@@ -7,8 +7,7 @@ frontend:
         - pnpm install
     build:
       commands:
-        - cd apps/web
-        - pnpm run build
+        - cd apps/web && pnpm run build
   artifacts:
     baseDirectory: apps/web/dist
     files:
