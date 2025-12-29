@@ -1,0 +1,4 @@
+# file: C:\Users\kpete\bloom-project\apps\api\middleware\exceptions.py
+# hypothesis_version: 6.148.8
+
+['HTTP_ERROR', 'code', 'error', 'message', 'request_id']

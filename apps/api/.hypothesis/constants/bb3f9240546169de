@@ -1,0 +1,4 @@
+# file: C:\Users\kpete\bloom-project\apps\api\auth\dependencies.py
+# hypothesis_version: 6.148.8
+
+[401, 403, 'FORBIDDEN', 'INVALID_TOKEN', 'code', 'email', 'error', 'id', 'message', 'request_id', 'role', 'sub']

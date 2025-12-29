@@ -1,0 +1,9 @@
+{
+  "ServiceArn": "arn:aws:apprunner:us-east-1:282939815209:service/bloom-api/22187e7a116149d4b4785e841d7d9b6a",
+  "NetworkConfiguration": {
+    "EgressConfiguration": {
+      "EgressType": "VPC",
+      "VpcConnectorArn": "arn:aws:apprunner:us-east-1:282939815209:vpcconnector/bloom-vpc-connector/1/5253fdfe41034fd3999521e1e4905206"
+    }
+  }
+}

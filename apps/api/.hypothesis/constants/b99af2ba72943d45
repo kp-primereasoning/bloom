@@ -1,0 +1,4 @@
+# file: C:\Users\kpete\bloom-project\apps\api\routes\auth.py
+# hypothesis_version: 6.148.8
+
+[400, 401, 404, '/auth', '/dev/switch-role', '/login', '/me', 'ENVIRONMENT', 'INVALID_CREDENTIALS', 'INVALID_ROLE', 'USER_NOT_FOUND', 'User not found', 'auth', 'bearer', 'code', 'development', 'error', 'id', 'message', 'request_id']

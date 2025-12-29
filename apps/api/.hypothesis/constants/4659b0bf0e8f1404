@@ -1,0 +1,4 @@
+# file: C:\Users\kpete\bloom-project\apps\api\main.py
+# hypothesis_version: 6.148.8
+
+['*', '/health', '0.1.0', 'Authorization', 'Bloom API', 'ENVIRONMENT', 'WEB_DOMAIN', 'development', 'healthy', 'startup', 'status']

@@ -1,0 +1,27 @@
+Generic single-database configuration for Bloom API.
+
+This directory contains Alembic migration scripts for the Bloom platform.
+
+## Running Migrations
+
+From the apps/api directory:
+
+# Upgrade to latest
+alembic upgrade head
+
+# Downgrade one revision
+alembic downgrade -1
+
+# Show current revision
+alembic current
+
+# Show migration history
+alembic history
+
+## Creating New Migrations
+
+# Auto-generate from model changes
+alembic revision --autogenerate -m "description"
+
+# Create empty migration
+alembic revision -m "description"

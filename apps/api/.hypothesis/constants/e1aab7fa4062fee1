@@ -1,0 +1,4 @@
+# file: C:\Users\kpete\bloom-project\apps\api\routes\admin.py
+# hypothesis_version: 6.148.8
+
+['/admin', '/ping', 'ADMIN', 'admin', 'ok', 'role']

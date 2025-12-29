@@ -1,0 +1,4 @@
+# file: C:\Users\kpete\bloom-project\apps\api\routes\pm.py
+# hypothesis_version: 6.148.8
+
+['/ping', '/pm', 'PROPERTY_MANAGER', 'ok', 'pm', 'role']

@@ -1,0 +1,4 @@
+# file: C:\Users\kpete\bloom-project\apps\api\routes\customer.py
+# hypothesis_version: 6.148.8
+
+['/customer', '/ping', 'CUSTOMER', 'customer', 'ok', 'role']

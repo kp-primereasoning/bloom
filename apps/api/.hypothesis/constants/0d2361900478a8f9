@@ -1,0 +1,4 @@
+# file: C:\Users\kpete\bloom-project\apps\api\auth\service.py
+# hypothesis_version: 6.148.8
+
+['HS256', 'JWT_SECRET', 'aud', 'auto', 'bcrypt', 'bloom-api', 'bloom-web', 'email', 'exp', 'iat', 'iss', 'leeway', 'role', 'sub']

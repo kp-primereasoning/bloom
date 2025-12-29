@@ -1,0 +1,13 @@
+{
+  "name": "bloom-monorepo",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Bloom floral subscription platform monorepo",
+  "scripts": {
+    "web:dev": "pnpm --filter web dev",
+    "web:build": "pnpm --filter web build",
+    "web:test": "pnpm --filter web test"
+  },
+  "devDependencies": {},
+  "packageManager": "pnpm@9.0.0"
+}

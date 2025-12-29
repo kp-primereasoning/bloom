@@ -1,0 +1,41 @@
+{
+  "ServiceName": "bloom-api",
+  "SourceConfiguration": {
+    "AuthenticationConfiguration": {
+      "AccessRoleArn": "arn:aws:iam::282939815209:role/service-role/AppRunnerECRAccessRole"
+    },
+    "AutoDeploymentsEnabled": true,
+    "ImageRepository": {
+      "ImageIdentifier": "282939815209.dkr.ecr.us-east-1.amazonaws.com/bloom-api:v1.0.0",
+      "ImageRepositoryType": "ECR",
+      "ImageConfiguration": {
+        "Port": "8080",
+        "RuntimeEnvironmentVariables": {
+          "DATABASE_URL": "postgresql://bloom_admin:BloomDev2025!@bloom-dev.cfkgs26u8dtb.us-east-1.rds.amazonaws.com:5432/bloom",
+          "JWT_SECRET": "bloom-dev-jwt-secret-2025-change-in-production",
+          "ENVIRONMENT": "development",
+          "WEB_DOMAIN": "http://localhost:5173"
+        }
+      }
+    }
+  },
+  "InstanceConfiguration": {
+    "Cpu": "1024",
+    "Memory": "2048",
+    "InstanceRoleArn": "arn:aws:iam::282939815209:role/BloomAppRunnerInstanceRole"
+  },
+  "NetworkConfiguration": {
+    "EgressConfiguration": {
+      "EgressType": "VPC",
+      "VpcConnectorArn": "arn:aws:apprunner:us-east-1:282939815209:vpcconnector/bloom-vpc-connector/1/5253fdfe41034fd3999521e1e4905206"
+    }
+  },
+  "HealthCheckConfiguration": {
+    "Protocol": "HTTP",
+    "Path": "/health",
+    "Interval": 10,
+    "Timeout": 5,
+    "HealthyThreshold": 1,
+    "UnhealthyThreshold": 5
+  }
+}
