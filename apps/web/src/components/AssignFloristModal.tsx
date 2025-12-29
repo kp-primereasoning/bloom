@@ -2,7 +2,7 @@
  * Modal for assigning a florist to a property.
  */
 
-import { useState, useEffect, FormEvent } from 'react';
+import { useState, useEffect, type FormEvent } from 'react';
 import type { Florist } from '@bloom/shared';
 import { apiRequest } from '@/lib/api';
 

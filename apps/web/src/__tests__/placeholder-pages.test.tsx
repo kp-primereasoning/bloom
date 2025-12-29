@@ -41,8 +41,7 @@ const pageComponents: Record<string, React.ComponentType> = {
   // Admin pages
   '/admin/properties': AdminPages.PropertiesPage,
   '/admin/florists': AdminPages.FloristsPage,
-  '/admin/assignments': AdminPages.AssignmentsPage,
-  '/admin/exceptions': AdminPages.ExceptionsPage,
+  '/admin/users': AdminPages.UsersPage,
 };
 
 // Get all nav items from all roles

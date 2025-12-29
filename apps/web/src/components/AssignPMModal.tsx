@@ -2,7 +2,7 @@
  * Modal for assigning a property manager to a property.
  */
 
-import { useState, useEffect, FormEvent } from 'react';
+import { useState, useEffect, type FormEvent } from 'react';
 import type { User } from '@bloom/shared';
 import { apiRequest } from '@/lib/api';
 

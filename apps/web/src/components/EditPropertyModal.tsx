@@ -2,7 +2,7 @@
  * Modal for editing property details.
  */
 
-import { useState, useEffect, FormEvent } from 'react';
+import { useState, useEffect, type FormEvent } from 'react';
 import type { EnrichedProperty, UpdatePropertyRequest } from '@bloom/shared';
 import { apiRequest } from '@/lib/api';
 
