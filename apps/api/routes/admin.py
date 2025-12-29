@@ -1,7 +1,7 @@
 """
 Admin routes - ADMIN role only.
 
-Provides endpoints for managing properties, florists, and assignments.
+Provides endpoints for managing properties, florists, assignments, and users.
 """
 
 from uuid import UUID, uuid4
@@ -16,12 +16,20 @@ from schemas.domain import (
     PropertyCreate,
     PropertyUpdate,
     PropertyResponse,
+    EnrichedPropertyResponse,
+    AssignPMRequest,
     FloristCreate,
     FloristResponse,
     PropertyAssignmentCreate,
     PropertyAssignmentResponse,
+    UserCreate,
+    UserUpdate,
+    EnrichedUserResponse,
 )
+from models.user import UserResponse, UserRole, SubscriptionStatus
 from services import property_service, florist_service, assignment_service
+from db.users import get_all_users, get_user_by_email, get_user_by_id, create_user, update_user
+from auth.service import auth_service
 
 
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -46,18 +54,26 @@ async def create_property(
     """
     Create a new property (ADMIN only).
     
-    Properties are always created in DRAFT status.
+    Properties are always created in CREATED status.
     """
     return property_service.create_property(db, data)
 
 
-@router.get("/properties", response_model=List[PropertyResponse])
+@router.get("/properties", response_model=List[EnrichedPropertyResponse])
 async def list_properties(
     db: Session = Depends(get_db),
     current_user: dict = Depends(require_role(["ADMIN"]))
 ):
-    """List all properties (ADMIN only)."""
-    return property_service.get_properties(db)
+    """
+    List all properties with enriched data (ADMIN only).
+    
+    Returns computed fields:
+    - total_users: Count of users associated with property
+    - active_users: Count of users with ACTIVE subscription
+    - florist_name: Name of assigned florist
+    - property_manager_email: Email of assigned PM
+    """
+    return await property_service.get_enriched_properties(db)
 
 
 @router.patch("/properties/{property_id}", response_model=PropertyResponse)
@@ -70,13 +86,31 @@ async def update_property(
     """
     Update a property (ADMIN only).
     
-    Status transitions are validated:
-    - DRAFT -> SUBMITTED: Always allowed
-    - SUBMITTED -> ACTIVE: Only with active assignment
-    - DRAFT -> ACTIVE: Not allowed
+    Note: Status is now computed automatically based on assignments.
     """
     request_id = str(uuid4())
     return property_service.update_property(db, property_id, data, request_id)
+
+
+@router.patch("/properties/{property_id}/assign-pm", response_model=EnrichedPropertyResponse)
+async def assign_property_manager(
+    property_id: UUID,
+    data: AssignPMRequest,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(require_role(["ADMIN"]))
+):
+    """
+    Assign a property manager to a property (ADMIN only).
+    
+    Validates user has PROPERTY_MANAGER role.
+    Automatically recomputes property status.
+    """
+    request_id = str(uuid4())
+    prop = property_service.assign_property_manager(db, property_id, data.user_id, request_id)
+    
+    # Return enriched response
+    enriched = await property_service.get_enriched_properties(db)
+    return next((p for p in enriched if p["id"] == prop.id), None)
 
 
 # =============================================================================
@@ -132,3 +166,249 @@ async def list_assignments(
 ):
     """List all property assignments (ADMIN only)."""
     return assignment_service.get_assignments(db)
+
+
+# =============================================================================
+# User Endpoints
+# =============================================================================
+
+@router.get("/users", response_model=List[EnrichedUserResponse])
+async def list_users(
+    role: str | None = None,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(require_role(["ADMIN"]))
+):
+    """
+    List all users with enriched data (ADMIN only).
+    
+    Returns:
+    - property_name: Resolved from property_id for PROPERTY_MANAGER users
+    - subscription_status: Only for CUSTOMER users, null for others
+    
+    Optionally filter by role using ?role=PROPERTY_MANAGER
+    """
+    users = await get_all_users()
+    if role:
+        users = [u for u in users if u.role == role]
+    
+    # Build enriched responses
+    enriched = []
+    for user in users:
+        # Resolve property name if user has property_id
+        property_name = None
+        if user.property_id:
+            prop = property_service.get_property(db, user.property_id)
+            if prop:
+                property_name = prop.name
+        
+        # subscription_status is null for non-CUSTOMER users
+        sub_status = user.subscription_status if user.role == UserRole.CUSTOMER else None
+        
+        enriched.append(EnrichedUserResponse(
+            id=user.id,
+            email=user.email,
+            role=user.role,
+            property_id=user.property_id,
+            property_name=property_name,
+            subscription_status=sub_status,
+            created_at=user.created_at
+        ))
+    
+    return enriched
+
+
+@router.post("/users", response_model=EnrichedUserResponse, status_code=201)
+async def create_user_endpoint(
+    data: UserCreate,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(require_role(["ADMIN"]))
+):
+    """
+    Create a new user (ADMIN only).
+    
+    Validation rules:
+    - property_id is only valid for PROPERTY_MANAGER role
+    - property_id must reference a valid Property if provided
+    - CUSTOMER users get subscription_status = CREATED
+    - Non-CUSTOMER users get subscription_status = None
+    
+    Returns 409 Conflict if email already exists.
+    Returns 400 Bad Request for invalid field combinations.
+    """
+    from datetime import datetime, timezone
+    from models.user import User
+    
+    # Check for existing user
+    existing = await get_user_by_email(data.email)
+    if existing:
+        raise HTTPException(status_code=409, detail="Email already exists")
+    
+    # Validate property_id is only for PROPERTY_MANAGER
+    if data.property_id is not None and data.role != UserRole.PROPERTY_MANAGER:
+        raise HTTPException(
+            status_code=400,
+            detail="property_id is only valid for PROPERTY_MANAGER role"
+        )
+    
+    # Validate property_id references a valid property
+    if data.property_id is not None:
+        prop = property_service.get_property(db, data.property_id)
+        if not prop:
+            raise HTTPException(
+                status_code=400,
+                detail="property_id references a non-existent property"
+            )
+    
+    # Set subscription_status based on role
+    sub_status = SubscriptionStatus.CREATED if data.role == UserRole.CUSTOMER else None
+    
+    # Hash password and create user
+    hashed_password = auth_service.hash_password(data.password)
+    new_user = User(
+        id=uuid4(),
+        email=data.email,
+        hashed_password=hashed_password,
+        role=data.role,
+        property_id=data.property_id,
+        subscription_status=sub_status if sub_status else SubscriptionStatus.CREATED,
+        created_at=datetime.now(timezone.utc)
+    )
+    
+    await create_user(new_user)
+    
+    # If PM is assigned to a property, update the property's property_manager_id
+    property_name = None
+    if new_user.property_id and data.role == UserRole.PROPERTY_MANAGER:
+        prop = property_service.get_property(db, new_user.property_id)
+        if prop:
+            property_name = prop.name
+            prop.property_manager_id = new_user.id
+            property_service._recompute_property_status(db, prop)
+            db.commit()
+    
+    return EnrichedUserResponse(
+        id=new_user.id,
+        email=new_user.email,
+        role=new_user.role,
+        property_id=new_user.property_id,
+        property_name=property_name,
+        subscription_status=sub_status,
+        created_at=new_user.created_at
+    )
+
+
+
+@router.patch("/users/{user_id}", response_model=EnrichedUserResponse)
+async def update_user_endpoint(
+    user_id: UUID,
+    data: UserUpdate,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(require_role(["ADMIN"]))
+):
+    """
+    Update a user (ADMIN only).
+    
+    Validation rules:
+    - subscription_status can only be updated for CUSTOMER users
+    - property_id can only be updated for PROPERTY_MANAGER users
+    - Role changes trigger field sanitization:
+      - If new role != PROPERTY_MANAGER, property_id is cleared
+      - If new role != CUSTOMER, subscription_status is cleared
+      - If new role == CUSTOMER, subscription_status is set to CREATED
+    
+    Returns 404 if user not found.
+    Returns 400 for invalid field combinations.
+    """
+    # Get existing user
+    user = await get_user_by_id(user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    updates = {}
+    new_role = data.role if data.role is not None else user.role
+    
+    # Handle role change with field sanitization
+    if data.role is not None and data.role != user.role:
+        updates["role"] = data.role
+        
+        # Sanitize fields based on new role
+        if data.role != UserRole.PROPERTY_MANAGER:
+            updates["property_id"] = None
+        if data.role != UserRole.CUSTOMER:
+            updates["subscription_status"] = SubscriptionStatus.CREATED  # Store as CREATED but return as None
+        elif data.role == UserRole.CUSTOMER:
+            updates["subscription_status"] = SubscriptionStatus.CREATED
+    
+    # Validate and handle subscription_status update
+    if data.subscription_status is not None:
+        if new_role != UserRole.CUSTOMER:
+            raise HTTPException(
+                status_code=400,
+                detail="subscription_status can only be updated for CUSTOMER users"
+            )
+        updates["subscription_status"] = data.subscription_status
+    
+    # Validate and handle property_id update
+    if data.property_id is not None:
+        if new_role != UserRole.PROPERTY_MANAGER:
+            raise HTTPException(
+                status_code=400,
+                detail="property_id can only be updated for PROPERTY_MANAGER users"
+            )
+        # Validate property exists
+        prop = property_service.get_property(db, data.property_id)
+        if not prop:
+            raise HTTPException(
+                status_code=400,
+                detail="property_id references a non-existent property"
+            )
+        
+        # Track old property_id for status recomputation
+        old_property_id = user.property_id
+        updates["property_id"] = data.property_id
+        
+        # Recompute property status for old property if PM is being reassigned
+        if old_property_id and old_property_id != data.property_id:
+            old_prop = property_service.get_property(db, old_property_id)
+            if old_prop:
+                old_prop.property_manager_id = None
+                property_service._recompute_property_status(db, old_prop)
+        
+        # Update new property's PM and recompute status
+        prop.property_manager_id = user_id
+        property_service._recompute_property_status(db, prop)
+        db.commit()
+    
+    # Handle clearing property_id (removing PM from property)
+    if "property_id" in updates and updates["property_id"] is None and user.property_id:
+        old_prop = property_service.get_property(db, user.property_id)
+        if old_prop and old_prop.property_manager_id == user_id:
+            old_prop.property_manager_id = None
+            property_service._recompute_property_status(db, old_prop)
+            db.commit()
+    
+    # Apply updates
+    if updates:
+        updated_user = await update_user(user_id, updates)
+    else:
+        updated_user = user
+    
+    # Resolve property name for response
+    property_name = None
+    if updated_user.property_id:
+        prop = property_service.get_property(db, updated_user.property_id)
+        if prop:
+            property_name = prop.name
+    
+    # subscription_status is null for non-CUSTOMER users in response
+    sub_status = updated_user.subscription_status if updated_user.role == UserRole.CUSTOMER else None
+    
+    return EnrichedUserResponse(
+        id=updated_user.id,
+        email=updated_user.email,
+        role=updated_user.role,
+        property_id=updated_user.property_id,
+        property_name=property_name,
+        subscription_status=sub_status,
+        created_at=updated_user.created_at
+    )

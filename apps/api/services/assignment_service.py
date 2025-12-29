@@ -1,7 +1,8 @@
 """
 Assignment service - business logic for property-florist assignments.
 
-Handles assignment creation with automatic deactivation of existing assignments.
+Handles assignment creation with automatic deactivation of existing assignments
+and property status recomputation.
 """
 
 from uuid import UUID
@@ -15,6 +16,7 @@ from models.property_assignment import PropertyAssignment
 from models.property import Property
 from models.florist import Florist
 from schemas.domain import PropertyAssignmentCreate
+from services.property_service import _recompute_property_status
 
 
 def create_assignment(
@@ -28,6 +30,8 @@ def create_assignment(
     If the property already has an active assignment, it will be deactivated
     before creating the new one. This ensures only one active assignment
     per property at any time.
+    
+    After creating the assignment, the property status is recomputed.
     """
     # Validate property exists
     prop = db.query(Property).filter(Property.id == data.property_id).first()
@@ -70,6 +74,9 @@ def create_assignment(
         active=True  # Always active on creation
     )
     db.add(assignment)
+    
+    # Recompute property status after florist assignment
+    _recompute_property_status(db, prop)
     
     try:
         db.commit()

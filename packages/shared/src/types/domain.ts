@@ -6,15 +6,27 @@
  */
 
 /**
- * Property status lifecycle
+ * Property status lifecycle - computed based on florist and PM assignments
  */
 export const PropertyStatus = {
-  DRAFT: 'DRAFT',
-  SUBMITTED: 'SUBMITTED',
-  ACTIVE: 'ACTIVE',
+  CREATED: 'CREATED',           // No florist, no PM
+  PENDING_FLORIST: 'PENDING_FLORIST',  // Has PM, needs florist
+  PENDING_PM: 'PENDING_PM',     // Has florist, needs PM
+  ACTIVE: 'ACTIVE',             // Has both florist and PM
 } as const;
 
 export type PropertyStatus = (typeof PropertyStatus)[keyof typeof PropertyStatus];
+
+/**
+ * User subscription status lifecycle
+ */
+export const SubscriptionStatus = {
+  CREATED: 'CREATED',   // Account created, no subscription
+  ACTIVE: 'ACTIVE',     // Active subscription
+  PAUSED: 'PAUSED',     // Subscription paused
+} as const;
+
+export type SubscriptionStatus = (typeof SubscriptionStatus)[keyof typeof SubscriptionStatus];
 
 /**
  * Florist status lifecycle
@@ -35,6 +47,23 @@ export interface Property {
   address: string;
   status: PropertyStatus;
   delivery_cadence: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+/**
+ * Enriched property entity - includes computed fields for admin table
+ */
+export interface EnrichedProperty {
+  id: string;
+  name: string;
+  address: string;
+  status: PropertyStatus;
+  delivery_cadence: string | null;
+  total_users: number;
+  active_users: number;
+  florist_name: string | null;
+  property_manager_email: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -98,6 +127,13 @@ export interface CreatePropertyAssignmentRequest {
   florist_id: string;
 }
 
+/**
+ * Request body for assigning a property manager to a property
+ */
+export interface AssignPMRequest {
+  user_id: string;
+}
+
 // =============================================================================
 // Array helpers for iteration
 // =============================================================================
@@ -111,3 +147,58 @@ export const ALL_PROPERTY_STATUSES = Object.values(PropertyStatus);
  * Array of all florist statuses for iteration
  */
 export const ALL_FLORIST_STATUSES = Object.values(FloristStatus);
+
+/**
+ * Array of all subscription statuses for iteration
+ */
+export const ALL_SUBSCRIPTION_STATUSES = Object.values(SubscriptionStatus);
+
+// =============================================================================
+// User Types
+// =============================================================================
+
+import type { UserRole } from './roles';
+
+/**
+ * User entity - a user account in the Bloom platform
+ */
+export interface User {
+  id: string;
+  email: string;
+  role: UserRole;
+  created_at: string;
+}
+
+/**
+ * Admin user entity - enriched user data for admin table
+ * Includes property_name resolved from property_id
+ * subscription_status is null for non-CUSTOMER users
+ */
+export interface AdminUser {
+  id: string;
+  email: string;
+  role: UserRole;
+  property_id: string | null;
+  property_name: string | null;
+  subscription_status: SubscriptionStatus | null;
+  created_at: string;
+}
+
+/**
+ * Request body for creating a new user
+ */
+export interface CreateUserRequest {
+  email: string;
+  role: UserRole;
+  password: string;
+  property_id?: string;  // Only valid for PROPERTY_MANAGER role
+}
+
+/**
+ * Request body for updating an existing user
+ */
+export interface UpdateUserRequest {
+  role?: UserRole;
+  property_id?: string | null;
+  subscription_status?: SubscriptionStatus;
+}

@@ -46,8 +46,7 @@ export const sidebarConfig: Record<UserRole, RoleConfig> = {
     navItems: [
       { label: 'Properties', path: '/admin/properties' },
       { label: 'Florists', path: '/admin/florists' },
-      { label: 'Assignments', path: '/admin/assignments' },
-      { label: 'Exceptions', path: '/admin/exceptions' },
+      { label: 'Users', path: '/admin/users' },
     ],
   },
 };

@@ -8,6 +8,22 @@ This file tracks all features, components, and infrastructure built for the Bloo
 
 | Date | What Was Built | What It Does |
 |------|----------------|--------------|
+| 2025-12-29 | Admin Users Enhanced | Enhanced UsersPage with Property/Subscription columns, inline role/status dropdowns, PATCH /admin/users/{id} endpoint, PM-property assignment sync, and 8 property-based test files |
+| 2025-12-29 | Property Selection & Actions | Single-select properties table with Edit Property, Assign Florist, and Assign PM modals; dynamic action bar toggles between Add/Edit modes |
+| 2025-12-29 | Enhanced Properties Table | Admin properties table with Total Users, Active Users, Florist Assigned, Property Manager, and auto-computed status (Created, Pending - Needs Florist, Pending - Needs PM, Active) |
+| 2025-12-29 | Property Status Computation | Automatic status based on florist and PM assignments with recomputation on changes |
+| 2025-12-29 | User Subscription Status | Added CREATED/ACTIVE/PAUSED subscription status to User model |
+| 2025-12-29 | Enriched Properties API | GET /admin/properties returns computed fields (total_users, active_users, florist_name, property_manager_email) |
+| 2025-12-29 | PM Assignment Endpoint | PATCH /admin/properties/{id}/assign-pm for assigning property managers with role validation |
+| 2025-12-29 | Property-Based Tests (Enhanced) | 3 new PBT test files for status computation, enriched properties, and PM role validation |
+| 2025-12-29 | Local Dev Setup | Docker Compose for Postgres, .env.local configs, pnpm dev scripts (dev, dev:db, dev:api, dev:web, db:migrate, db:reset, seed) |
+| 2025-12-29 | Developer Documentation | docs/dev.md with prerequisites, commands, troubleshooting, and promote-to-prod workflow |
+| 2025-12-29 | Admin CRUD UI | Admin pages for Properties, Florists, Users with tables, add modals, and status updates |
+| 2025-12-29 | User Management API | GET/POST /admin/users endpoints for listing and creating users with RBAC |
+| 2025-12-29 | AdminTable Component | Reusable table component with loading, error states, and custom column rendering |
+| 2025-12-29 | AddModal Component | Reusable modal for entity creation with configurable fields and validation |
+| 2025-12-29 | StatusDropdown Component | Inline dropdown for updating entity status with loading state |
+| 2025-12-28 | AWS Amplify Deployment | Deployed Bloom web app to AWS Amplify (https://main.d3f5f6vbe1hs1s.amplifyapp.com) with VITE_API_BASE_URL env var |
 | 2025-12-28 | Amplify Deployment Config | amplify.yml, pnpm-workspace.yaml, root package.json for monorepo Amplify deployment |
 | 2025-12-28 | CORS Multi-Origin Support | Updated backend to support CORS_ORIGINS env var for multiple allowed origins |
 | 2025-12-28 | App Runner Service Live | Created bloom-api App Runner service with VPC connector for RDS connectivity |

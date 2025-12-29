@@ -9,7 +9,7 @@ import uuid
 from datetime import datetime, timezone
 from enum import Enum
 
-from sqlalchemy import Column, String, DateTime, Enum as SQLEnum
+from sqlalchemy import Column, String, DateTime, Enum as SQLEnum, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
@@ -17,10 +17,19 @@ from db.database import Base
 
 
 class PropertyStatus(str, Enum):
-    """Lifecycle state of a property."""
-    DRAFT = "DRAFT"           # Initial state, property being set up
-    SUBMITTED = "SUBMITTED"   # Pending review
-    ACTIVE = "ACTIVE"         # Live and accepting subscriptions
+    """
+    Property lifecycle status - computed based on assignments.
+    
+    Status transitions are automatic based on florist and PM assignments:
+    - CREATED: No florist, no PM assigned
+    - PENDING_FLORIST: Has PM, needs florist
+    - PENDING_PM: Has florist, needs PM
+    - ACTIVE: Has both florist and PM assigned
+    """
+    CREATED = "CREATED"
+    PENDING_FLORIST = "PENDING_FLORIST"
+    PENDING_PM = "PENDING_PM"
+    ACTIVE = "ACTIVE"
 
 
 class Property(Base):
@@ -28,7 +37,8 @@ class Property(Base):
     Property ORM model.
     
     Represents a building or complex in the Bloom platform.
-    Properties must have an active florist assignment before being activated.
+    Properties must have both a florist assignment and property manager
+    before being activated.
     """
     __tablename__ = "properties"
     
@@ -36,11 +46,13 @@ class Property(Base):
     name = Column(String(255), nullable=False)
     address = Column(String(500), nullable=False)
     status = Column(
-        SQLEnum(PropertyStatus, name="propertystatus"),
+        SQLEnum(PropertyStatus, name="propertystatus_v2"),
         nullable=False,
-        default=PropertyStatus.DRAFT
+        default=PropertyStatus.CREATED
     )
     delivery_cadence = Column(String(100), nullable=True)
+    # Property manager assignment (references in-memory user store by ID)
+    property_manager_id = Column(UUID(as_uuid=True), nullable=True)
     created_at = Column(
         DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc)

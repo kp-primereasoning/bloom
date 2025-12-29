@@ -5,7 +5,7 @@ Authentication service for JWT creation and password handling.
 import os
 from datetime import datetime, timedelta, timezone
 from jose import jwt, JWTError
-from passlib.context import CryptContext
+import bcrypt
 
 from models.user import User
 
@@ -17,7 +17,6 @@ class AuthService:
         self.secret_key = os.environ.get("JWT_SECRET", "dev-secret-key-change-in-production")
         self.algorithm = "HS256"
         self.access_token_expire_minutes = 60 * 24  # 24 hours
-        self.pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
     
     def create_access_token(self, user: User) -> str:
         """Create a JWT access token for the given user."""
@@ -47,11 +46,15 @@ class AuthService:
     
     def verify_password(self, plain_password: str, hashed_password: str) -> bool:
         """Verify a plain password against a hashed password."""
-        return self.pwd_context.verify(plain_password, hashed_password)
+        return bcrypt.checkpw(
+            plain_password.encode('utf-8'),
+            hashed_password.encode('utf-8')
+        )
     
     def hash_password(self, password: str) -> str:
         """Hash a password using bcrypt."""
-        return self.pwd_context.hash(password)
+        salt = bcrypt.gensalt()
+        return bcrypt.hashpw(password.encode('utf-8'), salt).decode('utf-8')
 
 
 # Singleton instance

@@ -35,8 +35,7 @@ import {
 import {
   PropertiesPage,
   FloristsPage,
-  AssignmentsPage,
-  ExceptionsPage,
+  UsersPage,
 } from '@/pages/admin';
 
 export const router = createBrowserRouter([
@@ -208,18 +207,10 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: 'admin/assignments',
+        path: 'admin/users',
         element: (
           <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
-            <AssignmentsPage />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: 'admin/exceptions',
-        element: (
-          <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
-            <ExceptionsPage />
+            <UsersPage />
           </ProtectedRoute>
         ),
       },

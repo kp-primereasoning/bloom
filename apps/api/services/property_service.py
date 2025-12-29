@@ -1,7 +1,7 @@
 """
 Property service - business logic for property management.
 
-Handles property CRUD operations and status transition validation.
+Handles property CRUD operations and automatic status computation.
 """
 
 from uuid import UUID
@@ -15,28 +15,63 @@ from models.property_assignment import PropertyAssignment
 from schemas.domain import PropertyCreate, PropertyUpdate
 
 
-# Valid status transitions
-# DRAFT -> SUBMITTED: Always allowed
-# SUBMITTED -> ACTIVE: Only with active assignment
-# DRAFT -> ACTIVE: Never allowed (must go through SUBMITTED)
-VALID_TRANSITIONS = {
-    PropertyStatus.DRAFT: [PropertyStatus.SUBMITTED],
-    PropertyStatus.SUBMITTED: [PropertyStatus.ACTIVE],
-    PropertyStatus.ACTIVE: [],  # No transitions from ACTIVE in MLP
-}
+def compute_property_status(has_florist: bool, has_pm: bool) -> PropertyStatus:
+    """
+    Compute property status based on assignments.
+    
+    Rules:
+    - No florist + No PM -> CREATED
+    - Florist + No PM -> PENDING_PM
+    - No Florist + PM -> PENDING_FLORIST
+    - Florist + PM -> ACTIVE
+    
+    Args:
+        has_florist: Whether property has an active florist assignment
+        has_pm: Whether property has a property manager assigned
+        
+    Returns:
+        The computed PropertyStatus
+    """
+    if has_florist and has_pm:
+        return PropertyStatus.ACTIVE
+    elif has_florist:
+        return PropertyStatus.PENDING_PM
+    elif has_pm:
+        return PropertyStatus.PENDING_FLORIST
+    else:
+        return PropertyStatus.CREATED
+
+
+def _has_active_florist_assignment(db: Session, property_id: UUID) -> bool:
+    """Check if property has an active florist assignment."""
+    return db.query(PropertyAssignment).filter(
+        PropertyAssignment.property_id == property_id,
+        PropertyAssignment.active == True
+    ).first() is not None
+
+
+def _recompute_property_status(db: Session, prop: Property) -> None:
+    """
+    Recompute and update property status based on current assignments.
+    
+    Called after florist or PM assignment changes.
+    """
+    has_florist = _has_active_florist_assignment(db, prop.id)
+    has_pm = prop.property_manager_id is not None
+    prop.status = compute_property_status(has_florist, has_pm)
 
 
 def create_property(db: Session, data: PropertyCreate) -> Property:
     """
-    Create a new property in DRAFT status.
+    Create a new property in CREATED status.
     
-    Properties are always created in DRAFT status regardless of input.
+    Properties are always created in CREATED status (no assignments yet).
     """
     prop = Property(
         name=data.name,
         address=data.address,
         delivery_cadence=data.delivery_cadence,
-        status=PropertyStatus.DRAFT  # Always DRAFT on creation
+        status=PropertyStatus.CREATED  # Always CREATED on creation
     )
     db.add(prop)
     db.commit()
@@ -61,12 +96,10 @@ def update_property(
     request_id: str
 ) -> Property:
     """
-    Update a property with status transition validation.
+    Update a property.
     
-    Status transitions are validated according to business rules:
-    - DRAFT -> SUBMITTED: Always allowed
-    - SUBMITTED -> ACTIVE: Only with active assignment
-    - DRAFT -> ACTIVE: Never allowed
+    Note: Status is now computed automatically based on assignments.
+    Manual status updates are no longer supported.
     """
     prop = get_property(db, property_id)
     if not prop:
@@ -81,12 +114,7 @@ def update_property(
             }
         )
     
-    # Handle status transition if requested
-    if data.status is not None and data.status != prop.status:
-        _validate_status_transition(db, prop, data.status, request_id)
-        prop.status = data.status
-    
-    # Update other fields if provided
+    # Update fields if provided (status is computed, not manually set)
     if data.name is not None:
         prop.name = data.name
     if data.address is not None:
@@ -99,46 +127,148 @@ def update_property(
     return prop
 
 
-def _validate_status_transition(
+def assign_property_manager(
     db: Session,
-    prop: Property,
-    new_status: PropertyStatus,
+    property_id: UUID,
+    user_id: UUID,
     request_id: str
-) -> None:
+) -> Property:
     """
-    Validate property status transition rules.
+    Assign a property manager to a property.
     
-    Raises HTTPException if transition is invalid.
+    Validates user has PROPERTY_MANAGER role and recomputes status.
+    
+    Args:
+        db: Database session
+        property_id: ID of property to update
+        user_id: ID of user to assign as PM
+        request_id: Request ID for error tracking
+        
+    Returns:
+        Updated property with recomputed status
+        
+    Raises:
+        HTTPException: If property not found or user is not a PM
     """
-    allowed = VALID_TRANSITIONS.get(prop.status, [])
+    from db.users import get_user_by_id
+    from models.user import UserRole
+    import asyncio
     
-    if new_status not in allowed:
+    prop = get_property(db, property_id)
+    if not prop:
         raise HTTPException(
-            status_code=400,
+            status_code=404,
             detail={
                 "error": {
-                    "code": "BUSINESS_RULE_VIOLATION",
-                    "message": f"Invalid status transition from {prop.status.value} to {new_status.value}",
+                    "code": "NOT_FOUND",
+                    "message": "Property not found",
                     "request_id": request_id
                 }
             }
         )
     
-    # SUBMITTED -> ACTIVE requires active assignment
-    if new_status == PropertyStatus.ACTIVE:
-        has_active = db.query(PropertyAssignment).filter(
+    # Get user and validate role
+    # Note: Using asyncio.run since users are in async in-memory store
+    user = asyncio.get_event_loop().run_until_complete(get_user_by_id(user_id))
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail={
+                "error": {
+                    "code": "NOT_FOUND",
+                    "message": "User not found",
+                    "request_id": request_id
+                }
+            }
+        )
+    
+    if user.role != UserRole.PROPERTY_MANAGER:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error": {
+                    "code": "INVALID_ROLE",
+                    "message": "User must have PROPERTY_MANAGER role",
+                    "request_id": request_id
+                }
+            }
+        )
+    
+    # Assign PM and recompute status
+    prop.property_manager_id = user_id
+    _recompute_property_status(db, prop)
+    
+    db.commit()
+    db.refresh(prop)
+    return prop
+
+
+
+async def get_enriched_properties(db: Session) -> List[dict]:
+    """
+    Get all properties with enriched data for admin table.
+    
+    Returns computed fields:
+    - total_users: Count of users with this property_id
+    - active_users: Count of users with ACTIVE subscription
+    - florist_name: Name of assigned florist (from active assignment)
+    - property_manager_email: Email of assigned PM
+    
+    Args:
+        db: Database session
+        
+    Returns:
+        List of enriched property dictionaries
+    """
+    from db.users import get_all_users
+    from models.user import SubscriptionStatus
+    from models.florist import Florist
+    
+    # Get all properties
+    properties = get_properties(db)
+    
+    # Get all users for counting
+    all_users = await get_all_users()
+    
+    # Build enriched response
+    enriched = []
+    for prop in properties:
+        # Count users for this property
+        property_users = [u for u in all_users if u.property_id == prop.id]
+        total_users = len(property_users)
+        active_users = len([u for u in property_users if u.subscription_status == SubscriptionStatus.ACTIVE])
+        
+        # Get florist name from active assignment
+        florist_name = None
+        active_assignment = db.query(PropertyAssignment).filter(
             PropertyAssignment.property_id == prop.id,
             PropertyAssignment.active == True
         ).first()
+        if active_assignment:
+            florist = db.query(Florist).filter(Florist.id == active_assignment.florist_id).first()
+            if florist:
+                florist_name = florist.name
         
-        if not has_active:
-            raise HTTPException(
-                status_code=400,
-                detail={
-                    "error": {
-                        "code": "BUSINESS_RULE_VIOLATION",
-                        "message": "Cannot activate property without an active florist assignment",
-                        "request_id": request_id
-                    }
-                }
-            )
+        # Get property manager email
+        property_manager_email = None
+        if prop.property_manager_id:
+            from db.users import get_user_by_id
+            pm_user = await get_user_by_id(prop.property_manager_id)
+            if pm_user:
+                property_manager_email = pm_user.email
+        
+        enriched.append({
+            "id": prop.id,
+            "name": prop.name,
+            "address": prop.address,
+            "status": prop.status,
+            "delivery_cadence": prop.delivery_cadence,
+            "total_users": total_users,
+            "active_users": active_users,
+            "florist_name": florist_name,
+            "property_manager_email": property_manager_email,
+            "created_at": prop.created_at,
+            "updated_at": prop.updated_at,
+        })
+    
+    return enriched

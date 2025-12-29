@@ -4,10 +4,19 @@
   "version": "0.0.0",
   "description": "Bloom floral subscription platform monorepo",
   "scripts": {
+    "dev": "concurrently -n db,api,web -c blue,green,yellow \"pnpm dev:db\" \"pnpm dev:api\" \"pnpm dev:web\"",
+    "dev:db": "docker compose up postgres",
+    "dev:api": "cd apps/api && python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000",
+    "dev:web": "pnpm --filter web dev",
+    "db:migrate": "cd apps/api && python -m alembic upgrade head",
+    "db:reset": "docker compose down -v && docker compose up -d postgres && ping -n 6 127.0.0.1 >nul && pnpm db:migrate && pnpm seed",
+    "seed": "cd apps/api && python -c \"import asyncio; from db.seed import seed_dev_users; asyncio.run(seed_dev_users())\"",
     "web:dev": "pnpm --filter web dev",
     "web:build": "pnpm --filter web build",
     "web:test": "pnpm --filter web test"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  },
   "packageManager": "pnpm@9.0.0"
 }

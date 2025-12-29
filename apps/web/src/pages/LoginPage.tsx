@@ -112,10 +112,10 @@ export function LoginPage() {
           <div className="mt-6 p-4 bg-gray-100 rounded-md">
             <p className="text-xs text-gray-500 font-medium mb-2">Dev credentials:</p>
             <ul className="text-xs text-gray-500 space-y-1">
-              <li>admin@bloom.test / bloom123</li>
-              <li>florist@bloom.test / bloom123</li>
-              <li>pm@bloom.test / bloom123</li>
-              <li>customer@bloom.test / bloom123</li>
+              <li>admin@bloom.example.com / bloom123</li>
+              <li>florist@bloom.example.com / bloom123</li>
+              <li>pm@bloom.example.com / bloom123</li>
+              <li>customer@bloom.example.com / bloom123</li>
             </ul>
           </div>
         )}

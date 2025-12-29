@@ -3,8 +3,20 @@ Database connection and session management for the Bloom API.
 """
 
 import os
+from pathlib import Path
+from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
+
+# Get the directory where this file is located
+_this_dir = Path(__file__).parent.parent
+
+# Load .env.local for local development (if exists) - use absolute path
+_env_local = _this_dir / ".env.local"
+if _env_local.exists():
+    load_dotenv(_env_local, override=True)
+else:
+    load_dotenv()  # Fallback to .env
 
 # Build DATABASE_URL from environment variables
 DATABASE_URL = os.environ.get("DATABASE_URL")
@@ -24,6 +36,7 @@ engine = create_engine(
     pool_pre_ping=True,  # Verify connections before use
     pool_size=5,
     max_overflow=10,
+    connect_args={"connect_timeout": 5},  # 5 second connection timeout
 )
 
 # Session factory

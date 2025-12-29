@@ -45,6 +45,28 @@ async def get_all_users() -> list[User]:
     return list(_users.values())
 
 
+async def update_user(user_id: UUID, updates: dict) -> Optional[User]:
+    """
+    Update a user by ID.
+    
+    Args:
+        user_id: ID of the user to update
+        updates: Dictionary of fields to update
+        
+    Returns:
+        Updated user or None if not found
+    """
+    for email, user in _users.items():
+        if user.id == user_id:
+            # Create updated user with new values
+            user_dict = user.model_dump()
+            user_dict.update(updates)
+            updated_user = User(**user_dict)
+            _users[email] = updated_user
+            return updated_user
+    return None
+
+
 async def user_count() -> int:
     """Get the number of users."""
     return len(_users)
