@@ -10,7 +10,7 @@
 import { describe, it, expect } from 'vitest';
 import * as fc from 'fast-check';
 import { UserRole, ALL_ROLES } from '@bloom/shared';
-import { sidebarConfig, getRoleConfig, getNamespace, isPathInNamespace } from '../config/sidebarConfig';
+import { getRoleConfig, getNamespace, isPathInNamespace } from '../config/sidebarConfig';
 
 // Expected nav items for each role (ground truth from requirements)
 const expectedNavItems: Record<UserRole, { label: string; path: string }[]> = {

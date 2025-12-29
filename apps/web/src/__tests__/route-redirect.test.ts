@@ -29,20 +29,6 @@ const expectedDefaultPaths: Record<UserRole, string> = {
 // Arbitrary for generating random UserRole values
 const roleArbitrary = fc.constantFrom(...ALL_ROLES);
 
-// Get all valid paths from all roles
-const allValidPaths = ALL_ROLES.flatMap((role) =>
-  sidebarConfig[role].navItems.map((item) => item.path)
-);
-
-// Arbitrary for generating paths outside a role's namespace
-const pathOutsideNamespaceArbitrary = (role: UserRole) => {
-  const otherRoles = ALL_ROLES.filter((r) => r !== role);
-  const otherPaths = otherRoles.flatMap((r) =>
-    sidebarConfig[r].navItems.map((item) => item.path)
-  );
-  return fc.constantFrom(...otherPaths);
-};
-
 describe('Route Redirect - Property 5: Unauthorized Route Redirect', () => {
   beforeEach(() => {
     localStorage.clear();
