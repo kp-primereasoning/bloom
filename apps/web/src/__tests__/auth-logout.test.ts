@@ -47,7 +47,7 @@ interface AuthState {
 }
 
 // Simulate logout function
-function simulateLogout(state: AuthState): AuthState {
+function simulateLogout(): AuthState {
   localStorageMock.removeItem(TOKEN_KEY);
   return {
     user: null,
@@ -89,8 +89,9 @@ describe('Logout Clears All Auth State', () => {
           isLoading: false,
         };
         
-        // Action: logout
-        const newState = simulateLogout(authenticatedState);
+        // Action: logout (authenticatedState used to set up context)
+        void authenticatedState;
+        const newState = simulateLogout();
         
         // Assert: state is reset
         expect(newState.user).toBeNull();
@@ -117,7 +118,7 @@ describe('Logout Clears All Auth State', () => {
         
         // Action: logout multiple times
         for (let i = 0; i < logoutCount; i++) {
-          state = simulateLogout(state);
+          state = simulateLogout();
         }
         
         // Assert: state is still unauthenticated after multiple logouts

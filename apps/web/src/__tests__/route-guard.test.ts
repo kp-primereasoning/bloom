@@ -52,6 +52,9 @@ function simulateRouteGuard(
   targetRoute: string,
   allowedRoles?: UserRole[]
 ): RouteGuardResult {
+  // Mark targetRoute as used for route matching context
+  void targetRoute;
+  
   // If not authenticated, redirect to login
   if (!isAuthenticated) {
     return { action: 'redirect', redirectTo: '/login' };

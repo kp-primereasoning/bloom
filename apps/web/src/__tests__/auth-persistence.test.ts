@@ -4,9 +4,9 @@
  * Validates: Requirements 10.1, 10.2
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import * as fc from 'fast-check';
-import { UserRole, ALL_ROLES } from '@bloom/shared';
+import { ALL_ROLES } from '@bloom/shared';
 
 // Mock localStorage
 const localStorageMock = (() => {
@@ -63,7 +63,8 @@ describe('Auth State Persistence Round-Trip', () => {
   it('Property 8: auth state can be restored from localStorage', () => {
     fc.assert(
       fc.property(userArbitrary, tokenArbitrary, (user, token) => {
-        // Simulate storing auth state
+        // Simulate storing auth state (user info would be in JWT)
+        void user;
         localStorageMock.setItem(TOKEN_KEY, token);
         
         // Simulate restoring auth state

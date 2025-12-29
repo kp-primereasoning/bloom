@@ -8,19 +8,23 @@
 /**
  * Property status lifecycle
  */
-export enum PropertyStatus {
-  DRAFT = 'DRAFT',
-  SUBMITTED = 'SUBMITTED',
-  ACTIVE = 'ACTIVE',
-}
+export const PropertyStatus = {
+  DRAFT: 'DRAFT',
+  SUBMITTED: 'SUBMITTED',
+  ACTIVE: 'ACTIVE',
+} as const;
+
+export type PropertyStatus = (typeof PropertyStatus)[keyof typeof PropertyStatus];
 
 /**
  * Florist status lifecycle
  */
-export enum FloristStatus {
-  ONBOARDING = 'ONBOARDING',
-  READY = 'READY',
-}
+export const FloristStatus = {
+  ONBOARDING: 'ONBOARDING',
+  READY: 'READY',
+} as const;
+
+export type FloristStatus = (typeof FloristStatus)[keyof typeof FloristStatus];
 
 /**
  * Property entity - a physical location participating in Bloom's floral subscription program

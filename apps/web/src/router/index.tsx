@@ -2,7 +2,6 @@ import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { ProtectedRoute } from './ProtectedRoute';
 import { UserRole } from '@bloom/shared';
-import { getDefaultPath } from '@/config/sidebarConfig';
 
 // Auth pages
 import { LoginPage } from '@/pages/LoginPage';
