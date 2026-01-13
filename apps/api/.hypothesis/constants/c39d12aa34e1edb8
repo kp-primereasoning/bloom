@@ -1,0 +1,4 @@
+# file: C:\Users\kpete\bloom-project\apps\api\db\seed.py
+# hypothesis_version: 6.148.8
+
+['Bloom & Petal', 'Fresh Start Florals', 'Garden Gate Flowers', 'Parkside Residences', 'The Meridian', 'address', 'bi-weekly', 'bloom123', 'delivery_cadence', 'email', 'name', 'password', 'pm@bloom.example.com', 'role', 'status', 'weekly']

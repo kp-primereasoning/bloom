@@ -68,10 +68,8 @@ class TestErrorResponseFormat:
         request = Request(scope)
         
         # Call the exception handler
-        response = asyncio.get_event_loop().run_until_complete(
-            http_exception_handler(request, exc)
-        )
-        
+        response = asyncio.run(http_exception_handler(request, exc))
+
         # Verify response structure
         assert response.status_code == status_code
         
@@ -111,10 +109,8 @@ class TestErrorResponseFormat:
         request = Request(scope)
         
         # Call the exception handler
-        response = asyncio.get_event_loop().run_until_complete(
-            http_exception_handler(request, exc)
-        )
-        
+        response = asyncio.run(http_exception_handler(request, exc))
+
         import json
         body = json.loads(response.body.decode())
         

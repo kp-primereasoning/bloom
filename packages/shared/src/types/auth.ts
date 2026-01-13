@@ -11,6 +11,9 @@ export interface User {
   id: string;
   email: string;
   role: UserRole;
+  property_id: string | null;
+  subscription_status: 'CREATED' | 'ACTIVE' | 'PAUSED' | null;
+  subscription_plan: 'ESSENTIAL' | 'SIGNATURE' | 'STATEMENT' | null;
   created_at?: string;
 }
 

@@ -1,0 +1,4 @@
+# file: C:\Users\kpete\bloom-project\apps\api\schemas\__init__.py
+# hypothesis_version: 6.148.8
+
+['FloristCreate', 'FloristResponse', 'PropertyCreate', 'PropertyResponse', 'PropertyUpdate']

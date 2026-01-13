@@ -1,0 +1,4 @@
+# file: C:\Users\kpete\bloom-project\apps\api\models\property_assignment.py
+# hypothesis_version: 6.148.8
+
+['CASCADE', 'Florist', 'Property', 'assignments', 'florists.id', 'properties.id', 'property_assignments', 'property_id']

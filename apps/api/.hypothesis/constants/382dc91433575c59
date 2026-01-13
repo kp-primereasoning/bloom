@@ -1,0 +1,4 @@
+# file: C:\Users\kpete\bloom-project\apps\api\routes\admin.py
+# hypothesis_version: 6.148.8
+
+[201, 400, 404, 409, '/admin', '/florists', '/ping', '/properties', '/users', '/users/{user_id}', 'ADMIN', 'Email already exists', 'User not found', 'admin', 'id', 'ok', 'property_id', 'role', 'subscription_status']

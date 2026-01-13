@@ -13,6 +13,7 @@ from pydantic import BaseModel, EmailStr, Field
 from models.property import PropertyStatus
 from models.florist import FloristStatus
 from models.user import UserRole, SubscriptionStatus
+from models.delivery import SubscriptionPlan
 
 
 # =============================================================================
@@ -119,6 +120,56 @@ class PropertyAssignmentResponse(BaseModel):
 
 
 # =============================================================================
+# Registration Schemas (Public)
+# =============================================================================
+
+class RegisterRequest(BaseModel):
+    """Schema for customer self-registration."""
+    email: EmailStr = Field(..., description="User email address")
+    password: str = Field(..., min_length=6, description="User password (min 6 characters)")
+
+
+class RegisterResponse(BaseModel):
+    """Schema for registration response (same as login)."""
+    access_token: str
+    token_type: str = "bearer"
+    user: "UserResponseWithOnboarding"
+
+
+class UserResponseWithOnboarding(BaseModel):
+    """User response with onboarding fields for registration/login."""
+    id: UUID
+    email: EmailStr
+    role: UserRole
+    property_id: Optional[UUID] = None
+    subscription_status: Optional[SubscriptionStatus] = None
+    subscription_plan: Optional[SubscriptionPlan] = None
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class MeResponseWithPropertyName(BaseModel):
+    """
+    User response with property details for customer dashboard.
+
+    Includes property_name and property_address resolved from property_id for display.
+    """
+    id: UUID
+    email: EmailStr
+    role: UserRole
+    property_id: Optional[UUID] = None
+    property_name: Optional[str] = Field(default=None, description="Resolved property name")
+    property_address: Optional[str] = Field(default=None, description="Resolved property address")
+    unit: Optional[str] = Field(default=None, description="User's unit number within the property")
+    subscription_status: Optional[SubscriptionStatus] = None
+    subscription_plan: Optional[SubscriptionPlan] = None
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+# =============================================================================
 # User Schemas
 # =============================================================================
 
@@ -165,3 +216,111 @@ class EnrichedUserResponse(BaseModel):
     created_at: datetime
     
     model_config = {"from_attributes": True}
+
+
+# =============================================================================
+# Delivery Schemas
+# =============================================================================
+
+from models.delivery import SubscriptionPlan as SubscriptionPlanEnum, DeliveryStatus
+
+
+class DeliveryResponse(BaseModel):
+    """Schema for delivery API responses."""
+    id: UUID
+    user_id: UUID
+    property_id: UUID
+    subscription_plan: SubscriptionPlanEnum
+    status: DeliveryStatus
+    scheduled_for: datetime
+    delivered_at: Optional[datetime] = None
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+    
+    model_config = {"from_attributes": True}
+
+
+class MeDeliveriesResponse(BaseModel):
+    """
+    Response for GET /me/deliveries endpoint.
+    
+    Contains the customer's next scheduled delivery (if any)
+    and their delivery history (up to 20 most recent).
+    """
+    next_delivery: Optional[DeliveryResponse] = Field(
+        default=None,
+        description="Next scheduled delivery (future, not archived)"
+    )
+    history: list[DeliveryResponse] = Field(
+        default_factory=list,
+        description="Past deliveries, most recent first (limit 20)"
+    )
+
+
+# =============================================================================
+# Florist Dashboard Schemas
+# =============================================================================
+
+from typing import Literal
+
+
+class AssignedPropertyResponse(BaseModel):
+    """Property info for florist's assigned properties list."""
+    property_id: UUID
+    property_name: str
+    property_address: str
+
+
+class FloristMeResponse(BaseModel):
+    """
+    Response for GET /florist/me endpoint.
+    
+    Returns florist profile with assigned properties.
+    """
+    florist_id: UUID
+    florist_name: str
+    florist_status: FloristStatus
+    assigned_properties: list[AssignedPropertyResponse] = Field(
+        default_factory=list,
+        description="List of properties assigned to this florist"
+    )
+
+
+class FloristDeliveryResponse(BaseModel):
+    """
+    Delivery info for florist deliveries list.
+    
+    Includes customer and property details for display.
+    """
+    id: UUID
+    customer_email: str
+    property_id: UUID
+    property_name: str
+    property_address: str
+    subscription_plan: SubscriptionPlanEnum
+    status: DeliveryStatus
+    scheduled_for: datetime
+
+
+class FloristDeliveriesListResponse(BaseModel):
+    """
+    Response for GET /florist/deliveries endpoint.
+    
+    Returns list of upcoming deliveries for assigned properties.
+    """
+    deliveries: list[FloristDeliveryResponse] = Field(
+        default_factory=list,
+        description="List of scheduled deliveries for assigned properties"
+    )
+
+
+class UpdateDeliveryStatusRequest(BaseModel):
+    """
+    Request body for PATCH /florist/deliveries/{delivery_id}.
+    
+    Only DELIVERED or MISSED status allowed (florist actions).
+    """
+    status: Literal["DELIVERED", "MISSED"] = Field(
+        ...,
+        description="New delivery status (DELIVERED or MISSED only)"
+    )

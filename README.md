@@ -1,128 +1,228 @@
 # Bloom
 
-Bloom is a property-based floral subscription orchestration platform.
+Bloom is a property-based floral subscription orchestration platform that connects properties, florists, and residents. The platform orchestrates floral deliveries without selling flowers directly - Shopify is the system of record for all products and pricing.
+
+## Key Concepts
+
+- **Bloom does NOT sell flowers** - orchestration only
+- **Shopify is the system of record** for products and pricing
+- **One delivery cadence per property** (no per-resident customization)
+- **Bloom controls florist assignment** (residents cannot choose florists)
 
 ## Project Structure
 
 ```
 bloom/
 ├── apps/
-│   ├── web/          # Vite + React + TypeScript frontend
-│   └── api/          # FastAPI backend service
+│   ├── web/              # React + Vite + TypeScript frontend
+│   │   ├── src/
+│   │   │   ├── components/   # Reusable UI components
+│   │   │   ├── pages/        # Role-based page components
+│   │   │   │   ├── admin/    # Admin dashboard pages
+│   │   │   │   ├── customer/ # Customer dashboard pages
+│   │   │   │   ├── florist/  # Florist dashboard pages
+│   │   │   │   ├── pm/       # Property Manager pages
+│   │   │   │   └── onboarding/ # Customer onboarding flow
+│   │   │   ├── providers/    # React context providers
+│   │   │   ├── router/       # Route configuration
+│   │   │   └── config/       # App configuration
+│   │   └── package.json
+│   │
+│   └── api/              # FastAPI + Python backend
+│       ├── routes/       # API endpoint handlers
+│       ├── models/       # SQLAlchemy ORM models
+│       ├── schemas/      # Pydantic request/response schemas
+│       ├── services/     # Business logic layer
+│       ├── auth/         # JWT authentication
+│       ├── db/           # Database connection & seeding
+│       ├── middleware/   # Request middleware
+│       ├── alembic/      # Database migrations
+│       ├── tests/        # Property-based tests
+│       └── config/       # Static configuration (FAQ, etc.)
+│
 ├── packages/
-│   └── shared/       # Shared TypeScript types and validation
-├── docs/             # Documentation
-└── infra/            # Infrastructure configuration
+│   └── shared/           # Shared TypeScript types
+│       └── src/types/    # Domain types, roles, auth types
+│
+├── docs/
+│   ├── dev.md            # Developer setup guide
+│   └── system-design.md  # Full system architecture
+│
+├── .kiro/
+│   ├── specs/            # Feature specifications
+│   └── steering/         # AI assistant guidelines
+│
+└── infra/                # Infrastructure documentation
 ```
+
+## User Roles
+
+| Role | Description | Dashboard |
+|------|-------------|-----------|
+| **Customer** | Residents who subscribe to floral deliveries | `/customer/*` |
+| **Property Manager** | Building/complex managers | `/pm/*` |
+| **Florist** | Flower vendors connected to Bloom | `/florist/*` |
+| **Admin** | Bloom platform administrators | `/admin/*` |
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|------------|
+| Frontend | React 18, Vite, TypeScript, Tailwind CSS |
+| Backend | FastAPI, Python 3.11+, SQLAlchemy |
+| Database | PostgreSQL (Amazon RDS) |
+| Auth | JWT tokens with role-based access |
+| Hosting | AWS Amplify (frontend), AWS App Runner (backend) |
+| Testing | Vitest (frontend), Pytest + Hypothesis (backend) |
 
 ## Prerequisites
 
 - Node.js 18+
 - pnpm 8+
 - Python 3.11+
+- Docker (for local PostgreSQL)
 
-## Getting Started
+## Quick Start
 
-### Install Dependencies
+### 1. Install Dependencies
 
 ```bash
-# Install pnpm if not already installed
+# Install pnpm if needed
 npm install -g pnpm
 
-# Install frontend dependencies
-cd apps/web
+# Install all dependencies from root
 pnpm install
 
-# Install backend dependencies
+# Install Python dependencies
 cd apps/api
 pip install -r requirements.txt
 ```
 
-### Run the Web App
+### 2. Start Local Database
 
 ```bash
-cd apps/web
-pnpm dev
+# From project root
+docker-compose up -d
 ```
 
-The web app will be available at http://localhost:5173
-
-### Run the API
+### 3. Run Migrations & Seed Data
 
 ```bash
 cd apps/api
-uvicorn main:app --reload
+alembic upgrade head
+python -m db.seed
 ```
 
-The API will be available at http://localhost:8000
-
-Health check: http://localhost:8000/health
-
-## Development
-
-### Frontend Scripts
+### 4. Start Development Servers
 
 ```bash
-cd apps/web
+# Terminal 1: API (from apps/api)
+uvicorn main:app --reload
 
-# Start development server
+# Terminal 2: Web (from apps/web)
 pnpm dev
-
-# Run tests
-pnpm test
-
-# Type check
-pnpm typecheck
-
-# Lint
-pnpm lint
-
-# Format code
-pnpm format
 ```
 
-### Backend Scripts
+- Web: http://localhost:5173
+- API: http://localhost:8000
+- API Docs: http://localhost:8000/docs
+
+## Development Commands
+
+### Frontend (`apps/web`)
 
 ```bash
-cd apps/api
-
-# Run with auto-reload
-uvicorn main:app --reload
-
-# Format code (requires ruff)
-ruff format .
-
-# Lint code
-ruff check .
+pnpm dev          # Start dev server
+pnpm build        # Production build
+pnpm test         # Run tests
+pnpm typecheck    # Type checking
+pnpm lint         # Lint code
 ```
+
+### Backend (`apps/api`)
+
+```bash
+uvicorn main:app --reload    # Start with hot reload
+pytest                       # Run all tests
+pytest -v -k "property"      # Run property-based tests
+alembic upgrade head         # Run migrations
+alembic revision -m "desc"   # Create new migration
+python -m db.seed            # Seed test data
+```
+
+## API Endpoints
+
+### Public
+- `GET /health` - Health check
+- `GET /properties` - List available properties
+- `GET /public/faq` - FAQ content
+
+### Authentication
+- `POST /auth/register` - Customer registration
+- `POST /auth/login` - Login (returns JWT)
+- `GET /auth/me` - Current user info
+
+### Customer (`/me/*`)
+- `PATCH /me/property` - Set property & unit
+- `PATCH /me/subscription` - Update subscription status
+- `PATCH /me/plan` - Select subscription plan
+- `GET /me/deliveries` - Get delivery history
+
+### Admin (`/admin/*`)
+- Properties: `GET/POST/PATCH/DELETE /admin/properties`
+- Florists: `GET/POST/DELETE /admin/florists`
+- Users: `GET/POST/PATCH/DELETE /admin/users`
+- Assignments: `GET/POST /admin/property-assignments`
+
+### Florist (`/florist/*`)
+- `GET /florist/me` - Florist profile
+- `GET /florist/deliveries` - Upcoming deliveries
+- `PATCH /florist/deliveries/{id}` - Update delivery status
+
+### Property Manager (`/pm/*`)
+- `GET /pm/stats` - Dashboard statistics
+- `GET /pm/residents` - Property residents
 
 ## Environment Variables
 
-### Web App (`apps/web/.env`)
-
+### Web (`apps/web/.env.local`)
 ```env
-# API URL (optional, defaults to localhost:8000)
-VITE_API_URL=http://localhost:8000
+VITE_API_BASE_URL=http://localhost:8000
 ```
 
-### API (`apps/api/.env`)
-
+### API (`apps/api/.env.local`)
 ```env
-# No environment variables required for local development
+DATABASE_URL=postgresql://bloom:bloom@localhost:5432/bloom
+ENVIRONMENT=development
+JWT_SECRET=dev-secret-key
 ```
 
-## User Roles
+## Testing
 
-The platform supports 4 user roles:
+The project uses property-based testing extensively:
 
-| Role | Namespace | Default Page |
-|------|-----------|--------------|
-| Customer | `/customer` | `/customer/home` |
-| Property Manager | `/pm` | `/pm/overview` |
-| Florist | `/florist` | `/florist/deliveries` |
-| Admin | `/admin` | `/admin/properties` |
+- **Frontend**: Vitest with fast-check for property tests
+- **Backend**: Pytest with Hypothesis for property tests
 
-Use the role switcher in the top bar to switch between roles during development.
+```bash
+# Run all backend tests
+cd apps/api && pytest
+
+# Run frontend tests
+cd apps/web && pnpm test
+```
+
+## Documentation
+
+- [Developer Setup Guide](docs/dev.md) - Detailed local setup instructions
+- [System Design](docs/system-design.md) - Architecture, data models, APIs
+- [Changelog](CHANGELOG.md) - Feature development history
+
+## Deployment
+
+- **Frontend**: AWS Amplify (auto-deploys from `main` branch)
+- **Backend**: AWS App Runner with ECR container registry
+- **Database**: Amazon RDS PostgreSQL
 
 ## License
 

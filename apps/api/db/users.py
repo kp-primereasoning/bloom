@@ -40,9 +40,14 @@ async def create_user(user: User) -> User:
     return user
 
 
-async def get_all_users() -> list[User]:
-    """Get all users."""
-    return list(_users.values())
+async def get_all_users(include_archived: bool = False) -> list[User]:
+    """Get all users, excluding ARCHIVED by default."""
+    from models.user import UserStatus
+    
+    users = list(_users.values())
+    if not include_archived:
+        users = [u for u in users if getattr(u, 'status', UserStatus.ACTIVE) != UserStatus.ARCHIVED]
+    return users
 
 
 async def update_user(user_id: UUID, updates: dict) -> Optional[User]:
@@ -75,3 +80,25 @@ async def user_count() -> int:
 def clear_users() -> None:
     """Clear all users (for testing)."""
     _users.clear()
+
+
+async def archive_user(user_id: UUID) -> Optional[User]:
+    """
+    Soft delete a user by setting status to ARCHIVED.
+    
+    Args:
+        user_id: ID of the user to archive
+        
+    Returns:
+        Archived user or None if not found
+    """
+    from models.user import UserStatus
+    
+    for email, user in _users.items():
+        if user.id == user_id:
+            user_dict = user.model_dump()
+            user_dict["status"] = UserStatus.ARCHIVED
+            archived_user = User(**user_dict)
+            _users[email] = archived_user
+            return archived_user
+    return None

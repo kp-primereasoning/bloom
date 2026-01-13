@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "framer": {
+      "url": "https://mcp.unframer.co/sse?id=6525107c2eb980afc08db9da37f8bb5494997f523407f1990c6e7bd214a6ab18&secret=eVry7jm02b95Xl8EPm0QmQuRTfaodD1A",
+      "disabled": false,
+      "autoApprove": [
+        "getProjectXml",
+        "getNodeXml"
+      ]
+    }
+  }
+}

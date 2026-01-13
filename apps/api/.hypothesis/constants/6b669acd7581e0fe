@@ -1,0 +1,4 @@
+# file: C:\Users\kpete\bloom-project\apps\api\schemas\domain.py
+# hypothesis_version: 6.148.8
+
+[100, 255, 500, 'Property address', 'Property name', 'User email address', 'User role', 'from_attributes']

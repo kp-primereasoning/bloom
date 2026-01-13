@@ -1,0 +1,4 @@
+# file: C:\Users\kpete\bloom-project\apps\api\main.py
+# hypothesis_version: 6.148.8
+
+[0.1, 500, '*', ',', '-m', '0.1.0', 'Authorization', 'Bloom API', 'CORS_ORIGINS', 'Dev data seeded.', 'ENVIRONMENT', 'INTERNAL_ERROR', 'Migrations complete.', 'SENTRY_DSN', 'Seeding dev data...', 'WEB_DOMAIN', 'alembic', 'code', 'development', 'error', 'head', 'headers', 'message', 'method', 'request', 'request_id', 'upgrade', 'url']

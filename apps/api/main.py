@@ -4,6 +4,7 @@ Bloom API - FastAPI Backend Service
 
 import os
 import traceback
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
@@ -11,11 +12,38 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from middleware.exceptions import http_exception_handler, validation_exception_handler
+from middleware.request_id import RequestIDMiddleware, get_request_id
 from routes.auth import router as auth_router
 from routes.admin import router as admin_router
 from routes.florist import router as florist_router
 from routes.pm import router as pm_router
 from routes.customer import router as customer_router
+from routes.health import router as health_router
+from routes.properties import router as properties_router
+from routes.me import router as me_router
+from routes.public import router as public_router
+
+
+# Initialize Sentry if configured
+if sentry_dsn := os.environ.get("SENTRY_DSN"):
+    try:
+        import sentry_sdk
+        from sentry_sdk.integrations.fastapi import FastApiIntegration
+        from sentry_sdk.integrations.starlette import StarletteIntegration
+        
+        sentry_sdk.init(
+            dsn=sentry_dsn,
+            integrations=[
+                StarletteIntegration(),
+                FastApiIntegration(),
+            ],
+            traces_sample_rate=0.1,  # 10% of transactions for performance monitoring
+            environment=os.environ.get("ENVIRONMENT", "development"),
+            send_default_pii=False,  # Don't send PII by default
+        )
+        print(f"Sentry initialized for environment: {os.environ.get('ENVIRONMENT', 'development')}")
+    except ImportError:
+        print("Sentry SDK not installed, skipping error tracking initialization")
 
 
 def run_migrations():
@@ -51,10 +79,24 @@ def run_seeding_sync():
     seed_dev_users_sync()
 
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Lifespan context manager for startup and shutdown events."""
+    # Startup
+    run_migrations()
+    if os.environ.get("ENVIRONMENT") == "development":
+        print("Seeding dev data...")
+        run_seeding_sync()
+        print("Dev data seeded.")
+    yield
+    # Shutdown (nothing needed currently)
+
+
 app = FastAPI(
     title="Bloom API",
     description="Backend API for the Bloom floral subscription platform",
     version="0.1.0",
+    lifespan=lifespan,
 )
 
 # Register global exception handlers for consistent error format
@@ -64,12 +106,29 @@ app.add_exception_handler(RequestValidationError, validation_exception_handler)
 
 @app.exception_handler(Exception)
 async def generic_exception_handler(request: Request, exc: Exception):
-    """Catch-all exception handler for debugging."""
-    print(f"[ERROR] Unhandled exception: {exc}")
+    """Catch-all exception handler for debugging and error tracking."""
+    request_id = get_request_id()
+    print(f"[ERROR] [{request_id}] Unhandled exception: {exc}")
     traceback.print_exc()
+    
+    # Report to Sentry if configured
+    if os.environ.get("SENTRY_DSN"):
+        try:
+            import sentry_sdk
+            with sentry_sdk.push_scope() as scope:
+                scope.set_tag("request_id", request_id)
+                scope.set_context("request", {
+                    "url": str(request.url),
+                    "method": request.method,
+                    "headers": dict(request.headers),
+                })
+                sentry_sdk.capture_exception(exc)
+        except ImportError:
+            pass  # Sentry not installed
+    
     return JSONResponse(
         status_code=500,
-        content={"error": {"code": "INTERNAL_ERROR", "message": str(exc)}}
+        content={"error": {"code": "INTERNAL_ERROR", "message": str(exc), "request_id": request_id}}
     )
 
 # CORS configuration
@@ -99,26 +158,16 @@ app.add_middleware(
     allow_headers=["*", "Authorization"],  # Explicitly allow Authorization
 )
 
+# Add request ID middleware for tracing
+app.add_middleware(RequestIDMiddleware)
+
 # Include routers
 app.include_router(auth_router)
 app.include_router(admin_router)
 app.include_router(florist_router)
 app.include_router(pm_router)
 app.include_router(customer_router)
-
-
-@app.get("/health")
-def health_check():
-    """Health check endpoint for monitoring and load balancers."""
-    return {"status": "healthy"}
-
-
-# Startup event - runs migrations and seeds dev data
-@app.on_event("startup")
-def startup_event():
-    """Run migrations and seed on startup."""
-    run_migrations()
-    if os.environ.get("ENVIRONMENT") == "development":
-        print("Seeding dev data...")
-        run_seeding_sync()
-        print("Dev data seeded.")
+app.include_router(health_router)
+app.include_router(properties_router)
+app.include_router(me_router)
+app.include_router(public_router)

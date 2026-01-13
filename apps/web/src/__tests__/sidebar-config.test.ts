@@ -19,6 +19,7 @@ const expectedNavItems: Record<UserRole, { label: string; path: string }[]> = {
     { label: 'My Subscription', path: '/customer/subscription' },
     { label: 'Deliveries', path: '/customer/deliveries' },
     { label: 'Account', path: '/customer/account' },
+    { label: 'Help', path: '/customer/help' },
   ],
   [UserRole.PROPERTY_MANAGER]: [
     { label: 'Overview', path: '/pm/overview' },
@@ -35,8 +36,7 @@ const expectedNavItems: Record<UserRole, { label: string; path: string }[]> = {
   [UserRole.ADMIN]: [
     { label: 'Properties', path: '/admin/properties' },
     { label: 'Florists', path: '/admin/florists' },
-    { label: 'Assignments', path: '/admin/assignments' },
-    { label: 'Exceptions', path: '/admin/exceptions' },
+    { label: 'Users', path: '/admin/users' },
   ],
 };
 

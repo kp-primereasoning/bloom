@@ -15,6 +15,7 @@ export const sidebarConfig: Record<UserRole, RoleConfig> = {
       { label: 'My Subscription', path: '/customer/subscription' },
       { label: 'Deliveries', path: '/customer/deliveries' },
       { label: 'Account', path: '/customer/account' },
+      { label: 'Help', path: '/customer/help' },
     ],
   },
   [UserRole.PROPERTY_MANAGER]: {

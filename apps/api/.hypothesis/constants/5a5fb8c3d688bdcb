@@ -1,0 +1,4 @@
+# file: C:\Users\kpete\bloom-project\apps\api\routes\florist.py
+# hypothesis_version: 6.148.8
+
+[400, 403, 404, '/deliveries', '/florist', '/me', '/ping', 'DELIVERED', 'Delivery not found', 'FLORIST', 'FLORIST_NOT_FOUND', 'FLORIST_NOT_LINKED', 'FORBIDDEN', 'INVALID_STATE', 'NOT_FOUND', 'USER_NOT_FOUND', 'Unknown Property', 'User not found', 'code', 'error', 'florist', 'florist_id', 'id', 'message', 'ok', 'request_id', 'role', 'unknown@example.com']

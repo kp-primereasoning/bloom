@@ -61,6 +61,7 @@ async def create_property(
 
 @router.get("/properties", response_model=List[EnrichedPropertyResponse])
 async def list_properties(
+    include_archived: bool = False,
     db: Session = Depends(get_db),
     current_user: dict = Depends(require_role(["ADMIN"]))
 ):
@@ -72,8 +73,11 @@ async def list_properties(
     - active_users: Count of users with ACTIVE subscription
     - florist_name: Name of assigned florist
     - property_manager_email: Email of assigned PM
+    
+    Query params:
+    - include_archived: Include ARCHIVED properties (default: false)
     """
-    return await property_service.get_enriched_properties(db)
+    return await property_service.get_enriched_properties(db, include_archived=include_archived)
 
 
 @router.patch("/properties/{property_id}", response_model=PropertyResponse)
@@ -113,6 +117,22 @@ async def assign_property_manager(
     return next((p for p in enriched if p["id"] == prop.id), None)
 
 
+@router.delete("/properties/{property_id}", response_model=PropertyResponse)
+async def delete_property(
+    property_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(require_role(["ADMIN"]))
+):
+    """
+    Soft delete a property by setting status to ARCHIVED (ADMIN only).
+    
+    The property is not removed from the database, only marked as archived.
+    Use include_archived=true query param to see archived properties.
+    """
+    request_id = str(uuid4())
+    return property_service.archive_property(db, property_id, request_id)
+
+
 # =============================================================================
 # Florist Endpoints
 # =============================================================================
@@ -133,11 +153,33 @@ async def create_florist(
 
 @router.get("/florists", response_model=List[FloristResponse])
 async def list_florists(
+    include_archived: bool = False,
     db: Session = Depends(get_db),
     current_user: dict = Depends(require_role(["ADMIN"]))
 ):
-    """List all florists (ADMIN only)."""
-    return florist_service.get_florists(db)
+    """
+    List all florists (ADMIN only).
+    
+    Query params:
+    - include_archived: Include ARCHIVED florists (default: false)
+    """
+    return florist_service.get_florists(db, include_archived=include_archived)
+
+
+@router.delete("/florists/{florist_id}", response_model=FloristResponse)
+async def delete_florist(
+    florist_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(require_role(["ADMIN"]))
+):
+    """
+    Soft delete a florist by setting status to ARCHIVED (ADMIN only).
+    
+    The florist is not removed from the database, only marked as archived.
+    Use include_archived=true query param to see archived florists.
+    """
+    request_id = str(uuid4())
+    return florist_service.archive_florist(db, florist_id, request_id)
 
 
 # =============================================================================
@@ -175,6 +217,7 @@ async def list_assignments(
 @router.get("/users", response_model=List[EnrichedUserResponse])
 async def list_users(
     role: str | None = None,
+    include_archived: bool = False,
     db: Session = Depends(get_db),
     current_user: dict = Depends(require_role(["ADMIN"]))
 ):
@@ -185,9 +228,11 @@ async def list_users(
     - property_name: Resolved from property_id for PROPERTY_MANAGER users
     - subscription_status: Only for CUSTOMER users, null for others
     
-    Optionally filter by role using ?role=PROPERTY_MANAGER
+    Query params:
+    - role: Filter by role (e.g., ?role=PROPERTY_MANAGER)
+    - include_archived: Include ARCHIVED users (default: false)
     """
-    users = await get_all_users()
+    users = await get_all_users(include_archived=include_archived)
     if role:
         users = [u for u in users if u.role == role]
     
@@ -411,4 +456,45 @@ async def update_user_endpoint(
         property_name=property_name,
         subscription_status=sub_status,
         created_at=updated_user.created_at
+    )
+
+
+@router.delete("/users/{user_id}", response_model=EnrichedUserResponse)
+async def delete_user_endpoint(
+    user_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(require_role(["ADMIN"]))
+):
+    """
+    Soft delete a user by setting status to ARCHIVED (ADMIN only).
+    
+    The user is not removed from the database, only marked as archived.
+    Use include_archived=true query param to see archived users.
+    
+    Returns 404 if user not found.
+    """
+    from db.users import archive_user
+    
+    archived_user = await archive_user(user_id)
+    if not archived_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Resolve property name for response
+    property_name = None
+    if archived_user.property_id:
+        prop = property_service.get_property(db, archived_user.property_id)
+        if prop:
+            property_name = prop.name
+    
+    # subscription_status is null for non-CUSTOMER users in response
+    sub_status = archived_user.subscription_status if archived_user.role == UserRole.CUSTOMER else None
+    
+    return EnrichedUserResponse(
+        id=archived_user.id,
+        email=archived_user.email,
+        role=archived_user.role,
+        property_id=archived_user.property_id,
+        property_name=property_name,
+        subscription_status=sub_status,
+        created_at=archived_user.created_at
     )

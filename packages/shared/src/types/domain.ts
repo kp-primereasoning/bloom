@@ -166,6 +166,8 @@ export interface User {
   id: string;
   email: string;
   role: UserRole;
+  property_id: string | null;
+  subscription_status: SubscriptionStatus | null;
   created_at: string;
 }
 
@@ -201,4 +203,195 @@ export interface UpdateUserRequest {
   role?: UserRole;
   property_id?: string | null;
   subscription_status?: SubscriptionStatus;
+}
+
+
+// =============================================================================
+// Onboarding Types
+// =============================================================================
+
+/**
+ * Minimal property info for public listing during onboarding
+ */
+export interface PropertyListItem {
+  id: string;
+  name: string;
+  address: string;
+}
+
+/**
+ * Request body for customer self-registration
+ */
+export interface RegisterRequest {
+  email: string;
+  password: string;
+}
+
+/**
+ * Response from customer registration (same format as login)
+ */
+export interface RegisterResponse {
+  access_token: string;
+  token_type: string;
+  user: User;
+}
+
+/**
+ * Request body for customer property assignment
+ */
+export interface MePropertyUpdateRequest {
+  property_id: string;
+  unit: string;
+}
+
+/**
+ * Request body for customer subscription update
+ * Only ACTIVE or PAUSED allowed (not CREATED)
+ */
+export interface MeSubscriptionUpdateRequest {
+  subscription_status: 'ACTIVE' | 'PAUSED';
+}
+
+/**
+ * Request body for customer plan selection
+ */
+export interface MePlanUpdateRequest {
+  plan: 'ESSENTIAL' | 'SIGNATURE' | 'STATEMENT';
+}
+
+// =============================================================================
+// Customer Dashboard Types
+// =============================================================================
+
+/**
+ * Response from GET /auth/me with enriched property data for dashboard
+ * Includes property_name and property_address resolved server-side from property_id
+ */
+export interface MeResponse {
+  id: string;
+  email: string;
+  role: UserRole;
+  property_id: string | null;
+  property_name: string | null;
+  property_address: string | null;
+  unit: string | null;
+  subscription_status: SubscriptionStatus | null;
+  subscription_plan: SubscriptionPlan | null;
+  created_at: string;
+}
+
+// =============================================================================
+// Delivery Types
+// =============================================================================
+
+/**
+ * Subscription plan tiers
+ */
+export const SubscriptionPlan = {
+  ESSENTIAL: 'ESSENTIAL',   // Basic floral arrangement
+  SIGNATURE: 'SIGNATURE',   // Premium floral arrangement
+  STATEMENT: 'STATEMENT',   // Luxury floral arrangement
+} as const;
+
+export type SubscriptionPlan = (typeof SubscriptionPlan)[keyof typeof SubscriptionPlan];
+
+/**
+ * Delivery status lifecycle
+ */
+export const DeliveryStatus = {
+  SCHEDULED: 'SCHEDULED',   // Delivery is planned for a future date
+  DELIVERED: 'DELIVERED',   // Delivery was successfully completed
+  SKIPPED: 'SKIPPED',       // Customer chose to skip this delivery
+  MISSED: 'MISSED',         // Delivery was not completed
+} as const;
+
+export type DeliveryStatus = (typeof DeliveryStatus)[keyof typeof DeliveryStatus];
+
+/**
+ * Array of all subscription plans for iteration
+ */
+export const ALL_SUBSCRIPTION_PLANS = Object.values(SubscriptionPlan);
+
+/**
+ * Array of all delivery statuses for iteration
+ */
+export const ALL_DELIVERY_STATUSES = Object.values(DeliveryStatus);
+
+/**
+ * Delivery entity - a scheduled or completed floral delivery
+ */
+export interface Delivery {
+  id: string;
+  user_id: string;
+  property_id: string;
+  subscription_plan: SubscriptionPlan;
+  status: DeliveryStatus;
+  scheduled_for: string;
+  delivered_at: string | null;
+  created_at: string;
+  updated_at: string | null;
+}
+
+/**
+ * Response from GET /me/deliveries
+ * Contains next scheduled delivery and delivery history
+ */
+export interface MeDeliveriesResponse {
+  next_delivery: Delivery | null;
+  history: Delivery[];
+}
+
+// =============================================================================
+// Florist Dashboard Types
+// =============================================================================
+
+/**
+ * Assigned property info for florist dashboard
+ */
+export interface AssignedProperty {
+  property_id: string;
+  property_name: string;
+  property_address: string;
+}
+
+/**
+ * Response from GET /florist/me
+ * Returns florist profile with assigned properties
+ */
+export interface FloristMeResponse {
+  florist_id: string;
+  florist_name: string;
+  florist_status: FloristStatus;
+  assigned_properties: AssignedProperty[];
+}
+
+/**
+ * Delivery info for florist deliveries list
+ * Includes customer and property details for display
+ */
+export interface FloristDelivery {
+  id: string;
+  customer_email: string;
+  property_id: string;
+  property_name: string;
+  property_address: string;
+  subscription_plan: SubscriptionPlan;
+  status: DeliveryStatus;
+  scheduled_for: string;
+}
+
+/**
+ * Response from GET /florist/deliveries
+ * Returns list of upcoming deliveries for assigned properties
+ */
+export interface FloristDeliveriesListResponse {
+  deliveries: FloristDelivery[];
+}
+
+/**
+ * Request body for updating delivery status
+ * Only DELIVERED or MISSED allowed (florist actions)
+ */
+export interface UpdateDeliveryStatusRequest {
+  status: 'DELIVERED' | 'MISSED';
 }

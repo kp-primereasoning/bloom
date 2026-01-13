@@ -1,17 +1,22 @@
 """
-Authentication routes for login and user info.
+Authentication routes for login, registration, and user info.
 """
 
 import os
-from uuid import uuid4
+from datetime import datetime, timezone
+from uuid import uuid4, UUID
 
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel, EmailStr
+from sqlalchemy.orm import Session
 
 from auth.service import auth_service
 from auth.dependencies import get_current_user
-from db.users import get_user_by_email, get_user_by_role
-from models.user import UserRole, UserResponse
+from db.database import get_db
+from db.users import get_user_by_email, get_user_by_role, create_user, get_user_by_id
+from models.user import User, UserRole, UserResponse, SubscriptionStatus
+from schemas.domain import RegisterRequest, RegisterResponse, UserResponseWithOnboarding, MeResponseWithPropertyName
+from services import property_service
 
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -27,7 +32,61 @@ class LoginResponse(BaseModel):
     """Login response with token and user info."""
     access_token: str
     token_type: str = "bearer"
-    user: UserResponse
+    user: UserResponseWithOnboarding
+
+
+@router.post("/register", response_model=RegisterResponse, status_code=201)
+async def register(request: RegisterRequest):
+    """
+    Register a new customer account.
+    
+    Creates a user with role=CUSTOMER, subscription_status=CREATED, property_id=null.
+    Returns JWT token and user info (same format as login).
+    
+    Returns 409 if email already exists.
+    """
+    # Check for existing user
+    existing = await get_user_by_email(request.email)
+    if existing:
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "error": {
+                    "code": "EMAIL_EXISTS",
+                    "message": "Email already exists",
+                    "request_id": str(uuid4())
+                }
+            }
+        )
+    
+    # Hash password and create user
+    hashed_password = auth_service.hash_password(request.password)
+    new_user = User(
+        id=uuid4(),
+        email=request.email,
+        hashed_password=hashed_password,
+        role=UserRole.CUSTOMER,
+        property_id=None,
+        subscription_status=SubscriptionStatus.CREATED,
+        created_at=datetime.now(timezone.utc)
+    )
+    
+    await create_user(new_user)
+    
+    # Generate JWT
+    access_token = auth_service.create_access_token(new_user)
+    
+    return RegisterResponse(
+        access_token=access_token,
+        user=UserResponseWithOnboarding(
+            id=new_user.id,
+            email=new_user.email,
+            role=new_user.role,
+            property_id=new_user.property_id,
+            subscription_status=new_user.subscription_status,
+            created_at=new_user.created_at
+        )
+    )
 
 
 @router.post("/login", response_model=LoginResponse)
@@ -54,21 +113,27 @@ async def login(request: LoginRequest):
     access_token = auth_service.create_access_token(user)
     return LoginResponse(
         access_token=access_token,
-        user=UserResponse(
+        user=UserResponseWithOnboarding(
             id=user.id,
             email=user.email,
             role=user.role,
+            property_id=user.property_id,
+            subscription_status=user.subscription_status if user.role == UserRole.CUSTOMER else None,
             created_at=user.created_at
         )
     )
 
 
-@router.get("/me", response_model=UserResponse)
-async def get_me(current_user: dict = Depends(get_current_user)):
-    """Return current authenticated user."""
-    from db.users import get_user_by_id
-    from uuid import UUID
+@router.get("/me", response_model=MeResponseWithPropertyName)
+async def get_me(
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Return current authenticated user with enriched property data.
     
+    Includes property_name and property_address resolved from property_id for dashboard display.
+    """
     user = await get_user_by_id(UUID(current_user["id"]))
     if not user:
         raise HTTPException(
@@ -82,10 +147,24 @@ async def get_me(current_user: dict = Depends(get_current_user)):
             }
         )
     
-    return UserResponse(
+    # Resolve property_name and property_address if user has property_id
+    property_name = None
+    property_address = None
+    if user.property_id:
+        prop = property_service.get_property(db, user.property_id)
+        if prop:
+            property_name = prop.name
+            property_address = prop.address
+    
+    return MeResponseWithPropertyName(
         id=user.id,
         email=user.email,
         role=user.role,
+        property_id=user.property_id,
+        property_name=property_name,
+        property_address=property_address,
+        unit=getattr(user, 'unit', None),
+        subscription_status=user.subscription_status if user.role == UserRole.CUSTOMER else None,
         created_at=user.created_at
     )
 
@@ -134,10 +213,12 @@ if os.environ.get("ENVIRONMENT") == "development":
         access_token = auth_service.create_access_token(user)
         return LoginResponse(
             access_token=access_token,
-            user=UserResponse(
+            user=UserResponseWithOnboarding(
                 id=user.id,
                 email=user.email,
                 role=user.role,
+                property_id=user.property_id,
+                subscription_status=user.subscription_status if user.role == UserRole.CUSTOMER else None,
                 created_at=user.created_at
             )
         )

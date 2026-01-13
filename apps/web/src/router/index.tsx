@@ -1,18 +1,23 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { ProtectedRoute } from './ProtectedRoute';
+import { OnboardingGuard } from './OnboardingGuard';
 import { UserRole } from '@bloom/shared';
 
 // Auth pages
 import { LoginPage } from '@/pages/LoginPage';
 import { UnauthorizedPage } from '@/pages/UnauthorizedPage';
 
+// Onboarding pages
+import { RegisterPage, PropertyPage, SubscriptionPage as OnboardingSubscriptionPage } from '@/pages/onboarding';
+
 // Customer pages
 import {
   HomePage as CustomerHome,
-  SubscriptionPage,
+  SubscriptionPage as CustomerSubscriptionPage,
   DeliveriesPage as CustomerDeliveries,
   AccountPage,
+  HelpPage,
 } from '@/pages/customer';
 
 // Property Manager pages
@@ -48,6 +53,31 @@ export const router = createBrowserRouter([
     path: '/unauthorized',
     element: <UnauthorizedPage />,
   },
+  // Onboarding routes (with smart guard)
+  {
+    path: '/onboarding/register',
+    element: (
+      <OnboardingGuard>
+        <RegisterPage />
+      </OnboardingGuard>
+    ),
+  },
+  {
+    path: '/onboarding/property',
+    element: (
+      <OnboardingGuard>
+        <PropertyPage />
+      </OnboardingGuard>
+    ),
+  },
+  {
+    path: '/onboarding/subscription',
+    element: (
+      <OnboardingGuard>
+        <OnboardingSubscriptionPage />
+      </OnboardingGuard>
+    ),
+  },
   // Protected dashboard routes
   {
     path: '/',
@@ -79,7 +109,7 @@ export const router = createBrowserRouter([
         path: 'customer/subscription',
         element: (
           <ProtectedRoute allowedRoles={[UserRole.CUSTOMER]}>
-            <SubscriptionPage />
+            <CustomerSubscriptionPage />
           </ProtectedRoute>
         ),
       },
@@ -96,6 +126,14 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute allowedRoles={[UserRole.CUSTOMER]}>
             <AccountPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'customer/help',
+        element: (
+          <ProtectedRoute allowedRoles={[UserRole.CUSTOMER]}>
+            <HelpPage />
           </ProtectedRoute>
         ),
       },

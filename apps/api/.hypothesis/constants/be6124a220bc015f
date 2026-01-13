@@ -1,0 +1,4 @@
+# file: C:\Users\kpete\bloom-project\apps\api\services\property_service.py
+# hypothesis_version: 6.148.8
+
+[400, 404, 'INVALID_ROLE', 'NOT_FOUND', 'Property not found', 'User not found', 'active_users', 'address', 'code', 'created_at', 'delivery_cadence', 'error', 'florist_name', 'id', 'message', 'name', 'request_id', 'status', 'total_users', 'updated_at']

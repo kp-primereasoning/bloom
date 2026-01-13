@@ -1,0 +1,4 @@
+# file: C:\Users\kpete\bloom-project\apps\api\routes\me.py
+# hypothesis_version: 6.148.8
+
+[400, '/deliveries', '/me', '/plan', '/property', '/subscription', 'ACTIVE', 'CUSTOMER', 'ESSENTIAL', 'INVALID_PROPERTY', 'PAUSED', 'Property not found', 'SIGNATURE', 'STATEMENT', 'code', 'error', 'id', 'me', 'message', 'property_id', 'request_id', 'subscription_plan', 'subscription_status', 'unit']

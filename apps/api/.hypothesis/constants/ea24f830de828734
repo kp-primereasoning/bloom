@@ -1,0 +1,4 @@
+# file: C:\Users\kpete\bloom-project\apps\api\models\property.py
+# hypothesis_version: 6.148.8
+
+[100, 255, 500, 'ACTIVE', 'ARCHIVED', 'CREATED', 'PENDING_FLORIST', 'PENDING_PM', 'PropertyAssignment', 'all, delete-orphan', 'properties', 'property', 'propertystatus_v2', 'status']

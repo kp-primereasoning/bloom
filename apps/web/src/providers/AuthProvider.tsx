@@ -17,6 +17,8 @@ import { apiRequest, setAuthToken, clearAuthToken, getAuthToken } from '@/lib/ap
 interface AuthContextType extends AuthState {
   login: (credentials: LoginCredentials) => Promise<User>;
   logout: () => void;
+  refreshUser: () => Promise<void>;
+  setUser: (user: User) => void;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -93,8 +95,22 @@ export function AuthProvider({ children }: AuthProviderProps) {
     });
   }, []);
 
+  // Refresh user data from API
+  const refreshUser = useCallback(async () => {
+    await fetchCurrentUser();
+  }, [fetchCurrentUser]);
+
+  // Directly set user (for after registration/updates)
+  const setUser = useCallback((user: User) => {
+    setState({
+      user,
+      isAuthenticated: true,
+      isLoading: false,
+    });
+  }, []);
+
   return (
-    <AuthContext.Provider value={{ ...state, login, logout }}>
+    <AuthContext.Provider value={{ ...state, login, logout, refreshUser, setUser }}>
       {children}
     </AuthContext.Provider>
   );

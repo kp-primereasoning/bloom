@@ -1,0 +1,4 @@
+# file: C:\Users\kpete\bloom-project\apps\api\services\assignment_service.py
+# hypothesis_version: 6.148.8
+
+[400, 'Florist not found', 'NOT_FOUND', 'Property not found', 'VALIDATION_ERROR', 'active', 'code', 'error', 'message', 'request_id']

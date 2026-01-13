@@ -8,6 +8,8 @@ from typing import Optional
 from pydantic import BaseModel, EmailStr
 from uuid import UUID
 
+from models.delivery import SubscriptionPlan
+
 
 class UserRole(str, Enum):
     """User roles in the Bloom platform."""
@@ -15,6 +17,12 @@ class UserRole(str, Enum):
     PROPERTY_MANAGER = "PROPERTY_MANAGER"
     FLORIST = "FLORIST"
     ADMIN = "ADMIN"
+
+
+class UserStatus(str, Enum):
+    """User account status for soft delete support."""
+    ACTIVE = "ACTIVE"
+    ARCHIVED = "ARCHIVED"
 
 
 class SubscriptionStatus(str, Enum):
@@ -30,8 +38,12 @@ class User(BaseModel):
     email: EmailStr
     hashed_password: str
     role: UserRole
+    status: UserStatus = UserStatus.ACTIVE  # For soft delete
     property_id: Optional[UUID] = None  # Associated property (for residents)
+    unit: Optional[str] = None  # Unit number within the property
     subscription_status: SubscriptionStatus = SubscriptionStatus.CREATED
+    subscription_plan: Optional[SubscriptionPlan] = None  # Selected plan tier
+    florist_id: Optional[UUID] = None  # Associated florist (for FLORIST role users)
     created_at: datetime
 
 
@@ -40,6 +52,9 @@ class UserResponse(BaseModel):
     id: UUID
     email: EmailStr
     role: UserRole
+    status: UserStatus = UserStatus.ACTIVE
     property_id: Optional[UUID] = None
+    unit: Optional[str] = None
     subscription_status: SubscriptionStatus = SubscriptionStatus.CREATED
+    subscription_plan: Optional[SubscriptionPlan] = None
     created_at: datetime

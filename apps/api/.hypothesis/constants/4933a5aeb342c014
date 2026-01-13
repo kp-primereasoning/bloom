@@ -1,0 +1,4 @@
+# file: C:\Users\kpete\bloom-project\apps\api\models\user.py
+# hypothesis_version: 6.148.8
+
+['ACTIVE', 'ADMIN', 'CREATED', 'CUSTOMER', 'FLORIST', 'PAUSED', 'PROPERTY_MANAGER']

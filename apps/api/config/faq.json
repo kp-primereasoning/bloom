@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "items": [
+    {
+      "id": "change-subscription-plan",
+      "question": "How do I change my subscription plan?",
+      "answer_markdown": "You can change your subscription plan by navigating to the **Subscription** page in your dashboard. From there, you can view available plans and select a new one. Changes take effect on your next delivery cycle."
+    },
+    {
+      "id": "skip-delivery",
+      "question": "How do I skip a delivery?",
+      "answer_markdown": "To skip an upcoming delivery, please contact our support team at least 48 hours before your scheduled delivery date. We're working on adding self-service skip functionality soon!"
+    },
+    {
+      "id": "not-home-delivery",
+      "question": "What if I'm not home for my delivery?",
+      "answer_markdown": "No worries! Our florists will leave your arrangement in a safe location at your property's designated delivery area. If you have specific instructions, please let your property manager know."
+    },
+    {
+      "id": "contact-support",
+      "question": "How do I contact support?",
+      "answer_markdown": "You can reach our support team by email at [support@bloom.com](mailto:support@bloom.com?subject=Bloom%20Support). We typically respond within 24 hours on business days."
+    },
+    {
+      "id": "change-delivery-address",
+      "question": "Can I change my delivery address?",
+      "answer_markdown": "Bloom deliveries are tied to your property. If you've moved to a new property that participates in Bloom, please contact your **property manager** to update your account. If your new property doesn't have Bloom yet, ask them to get in touch with us!"
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+# file: C:\Users\kpete\bloom-project\apps\api\models\delivery.py
+# hypothesis_version: 6.148.8
+
+['DELIVERED', 'ESSENTIAL', 'MISSED', 'Property', 'SCHEDULED', 'SIGNATURE', 'SKIPPED', 'STATEMENT', 'deliveries', 'deliverystatus', 'properties.id', 'subscriptionplan']

@@ -1,127 +1,101 @@
 """
-Property test for property status transition rules.
-Feature: core-data-model, Property 3: Status Transition Rules
-Validates: Requirements 4.1, 4.2, 4.3, 4.4, 4.5
+Property test for property status computation rules.
+Feature: core-data-model, Property status is auto-computed based on assignments.
+Validates: Automatic status computation based on florist and PM assignments.
 """
 
 import os
 import sys
-from datetime import datetime, timezone
-from uuid import uuid4
 
 import pytest
-from hypothesis import given, settings, strategies as st, assume
+from hypothesis import given, settings, strategies as st
 
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from models.property import PropertyStatus
+from services.property_service import compute_property_status
 
 
-# Valid transitions map
-VALID_TRANSITIONS = {
-    PropertyStatus.DRAFT: [PropertyStatus.SUBMITTED],
-    PropertyStatus.SUBMITTED: [PropertyStatus.ACTIVE],
-    PropertyStatus.ACTIVE: [],
-}
-
-
-class TestStatusTransitionRules:
+class TestStatusComputationRules:
     """
-    Property 3: Status Transition Rules
-    
-    For any Property status transition:
-    - DRAFT → SUBMITTED is always allowed
-    - SUBMITTED → ACTIVE is allowed only when an active PropertyAssignment exists
-    - DRAFT → ACTIVE is never allowed (must go through SUBMITTED)
-    
-    All invalid transitions SHALL return a 400 error with code "BUSINESS_RULE_VIOLATION".
+    Property status is automatically computed based on assignments.
+
+    Rules:
+    - No florist + No PM -> CREATED
+    - Florist + No PM -> PENDING_PM
+    - No florist + PM -> PENDING_FLORIST
+    - Florist + PM -> ACTIVE
     """
-    
+
     @given(
-        current_status=st.sampled_from(list(PropertyStatus)),
-        target_status=st.sampled_from(list(PropertyStatus))
+        has_florist=st.booleans(),
+        has_pm=st.booleans()
     )
     @settings(max_examples=100)
-    def test_transition_validity_matrix(
-        self,
-        current_status: PropertyStatus,
-        target_status: PropertyStatus
-    ):
+    def test_status_computation_matrix(self, has_florist: bool, has_pm: bool):
         """
-        Test that the transition validity matrix is correctly defined.
-        
-        This tests the business logic rules without database interaction.
+        Test that status computation covers all boolean combinations.
         """
-        # Skip same-status "transitions"
-        assume(current_status != target_status)
-        
-        allowed = VALID_TRANSITIONS.get(current_status, [])
-        is_valid = target_status in allowed
-        
+        status = compute_property_status(has_florist, has_pm)
+
+        # Verify the status is always one of the valid enum values
+        assert status in PropertyStatus
+
         # Verify specific rules
-        if current_status == PropertyStatus.DRAFT:
-            if target_status == PropertyStatus.SUBMITTED:
-                assert is_valid, "DRAFT -> SUBMITTED should be valid"
-            elif target_status == PropertyStatus.ACTIVE:
-                assert not is_valid, "DRAFT -> ACTIVE should NOT be valid"
-        
-        elif current_status == PropertyStatus.SUBMITTED:
-            if target_status == PropertyStatus.ACTIVE:
-                assert is_valid, "SUBMITTED -> ACTIVE should be valid (with assignment)"
-            elif target_status == PropertyStatus.DRAFT:
-                assert not is_valid, "SUBMITTED -> DRAFT should NOT be valid"
-        
-        elif current_status == PropertyStatus.ACTIVE:
-            # No transitions from ACTIVE
-            assert not is_valid, f"ACTIVE -> {target_status.value} should NOT be valid"
-    
-    def test_draft_to_submitted_always_allowed(self):
-        """DRAFT -> SUBMITTED transition is always allowed without assignment."""
-        allowed = VALID_TRANSITIONS[PropertyStatus.DRAFT]
-        assert PropertyStatus.SUBMITTED in allowed
-    
-    def test_draft_to_active_never_allowed(self):
-        """DRAFT -> ACTIVE transition is never allowed (must go through SUBMITTED)."""
-        allowed = VALID_TRANSITIONS[PropertyStatus.DRAFT]
-        assert PropertyStatus.ACTIVE not in allowed
-    
-    def test_submitted_to_active_in_allowed_list(self):
-        """SUBMITTED -> ACTIVE is in the allowed list (requires assignment check at runtime)."""
-        allowed = VALID_TRANSITIONS[PropertyStatus.SUBMITTED]
-        assert PropertyStatus.ACTIVE in allowed
-    
-    def test_no_transitions_from_active(self):
-        """No transitions are allowed from ACTIVE status."""
-        allowed = VALID_TRANSITIONS[PropertyStatus.ACTIVE]
-        assert len(allowed) == 0
+        if has_florist and has_pm:
+            assert status == PropertyStatus.ACTIVE
+        elif has_florist and not has_pm:
+            assert status == PropertyStatus.PENDING_PM
+        elif not has_florist and has_pm:
+            assert status == PropertyStatus.PENDING_FLORIST
+        else:
+            assert status == PropertyStatus.CREATED
+
+    def test_no_assignments_returns_created(self):
+        """No florist + No PM -> CREATED"""
+        status = compute_property_status(has_florist=False, has_pm=False)
+        assert status == PropertyStatus.CREATED
+
+    def test_florist_only_returns_pending_pm(self):
+        """Florist + No PM -> PENDING_PM"""
+        status = compute_property_status(has_florist=True, has_pm=False)
+        assert status == PropertyStatus.PENDING_PM
+
+    def test_pm_only_returns_pending_florist(self):
+        """No florist + PM -> PENDING_FLORIST"""
+        status = compute_property_status(has_florist=False, has_pm=True)
+        assert status == PropertyStatus.PENDING_FLORIST
+
+    def test_both_assignments_returns_active(self):
+        """Florist + PM -> ACTIVE"""
+        status = compute_property_status(has_florist=True, has_pm=True)
+        assert status == PropertyStatus.ACTIVE
 
 
-class TestStatusTransitionIntegration:
+class TestStatusEnumValues:
     """
-    Integration tests for status transitions with mock database.
-    These tests verify the service layer behavior.
+    Tests that the PropertyStatus enum has the expected values.
     """
-    
-    def test_validate_transition_draft_to_submitted(self):
-        """DRAFT -> SUBMITTED should be allowed without assignment."""
-        from services.property_service import VALID_TRANSITIONS
-        
-        allowed = VALID_TRANSITIONS[PropertyStatus.DRAFT]
-        assert PropertyStatus.SUBMITTED in allowed
-    
-    def test_validate_transition_draft_to_active_blocked(self):
-        """DRAFT -> ACTIVE should be blocked."""
-        from services.property_service import VALID_TRANSITIONS
-        
-        allowed = VALID_TRANSITIONS[PropertyStatus.DRAFT]
-        assert PropertyStatus.ACTIVE not in allowed
-    
-    def test_validate_transition_submitted_to_active_requires_assignment(self):
-        """SUBMITTED -> ACTIVE requires an active assignment (tested at service level)."""
-        from services.property_service import VALID_TRANSITIONS
-        
-        # The transition is in the allowed list, but requires assignment check
-        allowed = VALID_TRANSITIONS[PropertyStatus.SUBMITTED]
-        assert PropertyStatus.ACTIVE in allowed
-        # Note: The actual assignment check happens in _validate_status_transition
+
+    def test_all_expected_statuses_exist(self):
+        """Verify all expected status values exist in the enum."""
+        expected = ["CREATED", "PENDING_FLORIST", "PENDING_PM", "ACTIVE", "ARCHIVED"]
+        for status_name in expected:
+            assert hasattr(PropertyStatus, status_name), f"Missing status: {status_name}"
+
+    def test_status_string_values(self):
+        """Verify status string values match names."""
+        assert PropertyStatus.CREATED.value == "CREATED"
+        assert PropertyStatus.PENDING_FLORIST.value == "PENDING_FLORIST"
+        assert PropertyStatus.PENDING_PM.value == "PENDING_PM"
+        assert PropertyStatus.ACTIVE.value == "ACTIVE"
+        assert PropertyStatus.ARCHIVED.value == "ARCHIVED"
+
+    def test_archived_is_separate_from_computation(self):
+        """ARCHIVED status is set via soft-delete, not computed."""
+        # compute_property_status never returns ARCHIVED
+        for has_florist in [True, False]:
+            for has_pm in [True, False]:
+                status = compute_property_status(has_florist, has_pm)
+                assert status != PropertyStatus.ARCHIVED

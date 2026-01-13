@@ -37,28 +37,28 @@ class TestEntityCreationDefaults:
     """
     Property 1: Entity Creation Defaults
     
-    For any newly created Property, Florist, or PropertyAssignment, 
+    For any newly created Property, Florist, or PropertyAssignment,
     the system SHALL set the correct default values:
-    - Property.status = DRAFT
+    - Property.status = CREATED
     - Florist.status = ONBOARDING
     - PropertyAssignment.active = true
     """
-    
+
     @given(
         name=property_name_strategy,
         address=address_strategy
     )
     @settings(max_examples=100)
-    def test_property_defaults_to_draft_status(self, name: str, address: str):
+    def test_property_defaults_to_created_status(self, name: str, address: str):
         """
         For any Property created with arbitrary name and address,
-        the status SHALL default to DRAFT.
+        the status SHALL default to CREATED.
         """
         prop = Property(name=name, address=address)
-        
-        # Status should default to DRAFT
-        assert prop.status == PropertyStatus.DRAFT, \
-            f"Property status should default to DRAFT, got {prop.status}"
+
+        # Status should default to CREATED
+        assert prop.status == PropertyStatus.CREATED, \
+            f"Property status should default to CREATED, got {prop.status}"
     
     @given(name=property_name_strategy)
     @settings(max_examples=100)
@@ -103,9 +103,9 @@ class TestEntityCreationExplicitValues:
         prop = Property(
             name="Test Property",
             address="123 Test St",
-            status=PropertyStatus.SUBMITTED
+            status=PropertyStatus.ACTIVE
         )
-        assert prop.status == PropertyStatus.SUBMITTED
+        assert prop.status == PropertyStatus.ACTIVE
     
     def test_florist_explicit_status_overrides_default(self):
         """Florist can be created with explicit status."""

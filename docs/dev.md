@@ -138,29 +138,250 @@ Ensure Docker Desktop is running before starting `pnpm dev:db`.
 | Web Frontend | Push to `main` | AWS Amplify |
 | API Backend | Push to `main` | AWS App Runner |
 
-### Environment Variables
+---
 
-Local and production use the same code. Only environment variables differ:
+## API Deployment (App Runner)
 
-| Variable | Local | Production |
-|----------|-------|------------|
-| `DATABASE_URL` | Local Postgres | RDS connection string |
-| `JWT_SECRET` | Dev secret | Secure production secret |
-| `ENVIRONMENT` | `development` | `production` |
-| `VITE_API_BASE_URL` | `http://localhost:8000` | Production API URL |
+### Automatic Deployment
 
-### Manual API Deployment (if needed)
+App Runner automatically deploys when:
+- Code is pushed to `main` branch
+- Container image is updated in ECR
 
-If App Runner auto-deploy is not configured:
+### Manual Deployment
+
+If auto-deploy is not configured or you need to force a deployment:
 
 ```bash
 cd apps/api
 ./deploy.sh
 ```
 
-### Verifying Production
+### Required Environment Variables
 
-After merge:
-1. Check Amplify console for web deployment status
-2. Check App Runner console for API deployment status
-3. Test production endpoints manually
+Configure these in App Runner console:
+
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `DATABASE_URL` | PostgreSQL connection string | Yes |
+| `JWT_SECRET` | Secret key for JWT signing | Yes |
+| `ENVIRONMENT` | `production` | Yes |
+| `SENTRY_DSN` | Sentry error tracking DSN | No |
+| `CORS_ORIGINS` | Comma-separated allowed origins | Yes |
+
+### Health Checks
+
+App Runner uses these endpoints for health monitoring:
+- `/health` - Basic API health (always returns 200)
+- `/health/db` - Database connectivity check (returns 200 if DB is reachable)
+
+---
+
+## Web Deployment (Amplify)
+
+### Automatic Deployment
+
+Amplify automatically deploys when code is pushed to `main` branch.
+
+Build configuration is in `amplify.yml`:
+- Installs pnpm and dependencies
+- Builds the web app with production settings
+- Outputs to `apps/web/dist`
+
+### Required Environment Variables
+
+Configure these in Amplify console:
+
+| Variable | Description |
+|----------|-------------|
+| `VITE_API_BASE_URL` | Production API URL (e.g., `https://api.bloom.example.com`) |
+
+### Build Settings
+
+The build runs from the monorepo root:
+```yaml
+build:
+  commands:
+    - npm install -g pnpm
+    - pnpm install
+    - pnpm --filter web build
+```
+
+---
+
+## Database Migrations
+
+### When Migrations Run
+
+Migrations run automatically on API startup via Alembic:
+- FastAPI startup event triggers migration check
+- Only pending migrations are applied
+- Safe to run multiple times (idempotent)
+
+### Manual Migration
+
+To run migrations manually:
+
+```bash
+# Local
+cd apps/api
+alembic upgrade head
+
+# Production (via App Runner exec or bastion)
+alembic upgrade head
+```
+
+### Creating New Migrations
+
+```bash
+cd apps/api
+alembic revision --autogenerate -m "description_of_change"
+```
+
+### Rollback
+
+To rollback the last migration:
+
+```bash
+alembic downgrade -1
+```
+
+To rollback to a specific revision:
+
+```bash
+alembic downgrade <revision_id>
+```
+
+---
+
+## Environment Variables Reference
+
+### Local vs Production
+
+| Variable | Local | Production |
+|----------|-------|------------|
+| `DATABASE_URL` | `postgresql://bloom:bloom@localhost:5432/bloom` | RDS connection string |
+| `JWT_SECRET` | `local-dev-secret-key-not-for-production` | Secure production secret |
+| `ENVIRONMENT` | `development` | `production` |
+| `SENTRY_DSN` | (optional) | Sentry project DSN |
+| `CORS_ORIGINS` | `http://localhost:5173` | Production frontend URL |
+| `VITE_API_BASE_URL` | `http://localhost:8000` | Production API URL |
+
+---
+
+## Post-Deployment Verification
+
+### Checklist
+
+After deploying to production, verify:
+
+1. **API Health**
+   ```bash
+   curl https://your-api-url/health
+   # Expected: {"status": "healthy"}
+   
+   curl https://your-api-url/health/db
+   # Expected: {"status": "healthy", "database": "connected"}
+   ```
+
+2. **Web App Loads**
+   - Navigate to production URL
+   - Verify login page renders
+   - Check browser console for errors
+
+3. **Authentication Works**
+   - Log in with test credentials
+   - Verify JWT token is returned
+   - Verify protected routes are accessible
+
+4. **Database Connectivity**
+   - Check `/health/db` returns 200
+   - Verify data loads on admin pages
+
+5. **Error Tracking (if Sentry configured)**
+   - Trigger a test error
+   - Verify it appears in Sentry dashboard
+
+---
+
+## Customer Onboarding Flow
+
+### Overview
+
+New customers can self-onboard through a 3-step flow:
+1. **Register** - Create account with email/password
+2. **Select Property** - Choose their apartment complex
+3. **Activate** - Confirm and activate subscription
+
+### Testing Locally
+
+1. Start the development stack:
+   ```bash
+   pnpm dev
+   ```
+
+2. Open the onboarding flow:
+   ```
+   http://localhost:5173/onboarding/register
+   ```
+
+3. Complete the flow:
+   - Enter email and password (min 6 characters)
+   - Select a property from the list
+   - Click "Activate Subscription"
+   - You'll be redirected to the customer dashboard
+
+### Deep Links from Marketing Site
+
+The marketing site can link directly to onboarding with pre-filled data:
+
+```
+https://your-app-url/onboarding/register?email=user@example.com&property_id=<uuid>
+```
+
+Query parameters:
+- `email` - Pre-fills the email field
+- `property_id` - Pre-selects the property (stored in sessionStorage)
+
+### API Endpoints
+
+| Endpoint | Method | Auth | Description |
+|----------|--------|------|-------------|
+| `/auth/register` | POST | Public | Create customer account |
+| `/properties` | GET | Public | List available properties |
+| `/me/property` | PATCH | Customer | Assign property to self |
+| `/me/subscription` | PATCH | Customer | Activate subscription |
+
+### Onboarding State Machine
+
+```
+CREATED (no property) → CREATED (with property) → ACTIVE
+                                                 → PAUSED
+```
+
+The routing guard automatically redirects customers based on their state:
+- No property → `/onboarding/property`
+- Status CREATED → `/onboarding/subscription`
+- Status ACTIVE/PAUSED → `/customer` dashboard
+
+### Smoke Test Commands
+
+```bash
+# Check API is responding
+curl -s https://your-api-url/health | jq .
+
+# Check DB connectivity
+curl -s https://your-api-url/health/db | jq .
+
+# Test login endpoint
+curl -s -X POST https://your-api-url/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@bloom.example.com","password":"bloom123"}' | jq .
+```
+
+### Monitoring
+
+- **Amplify Console**: Check build logs and deployment status
+- **App Runner Console**: Check service logs and metrics
+- **CloudWatch**: View API logs and set up alarms
+- **Sentry**: Monitor errors and performance (if configured)

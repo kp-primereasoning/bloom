@@ -79,9 +79,12 @@ def create_property(db: Session, data: PropertyCreate) -> Property:
     return prop
 
 
-def get_properties(db: Session) -> List[Property]:
-    """Get all properties."""
-    return db.query(Property).all()
+def get_properties(db: Session, include_archived: bool = False) -> List[Property]:
+    """Get all properties, excluding ARCHIVED by default."""
+    query = db.query(Property)
+    if not include_archived:
+        query = query.filter(Property.status != PropertyStatus.ARCHIVED)
+    return query.all()
 
 
 def get_property(db: Session, property_id: UUID) -> Optional[Property]:
@@ -204,7 +207,7 @@ def assign_property_manager(
 
 
 
-async def get_enriched_properties(db: Session) -> List[dict]:
+async def get_enriched_properties(db: Session, include_archived: bool = False) -> List[dict]:
     """
     Get all properties with enriched data for admin table.
     
@@ -216,6 +219,7 @@ async def get_enriched_properties(db: Session) -> List[dict]:
     
     Args:
         db: Database session
+        include_archived: Include ARCHIVED properties (default: False)
         
     Returns:
         List of enriched property dictionaries
@@ -225,7 +229,7 @@ async def get_enriched_properties(db: Session) -> List[dict]:
     from models.florist import Florist
     
     # Get all properties
-    properties = get_properties(db)
+    properties = get_properties(db, include_archived=include_archived)
     
     # Get all users for counting
     all_users = await get_all_users()
@@ -272,3 +276,37 @@ async def get_enriched_properties(db: Session) -> List[dict]:
         })
     
     return enriched
+
+
+def archive_property(db: Session, property_id: UUID, request_id: str) -> Property:
+    """
+    Soft delete a property by setting status to ARCHIVED.
+    
+    Args:
+        db: Database session
+        property_id: ID of property to archive
+        request_id: Request ID for error tracking
+        
+    Returns:
+        Archived property
+        
+    Raises:
+        HTTPException: If property not found
+    """
+    prop = get_property(db, property_id)
+    if not prop:
+        raise HTTPException(
+            status_code=404,
+            detail={
+                "error": {
+                    "code": "NOT_FOUND",
+                    "message": "Property not found",
+                    "request_id": request_id
+                }
+            }
+        )
+    
+    prop.status = PropertyStatus.ARCHIVED
+    db.commit()
+    db.refresh(prop)
+    return prop
