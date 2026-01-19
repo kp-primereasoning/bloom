@@ -8,6 +8,7 @@ This file tracks all features, components, and infrastructure built for the Bloo
 
 | Date | What Was Built | What It Does |
 |------|----------------|--------------|
+| 2026-01-19 | AWS Infrastructure Integration | Complete AWS service integration: Cognito authentication (with feature flag), S3 presigned URLs for delivery photos, SES email notifications, Secrets Manager for credentials, CloudWatch logging with JSON format; Enhanced /health/full endpoint; Connection test and user migration scripts; 73 property-based tests |
 | 2026-01-13 | System Design Document | Comprehensive markdown documentation of the Bloom platform architecture, data models, API endpoints, frontend pages, user roles, and business rules at docs/system-design.md |
 | 2026-01-12 | Florist Onboarding Steps | Settings page onboarding section with 3 step cards (Link Store, Link Products, Turn on Deliveries); StepCard component with completion indicators; Modal components for each step with prerequisite validation; localStorage state persistence; Success state when all steps complete; 29 tests including 5 property-based tests |
 | 2026-01-06 | Florist Dashboard | Complete florist dashboard with 4 pages: Deliveries (view/mark delivered/missed), Settings (profile, assigned properties, Shopify placeholder), Availability (capacity/windows placeholders), Products (tier mapping placeholder); Backend: GET /florist/me, GET /florist/deliveries, PATCH /florist/deliveries/{id} endpoints with FLORIST role enforcement; 36 backend property tests, 29 frontend unit tests |

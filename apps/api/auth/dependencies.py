@@ -1,8 +1,12 @@
 """
 FastAPI dependencies for authentication and authorization.
+
+This module provides a unified authentication interface that switches
+between custom JWT and Cognito based on the USE_COGNITO feature flag.
 """
 
-from typing import Callable
+import logging
+from typing import Callable, Optional
 from uuid import uuid4
 
 from fastapi import Depends, HTTPException
@@ -11,19 +15,21 @@ from jose import JWTError
 
 from auth.service import auth_service
 
+logger = logging.getLogger(__name__)
 
 security = HTTPBearer()
 
 
-async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
+def _use_cognito() -> bool:
+    """Check if Cognito authentication is enabled."""
+    from services.aws.config import get_aws_settings
+    return get_aws_settings().use_cognito
+
+
+async def _get_current_user_jwt(
+    credentials: HTTPAuthorizationCredentials,
 ) -> dict:
-    """
-    FastAPI dependency to extract and validate current user from JWT.
-    
-    Returns user dict with id, email, and role.
-    Raises 401 if token is invalid or expired.
-    """
+    """Validate user using custom JWT authentication."""
     request_id = str(uuid4())
     try:
         payload = auth_service.verify_token(credentials.credentials)
@@ -43,6 +49,34 @@ async def get_current_user(
                 }
             }
         )
+
+
+async def _get_current_user_cognito(
+    credentials: HTTPAuthorizationCredentials,
+) -> dict:
+    """Validate user using Cognito JWT authentication."""
+    from auth.cognito_dependencies import get_current_user_cognito
+    return await get_current_user_cognito(credentials)
+
+
+async def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+) -> dict:
+    """
+    FastAPI dependency to extract and validate current user from JWT.
+    
+    Automatically switches between custom JWT and Cognito based on
+    the USE_COGNITO feature flag.
+    
+    Returns user dict with id, email, and role.
+    Raises 401 if token is invalid or expired.
+    """
+    if _use_cognito():
+        logger.debug("Using Cognito authentication")
+        return await _get_current_user_cognito(credentials)
+    else:
+        logger.debug("Using custom JWT authentication")
+        return await _get_current_user_jwt(credentials)
 
 
 def require_role(allowed_roles: list[str]) -> Callable:

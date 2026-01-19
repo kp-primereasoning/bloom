@@ -1,7 +1,11 @@
 """
 Authentication routes for login, registration, and user info.
+
+Supports both custom JWT and AWS Cognito authentication based on
+the USE_COGNITO feature flag.
 """
 
+import logging
 import os
 from datetime import datetime, timezone
 from uuid import uuid4, UUID
@@ -18,8 +22,15 @@ from models.user import User, UserRole, UserResponse, SubscriptionStatus
 from schemas.domain import RegisterRequest, RegisterResponse, UserResponseWithOnboarding, MeResponseWithPropertyName
 from services import property_service
 
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+
+
+def _use_cognito() -> bool:
+    """Check if Cognito authentication is enabled."""
+    from services.aws.config import get_aws_settings
+    return get_aws_settings().use_cognito
 
 
 class LoginRequest(BaseModel):
@@ -33,6 +44,19 @@ class LoginResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
     user: UserResponseWithOnboarding
+    refresh_token: str | None = None
+
+
+class RefreshRequest(BaseModel):
+    """Token refresh request body."""
+    refresh_token: str
+
+
+class RefreshResponse(BaseModel):
+    """Token refresh response."""
+    access_token: str
+    token_type: str = "bearer"
+    expires_in: int = 3600
 
 
 @router.post("/register", response_model=RegisterResponse, status_code=201)
@@ -40,12 +64,13 @@ async def register(request: RegisterRequest):
     """
     Register a new customer account.
     
-    Creates a user with role=CUSTOMER, subscription_status=CREATED, property_id=null.
-    Returns JWT token and user info (same format as login).
+    When USE_COGNITO=true, creates user in Cognito and local DB.
+    When USE_COGNITO=false, creates user in local DB only with custom JWT.
     
+    Returns JWT token and user info (same format as login).
     Returns 409 if email already exists.
     """
-    # Check for existing user
+    # Check for existing user in local DB
     existing = await get_user_by_email(request.email)
     if existing:
         raise HTTPException(
@@ -59,10 +84,69 @@ async def register(request: RegisterRequest):
             }
         )
     
-    # Hash password and create user
+    user_id = uuid4()
+    access_token = None
+    
+    if _use_cognito():
+        # Register with Cognito
+        from services.aws.cognito import get_cognito_client
+        from botocore.exceptions import ClientError
+        
+        cognito = get_cognito_client()
+        if cognito is None:
+            raise HTTPException(
+                status_code=503,
+                detail={
+                    "error": {
+                        "code": "SERVICE_UNAVAILABLE",
+                        "message": "Authentication service not available",
+                        "request_id": str(uuid4())
+                    }
+                }
+            )
+        
+        try:
+            # Register in Cognito
+            cognito_result = cognito.register(
+                email=request.email,
+                password=request.password,
+                role="CUSTOMER",
+            )
+            user_id = UUID(cognito_result["user_sub"])
+            
+            # Login to get tokens
+            tokens = cognito.login(request.email, request.password)
+            access_token = tokens["access_token"]
+            
+        except ClientError as e:
+            error_code = e.response.get("Error", {}).get("Code", "Unknown")
+            if error_code == "UsernameExistsException":
+                raise HTTPException(
+                    status_code=409,
+                    detail={
+                        "error": {
+                            "code": "EMAIL_EXISTS",
+                            "message": "Email already exists",
+                            "request_id": str(uuid4())
+                        }
+                    }
+                )
+            logger.error(f"Cognito registration failed: {error_code}")
+            raise HTTPException(
+                status_code=500,
+                detail={
+                    "error": {
+                        "code": "REGISTRATION_FAILED",
+                        "message": "Registration failed",
+                        "request_id": str(uuid4())
+                    }
+                }
+            )
+    
+    # Create user in local DB (for both Cognito and non-Cognito modes)
     hashed_password = auth_service.hash_password(request.password)
     new_user = User(
-        id=uuid4(),
+        id=user_id,
         email=request.email,
         hashed_password=hashed_password,
         role=UserRole.CUSTOMER,
@@ -73,8 +157,9 @@ async def register(request: RegisterRequest):
     
     await create_user(new_user)
     
-    # Generate JWT
-    access_token = auth_service.create_access_token(new_user)
+    # Generate custom JWT if not using Cognito
+    if access_token is None:
+        access_token = auth_service.create_access_token(new_user)
     
     return RegisterResponse(
         access_token=access_token,
@@ -94,25 +179,95 @@ async def login(request: LoginRequest):
     """
     Authenticate user and return JWT with user info.
     
+    When USE_COGNITO=true, authenticates against Cognito.
+    When USE_COGNITO=false, authenticates against local DB.
+    
     Returns 401 if credentials are invalid.
     """
-    user = await get_user_by_email(request.email)
+    access_token = None
+    refresh_token = None
     
-    if not user or not auth_service.verify_password(request.password, user.hashed_password):
+    if _use_cognito():
+        # Authenticate with Cognito
+        from services.aws.cognito import get_cognito_client
+        from botocore.exceptions import ClientError
+        
+        cognito = get_cognito_client()
+        if cognito is None:
+            raise HTTPException(
+                status_code=503,
+                detail={
+                    "error": {
+                        "code": "SERVICE_UNAVAILABLE",
+                        "message": "Authentication service not available",
+                        "request_id": str(uuid4())
+                    }
+                }
+            )
+        
+        try:
+            tokens = cognito.login(request.email, request.password)
+            access_token = tokens["access_token"]
+            refresh_token = tokens.get("refresh_token")
+        except ClientError as e:
+            error_code = e.response.get("Error", {}).get("Code", "Unknown")
+            if error_code in ["NotAuthorizedException", "UserNotFoundException"]:
+                raise HTTPException(
+                    status_code=401,
+                    detail={
+                        "error": {
+                            "code": "INVALID_CREDENTIALS",
+                            "message": "Invalid email or password",
+                            "request_id": str(uuid4())
+                        }
+                    }
+                )
+            logger.error(f"Cognito login failed: {error_code}")
+            raise HTTPException(
+                status_code=500,
+                detail={
+                    "error": {
+                        "code": "LOGIN_FAILED",
+                        "message": "Login failed",
+                        "request_id": str(uuid4())
+                    }
+                }
+            )
+    else:
+        # Authenticate with local DB
+        user = await get_user_by_email(request.email)
+        
+        if not user or not auth_service.verify_password(request.password, user.hashed_password):
+            raise HTTPException(
+                status_code=401,
+                detail={
+                    "error": {
+                        "code": "INVALID_CREDENTIALS",
+                        "message": "Invalid email or password",
+                        "request_id": str(uuid4())
+                    }
+                }
+            )
+        
+        access_token = auth_service.create_access_token(user)
+    
+    # Get user from local DB for response
+    user = await get_user_by_email(request.email)
+    if not user:
         raise HTTPException(
-            status_code=401,
+            status_code=404,
             detail={
                 "error": {
-                    "code": "INVALID_CREDENTIALS",
-                    "message": "Invalid email or password",
+                    "code": "USER_NOT_FOUND",
+                    "message": "User not found in database",
                     "request_id": str(uuid4())
                 }
             }
         )
     
-    access_token = auth_service.create_access_token(user)
     return LoginResponse(
         access_token=access_token,
+        refresh_token=refresh_token,
         user=UserResponseWithOnboarding(
             id=user.id,
             email=user.email,
@@ -122,6 +277,73 @@ async def login(request: LoginRequest):
             created_at=user.created_at
         )
     )
+
+
+@router.post("/refresh", response_model=RefreshResponse)
+async def refresh(request: RefreshRequest):
+    """
+    Refresh access token using refresh token.
+    
+    Only available when USE_COGNITO=true. Returns 400 when using custom JWT.
+    """
+    if not _use_cognito():
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error": {
+                    "code": "NOT_SUPPORTED",
+                    "message": "Token refresh not supported with custom JWT authentication",
+                    "request_id": str(uuid4())
+                }
+            }
+        )
+    
+    from services.aws.cognito import get_cognito_client
+    from botocore.exceptions import ClientError
+    
+    cognito = get_cognito_client()
+    if cognito is None:
+        raise HTTPException(
+            status_code=503,
+            detail={
+                "error": {
+                    "code": "SERVICE_UNAVAILABLE",
+                    "message": "Authentication service not available",
+                    "request_id": str(uuid4())
+                }
+            }
+        )
+    
+    try:
+        tokens = cognito.refresh_token(request.refresh_token)
+        return RefreshResponse(
+            access_token=tokens["access_token"],
+            expires_in=tokens.get("expires_in", 3600),
+        )
+    except ClientError as e:
+        error_code = e.response.get("Error", {}).get("Code", "Unknown")
+        if error_code == "NotAuthorizedException":
+            raise HTTPException(
+                status_code=401,
+                detail={
+                    "error": {
+                        "code": "INVALID_REFRESH_TOKEN",
+                        "message": "Invalid or expired refresh token",
+                        "request_id": str(uuid4())
+                    }
+                }
+            )
+        logger.error(f"Token refresh failed: {error_code}")
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error": {
+                    "code": "REFRESH_FAILED",
+                    "message": "Token refresh failed",
+                    "request_id": str(uuid4())
+                }
+            }
+        )
 
 
 @router.get("/me", response_model=MeResponseWithPropertyName)

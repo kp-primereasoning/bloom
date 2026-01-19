@@ -22,6 +22,7 @@ from routes.health import router as health_router
 from routes.properties import router as properties_router
 from routes.me import router as me_router
 from routes.public import router as public_router
+from routes.deliveries import router as deliveries_router
 
 
 # Initialize Sentry if configured
@@ -171,3 +172,4 @@ app.include_router(health_router)
 app.include_router(properties_router)
 app.include_router(me_router)
 app.include_router(public_router)
+app.include_router(deliveries_router)
