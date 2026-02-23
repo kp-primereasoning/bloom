@@ -1,1 +1,45 @@
+# Dependencies
 node_modules
+
+# Environment files (may contain secrets)
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Python
+__pycache__
+*.pyc
+.pytest_cache
+.hypothesis
+
+# IDE
+.vscode
+.idea
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build outputs
+dist
+.next
+*.zip
+
+# AWS CLI config artifacts (contain account IDs, ARNs, credentials)
+apprunner-config.json
+apprunner-simple.json
+create-service.json
+update-service*.json
+update-cors.json
+update-network.json
+update-source-config.json
+cf-config.json
+bucket-policy.json
+
+# Database
+*.db
+*.db-journal
+
+# Logs
+*.log

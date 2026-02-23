@@ -1,0 +1,42 @@
+// Prisma schema for Shopify session storage
+// This stores OAuth sessions for installed shops
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Session {
+  id            String    @id
+  shop          String
+  state         String
+  isOnline      Boolean   @default(false)
+  scope         String?
+  expires       DateTime?
+  accessToken   String
+  userId        BigInt?
+  firstName     String?
+  lastName      String?
+  email         String?
+  accountOwner  Boolean   @default(false)
+  locale        String?
+  collaborator  Boolean?  @default(false)
+  emailVerified Boolean?  @default(false)
+}
+
+// Track which shops have connected to Bloom
+model ShopConnection {
+  id          String    @id @default(cuid())
+  shop        String    @unique
+  bloomApiKey String    // Encrypted Bloom API key
+  floristId   String?   // Bloom florist ID once validated
+  floristName String?   // Cached florist name for display
+  syncedAt    DateTime? // Last successful product sync
+  syncedCount Int       @default(0) // Number of products last synced
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}

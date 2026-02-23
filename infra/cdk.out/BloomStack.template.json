@@ -1,0 +1,1686 @@
+{
+ "Description": "Bloom floral subscription platform — MLP infrastructure",
+ "Resources": {
+  "BloomVpc466B2B9C": {
+   "Type": "AWS::EC2::VPC",
+   "Properties": {
+    "CidrBlock": "10.0.0.0/16",
+    "EnableDnsHostnames": true,
+    "EnableDnsSupport": true,
+    "InstanceTenancy": "default",
+    "Tags": [
+     {
+      "Key": "Name",
+      "Value": "BloomStack/BloomVpc"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "BloomStack/BloomVpc/Resource"
+   }
+  },
+  "BloomVpcPublicSubnet1Subnet7D961ACC": {
+   "Type": "AWS::EC2::Subnet",
+   "Properties": {
+    "AvailabilityZone": {
+     "Fn::Select": [
+      0,
+      {
+       "Fn::GetAZs": ""
+      }
+     ]
+    },
+    "CidrBlock": "10.0.0.0/24",
+    "MapPublicIpOnLaunch": true,
+    "Tags": [
+     {
+      "Key": "aws-cdk:subnet-name",
+      "Value": "Public"
+     },
+     {
+      "Key": "aws-cdk:subnet-type",
+      "Value": "Public"
+     },
+     {
+      "Key": "Name",
+      "Value": "BloomStack/BloomVpc/PublicSubnet1"
+     }
+    ],
+    "VpcId": {
+     "Ref": "BloomVpc466B2B9C"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "BloomStack/BloomVpc/PublicSubnet1/Subnet"
+   }
+  },
+  "BloomVpcPublicSubnet1RouteTable4F37F5A9": {
+   "Type": "AWS::EC2::RouteTable",
+   "Properties": {
+    "Tags": [
+     {
+      "Key": "Name",
+      "Value": "BloomStack/BloomVpc/PublicSubnet1"
+     }
+    ],
+    "VpcId": {
+     "Ref": "BloomVpc466B2B9C"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "BloomStack/BloomVpc/PublicSubnet1/RouteTable"
+   }
+  },
+  "BloomVpcPublicSubnet1RouteTableAssociationF862ABF0": {
+   "Type": "AWS::EC2::SubnetRouteTableAssociation",
+   "Properties": {
+    "RouteTableId": {
+     "Ref": "BloomVpcPublicSubnet1RouteTable4F37F5A9"
+    },
+    "SubnetId": {
+     "Ref": "BloomVpcPublicSubnet1Subnet7D961ACC"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "BloomStack/BloomVpc/PublicSubnet1/RouteTableAssociation"
+   }
+  },
+  "BloomVpcPublicSubnet1DefaultRoute8DD7EDD6": {
+   "Type": "AWS::EC2::Route",
+   "Properties": {
+    "DestinationCidrBlock": "0.0.0.0/0",
+    "GatewayId": {
+     "Ref": "BloomVpcIGW00274E45"
+    },
+    "RouteTableId": {
+     "Ref": "BloomVpcPublicSubnet1RouteTable4F37F5A9"
+    }
+   },
+   "DependsOn": [
+    "BloomVpcVPCGW9DD389C0"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "BloomStack/BloomVpc/PublicSubnet1/DefaultRoute"
+   }
+  },
+  "BloomVpcPublicSubnet1EIPE95B6C0B": {
+   "Type": "AWS::EC2::EIP",
+   "Properties": {
+    "Domain": "vpc",
+    "Tags": [
+     {
+      "Key": "Name",
+      "Value": "BloomStack/BloomVpc/PublicSubnet1"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "BloomStack/BloomVpc/PublicSubnet1/EIP"
+   }
+  },
+  "BloomVpcPublicSubnet1NATGateway996926A0": {
+   "Type": "AWS::EC2::NatGateway",
+   "Properties": {
+    "AllocationId": {
+     "Fn::GetAtt": [
+      "BloomVpcPublicSubnet1EIPE95B6C0B",
+      "AllocationId"
+     ]
+    },
+    "SubnetId": {
+     "Ref": "BloomVpcPublicSubnet1Subnet7D961ACC"
+    },
+    "Tags": [
+     {
+      "Key": "Name",
+      "Value": "BloomStack/BloomVpc/PublicSubnet1"
+     }
+    ]
+   },
+   "DependsOn": [
+    "BloomVpcPublicSubnet1DefaultRoute8DD7EDD6",
+    "BloomVpcPublicSubnet1RouteTableAssociationF862ABF0"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "BloomStack/BloomVpc/PublicSubnet1/NATGateway"
+   }
+  },
+  "BloomVpcPublicSubnet2SubnetF67FDA60": {
+   "Type": "AWS::EC2::Subnet",
+   "Properties": {
+    "AvailabilityZone": {
+     "Fn::Select": [
+      1,
+      {
+       "Fn::GetAZs": ""
+      }
+     ]
+    },
+    "CidrBlock": "10.0.1.0/24",
+    "MapPublicIpOnLaunch": true,
+    "Tags": [
+     {
+      "Key": "aws-cdk:subnet-name",
+      "Value": "Public"
+     },
+     {
+      "Key": "aws-cdk:subnet-type",
+      "Value": "Public"
+     },
+     {
+      "Key": "Name",
+      "Value": "BloomStack/BloomVpc/PublicSubnet2"
+     }
+    ],
+    "VpcId": {
+     "Ref": "BloomVpc466B2B9C"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "BloomStack/BloomVpc/PublicSubnet2/Subnet"
+   }
+  },
+  "BloomVpcPublicSubnet2RouteTableB7F7DDAC": {
+   "Type": "AWS::EC2::RouteTable",
+   "Properties": {
+    "Tags": [
+     {
+      "Key": "Name",
+      "Value": "BloomStack/BloomVpc/PublicSubnet2"
+     }
+    ],
+    "VpcId": {
+     "Ref": "BloomVpc466B2B9C"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "BloomStack/BloomVpc/PublicSubnet2/RouteTable"
+   }
+  },
+  "BloomVpcPublicSubnet2RouteTableAssociationF1F1180E": {
+   "Type": "AWS::EC2::SubnetRouteTableAssociation",
+   "Properties": {
+    "RouteTableId": {
+     "Ref": "BloomVpcPublicSubnet2RouteTableB7F7DDAC"
+    },
+    "SubnetId": {
+     "Ref": "BloomVpcPublicSubnet2SubnetF67FDA60"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "BloomStack/BloomVpc/PublicSubnet2/RouteTableAssociation"
+   }
+  },
+  "BloomVpcPublicSubnet2DefaultRoute1E1D8E67": {
+   "Type": "AWS::EC2::Route",
+   "Properties": {
+    "DestinationCidrBlock": "0.0.0.0/0",
+    "GatewayId": {
+     "Ref": "BloomVpcIGW00274E45"
+    },
+    "RouteTableId": {
+     "Ref": "BloomVpcPublicSubnet2RouteTableB7F7DDAC"
+    }
+   },
+   "DependsOn": [
+    "BloomVpcVPCGW9DD389C0"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "BloomStack/BloomVpc/PublicSubnet2/DefaultRoute"
+   }
+  },
+  "BloomVpcPrivateSubnet1SubnetAE431CA6": {
+   "Type": "AWS::EC2::Subnet",
+   "Properties": {
+    "AvailabilityZone": {
+     "Fn::Select": [
+      0,
+      {
+       "Fn::GetAZs": ""
+      }
+     ]
+    },
+    "CidrBlock": "10.0.2.0/24",
+    "MapPublicIpOnLaunch": false,
+    "Tags": [
+     {
+      "Key": "aws-cdk:subnet-name",
+      "Value": "Private"
+     },
+     {
+      "Key": "aws-cdk:subnet-type",
+      "Value": "Private"
+     },
+     {
+      "Key": "Name",
+      "Value": "BloomStack/BloomVpc/PrivateSubnet1"
+     }
+    ],
+    "VpcId": {
+     "Ref": "BloomVpc466B2B9C"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "BloomStack/BloomVpc/PrivateSubnet1/Subnet"
+   }
+  },
+  "BloomVpcPrivateSubnet1RouteTable738CBD8E": {
+   "Type": "AWS::EC2::RouteTable",
+   "Properties": {
+    "Tags": [
+     {
+      "Key": "Name",
+      "Value": "BloomStack/BloomVpc/PrivateSubnet1"
+     }
+    ],
+    "VpcId": {
+     "Ref": "BloomVpc466B2B9C"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "BloomStack/BloomVpc/PrivateSubnet1/RouteTable"
+   }
+  },
+  "BloomVpcPrivateSubnet1RouteTableAssociation4727934C": {
+   "Type": "AWS::EC2::SubnetRouteTableAssociation",
+   "Properties": {
+    "RouteTableId": {
+     "Ref": "BloomVpcPrivateSubnet1RouteTable738CBD8E"
+    },
+    "SubnetId": {
+     "Ref": "BloomVpcPrivateSubnet1SubnetAE431CA6"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "BloomStack/BloomVpc/PrivateSubnet1/RouteTableAssociation"
+   }
+  },
+  "BloomVpcPrivateSubnet1DefaultRoute12A083A4": {
+   "Type": "AWS::EC2::Route",
+   "Properties": {
+    "DestinationCidrBlock": "0.0.0.0/0",
+    "NatGatewayId": {
+     "Ref": "BloomVpcPublicSubnet1NATGateway996926A0"
+    },
+    "RouteTableId": {
+     "Ref": "BloomVpcPrivateSubnet1RouteTable738CBD8E"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "BloomStack/BloomVpc/PrivateSubnet1/DefaultRoute"
+   }
+  },
+  "BloomVpcPrivateSubnet2Subnet78657C21": {
+   "Type": "AWS::EC2::Subnet",
+   "Properties": {
+    "AvailabilityZone": {
+     "Fn::Select": [
+      1,
+      {
+       "Fn::GetAZs": ""
+      }
+     ]
+    },
+    "CidrBlock": "10.0.3.0/24",
+    "MapPublicIpOnLaunch": false,
+    "Tags": [
+     {
+      "Key": "aws-cdk:subnet-name",
+      "Value": "Private"
+     },
+     {
+      "Key": "aws-cdk:subnet-type",
+      "Value": "Private"
+     },
+     {
+      "Key": "Name",
+      "Value": "BloomStack/BloomVpc/PrivateSubnet2"
+     }
+    ],
+    "VpcId": {
+     "Ref": "BloomVpc466B2B9C"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "BloomStack/BloomVpc/PrivateSubnet2/Subnet"
+   }
+  },
+  "BloomVpcPrivateSubnet2RouteTable4D400FB0": {
+   "Type": "AWS::EC2::RouteTable",
+   "Properties": {
+    "Tags": [
+     {
+      "Key": "Name",
+      "Value": "BloomStack/BloomVpc/PrivateSubnet2"
+     }
+    ],
+    "VpcId": {
+     "Ref": "BloomVpc466B2B9C"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "BloomStack/BloomVpc/PrivateSubnet2/RouteTable"
+   }
+  },
+  "BloomVpcPrivateSubnet2RouteTableAssociationB29D7303": {
+   "Type": "AWS::EC2::SubnetRouteTableAssociation",
+   "Properties": {
+    "RouteTableId": {
+     "Ref": "BloomVpcPrivateSubnet2RouteTable4D400FB0"
+    },
+    "SubnetId": {
+     "Ref": "BloomVpcPrivateSubnet2Subnet78657C21"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "BloomStack/BloomVpc/PrivateSubnet2/RouteTableAssociation"
+   }
+  },
+  "BloomVpcPrivateSubnet2DefaultRoute2D2FD3FB": {
+   "Type": "AWS::EC2::Route",
+   "Properties": {
+    "DestinationCidrBlock": "0.0.0.0/0",
+    "NatGatewayId": {
+     "Ref": "BloomVpcPublicSubnet1NATGateway996926A0"
+    },
+    "RouteTableId": {
+     "Ref": "BloomVpcPrivateSubnet2RouteTable4D400FB0"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "BloomStack/BloomVpc/PrivateSubnet2/DefaultRoute"
+   }
+  },
+  "BloomVpcIGW00274E45": {
+   "Type": "AWS::EC2::InternetGateway",
+   "Properties": {
+    "Tags": [
+     {
+      "Key": "Name",
+      "Value": "BloomStack/BloomVpc"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "BloomStack/BloomVpc/IGW"
+   }
+  },
+  "BloomVpcVPCGW9DD389C0": {
+   "Type": "AWS::EC2::VPCGatewayAttachment",
+   "Properties": {
+    "InternetGatewayId": {
+     "Ref": "BloomVpcIGW00274E45"
+    },
+    "VpcId": {
+     "Ref": "BloomVpc466B2B9C"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "BloomStack/BloomVpc/VPCGW"
+   }
+  },
+  "DbSg495F8305": {
+   "Type": "AWS::EC2::SecurityGroup",
+   "Properties": {
+    "GroupDescription": "RDS PostgreSQL",
+    "SecurityGroupEgress": [
+     {
+      "CidrIp": "0.0.0.0/0",
+      "Description": "Allow all outbound traffic by default",
+      "IpProtocol": "-1"
+     }
+    ],
+    "VpcId": {
+     "Ref": "BloomVpc466B2B9C"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "BloomStack/DbSg/Resource"
+   }
+  },
+  "DbSgfromBloomStackApiSg23F3412F5432F9B5D503": {
+   "Type": "AWS::EC2::SecurityGroupIngress",
+   "Properties": {
+    "Description": "App Runner -> RDS",
+    "FromPort": 5432,
+    "GroupId": {
+     "Fn::GetAtt": [
+      "DbSg495F8305",
+      "GroupId"
+     ]
+    },
+    "IpProtocol": "tcp",
+    "SourceSecurityGroupId": {
+     "Fn::GetAtt": [
+      "ApiSg8419ACD7",
+      "GroupId"
+     ]
+    },
+    "ToPort": 5432
+   },
+   "Metadata": {
+    "aws:cdk:path": "BloomStack/DbSg/from BloomStackApiSg23F3412F:5432"
+   }
+  },
+  "DbSgfromBloomStackLambdaSg5C23AFD754324D71B3AC": {
+   "Type": "AWS::EC2::SecurityGroupIngress",
+   "Properties": {
+    "Description": "Lambda -> RDS",
+    "FromPort": 5432,
+    "GroupId": {
+     "Fn::GetAtt": [
+      "DbSg495F8305",
+      "GroupId"
+     ]
+    },
+    "IpProtocol": "tcp",
+    "SourceSecurityGroupId": {
+     "Fn::GetAtt": [
+      "LambdaSg30A6108C",
+      "GroupId"
+     ]
+    },
+    "ToPort": 5432
+   },
+   "Metadata": {
+    "aws:cdk:path": "BloomStack/DbSg/from BloomStackLambdaSg5C23AFD7:5432"
+   }
+  },
+  "ApiSg8419ACD7": {
+   "Type": "AWS::EC2::SecurityGroup",
+   "Properties": {
+    "GroupDescription": "App Runner VPC connector",
+    "SecurityGroupEgress": [
+     {
+      "CidrIp": "0.0.0.0/0",
+      "Description": "Allow all outbound traffic by default",
+      "IpProtocol": "-1"
+     }
+    ],
+    "VpcId": {
+     "Ref": "BloomVpc466B2B9C"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "BloomStack/ApiSg/Resource"
+   }
+  },
+  "LambdaSg30A6108C": {
+   "Type": "AWS::EC2::SecurityGroup",
+   "Properties": {
+    "GroupDescription": "Lambda delivery gen",
+    "SecurityGroupEgress": [
+     {
+      "CidrIp": "0.0.0.0/0",
+      "Description": "Allow all outbound traffic by default",
+      "IpProtocol": "-1"
+     }
+    ],
+    "VpcId": {
+     "Ref": "BloomVpc466B2B9C"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "BloomStack/LambdaSg/Resource"
+   }
+  },
+  "DbSecret685A0FA5": {
+   "Type": "AWS::SecretsManager::Secret",
+   "Properties": {
+    "GenerateSecretString": {
+     "ExcludePunctuation": true,
+     "GenerateStringKey": "password",
+     "PasswordLength": 32,
+     "SecretStringTemplate": "{\"username\":\"bloom_admin\"}"
+    },
+    "Name": "bloom/prod/database"
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "BloomStack/DbSecret/Resource"
+   }
+  },
+  "DbSecretAttachment0609CE05": {
+   "Type": "AWS::SecretsManager::SecretTargetAttachment",
+   "Properties": {
+    "SecretId": {
+     "Ref": "DbSecret685A0FA5"
+    },
+    "TargetId": {
+     "Ref": "BloomDb64A7B6BB"
+    },
+    "TargetType": "AWS::RDS::DBInstance"
+   },
+   "Metadata": {
+    "aws:cdk:path": "BloomStack/DbSecret/Attachment/Resource"
+   }
+  },
+  "JwtSecretB8834B39": {
+   "Type": "AWS::SecretsManager::Secret",
+   "Properties": {
+    "GenerateSecretString": {
+     "ExcludePunctuation": true,
+     "PasswordLength": 64
+    },
+    "Name": "bloom/prod/jwt-secret"
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "BloomStack/JwtSecret/Resource"
+   }
+  },
+  "BloomDbSubnetGroupA25F7ED5": {
+   "Type": "AWS::RDS::DBSubnetGroup",
+   "Properties": {
+    "DBSubnetGroupDescription": "Subnet group for BloomDb database",
+    "SubnetIds": [
+     {
+      "Ref": "BloomVpcPrivateSubnet1SubnetAE431CA6"
+     },
+     {
+      "Ref": "BloomVpcPrivateSubnet2Subnet78657C21"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "BloomStack/BloomDb/SubnetGroup/Default"
+   }
+  },
+  "BloomDb64A7B6BB": {
+   "Type": "AWS::RDS::DBInstance",
+   "Properties": {
+    "AllocatedStorage": "20",
+    "BackupRetentionPeriod": 7,
+    "CopyTagsToSnapshot": true,
+    "DBInstanceClass": "db.t3.micro",
+    "DBName": "bloom",
+    "DBSubnetGroupName": {
+     "Ref": "BloomDbSubnetGroupA25F7ED5"
+    },
+    "DeletionProtection": false,
+    "Engine": "postgres",
+    "EngineVersion": "15",
+    "MasterUserPassword": {
+     "Fn::Join": [
+      "",
+      [
+       "{{resolve:secretsmanager:",
+       {
+        "Ref": "DbSecret685A0FA5"
+       },
+       ":SecretString:password::}}"
+      ]
+     ]
+    },
+    "MasterUsername": {
+     "Fn::Join": [
+      "",
+      [
+       "{{resolve:secretsmanager:",
+       {
+        "Ref": "DbSecret685A0FA5"
+       },
+       ":SecretString:username::}}"
+      ]
+     ]
+    },
+    "MaxAllocatedStorage": 50,
+    "PubliclyAccessible": false,
+    "StorageType": "gp2",
+    "VPCSecurityGroups": [
+     {
+      "Fn::GetAtt": [
+       "DbSg495F8305",
+       "GroupId"
+      ]
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "BloomStack/BloomDb/Resource"
+   }
+  },
+  "BloomApiRepoA2B7B972": {
+   "Type": "AWS::ECR::Repository",
+   "Properties": {
+    "EmptyOnDelete": true,
+    "LifecyclePolicy": {
+     "LifecyclePolicyText": "{\"rules\":[{\"rulePriority\":1,\"description\":\"Keep last 10 images\",\"selection\":{\"tagStatus\":\"any\",\"countType\":\"imageCountMoreThan\",\"countNumber\":10},\"action\":{\"type\":\"expire\"}}]}"
+    },
+    "RepositoryName": "bloom-api"
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "BloomStack/BloomApiRepo/Resource"
+   }
+  },
+  "BloomUserPool855DF2A3": {
+   "Type": "AWS::Cognito::UserPool",
+   "Properties": {
+    "AccountRecoverySetting": {
+     "RecoveryMechanisms": [
+      {
+       "Name": "verified_email",
+       "Priority": 1
+      }
+     ]
+    },
+    "AdminCreateUserConfig": {
+     "AllowAdminCreateUserOnly": false
+    },
+    "AutoVerifiedAttributes": [
+     "email"
+    ],
+    "EmailVerificationMessage": "The verification code to your new account is {####}",
+    "EmailVerificationSubject": "Verify your new account",
+    "Policies": {
+     "PasswordPolicy": {
+      "MinimumLength": 8,
+      "RequireLowercase": true,
+      "RequireNumbers": true,
+      "RequireSymbols": false,
+      "RequireUppercase": true
+     }
+    },
+    "SmsVerificationMessage": "The verification code to your new account is {####}",
+    "UserPoolName": "bloom-users",
+    "UsernameAttributes": [
+     "email"
+    ],
+    "VerificationMessageTemplate": {
+     "DefaultEmailOption": "CONFIRM_WITH_CODE",
+     "EmailMessage": "The verification code to your new account is {####}",
+     "EmailSubject": "Verify your new account",
+     "SmsMessage": "The verification code to your new account is {####}"
+    }
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "BloomStack/BloomUserPool/Resource"
+   }
+  },
+  "BloomUserPoolBloomWebClient83F1F812": {
+   "Type": "AWS::Cognito::UserPoolClient",
+   "Properties": {
+    "AccessTokenValidity": 480,
+    "AllowedOAuthFlows": [
+     "implicit",
+     "code"
+    ],
+    "AllowedOAuthFlowsUserPoolClient": true,
+    "AllowedOAuthScopes": [
+     "profile",
+     "phone",
+     "email",
+     "openid",
+     "aws.cognito.signin.user.admin"
+    ],
+    "CallbackURLs": [
+     "https://example.com"
+    ],
+    "ClientName": "bloom-web",
+    "ExplicitAuthFlows": [
+     "ALLOW_USER_PASSWORD_AUTH",
+     "ALLOW_USER_SRP_AUTH",
+     "ALLOW_REFRESH_TOKEN_AUTH"
+    ],
+    "IdTokenValidity": 480,
+    "RefreshTokenValidity": 43200,
+    "SupportedIdentityProviders": [
+     "COGNITO"
+    ],
+    "TokenValidityUnits": {
+     "AccessToken": "minutes",
+     "IdToken": "minutes",
+     "RefreshToken": "minutes"
+    },
+    "UserPoolId": {
+     "Ref": "BloomUserPool855DF2A3"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "BloomStack/BloomUserPool/BloomWebClient/Resource"
+   }
+  },
+  "DeliveryPhotosF066DD78": {
+   "Type": "AWS::S3::Bucket",
+   "Properties": {
+    "BucketName": {
+     "Fn::Join": [
+      "",
+      [
+       "bloom-delivery-photos-",
+       {
+        "Ref": "AWS::AccountId"
+       }
+      ]
+     ]
+    },
+    "CorsConfiguration": {
+     "CorsRules": [
+      {
+       "AllowedHeaders": [
+        "*"
+       ],
+       "AllowedMethods": [
+        "GET",
+        "PUT"
+       ],
+       "AllowedOrigins": [
+        "*"
+       ],
+       "MaxAge": 3600
+      }
+     ]
+    },
+    "Tags": [
+     {
+      "Key": "aws-cdk:auto-delete-objects",
+      "Value": "true"
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "BloomStack/DeliveryPhotos/Resource"
+   }
+  },
+  "DeliveryPhotosPolicy648E40C3": {
+   "Type": "AWS::S3::BucketPolicy",
+   "Properties": {
+    "Bucket": {
+     "Ref": "DeliveryPhotosF066DD78"
+    },
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "s3:PutBucketPolicy",
+        "s3:GetBucket*",
+        "s3:List*",
+        "s3:DeleteObject*"
+       ],
+       "Effect": "Allow",
+       "Principal": {
+        "AWS": {
+         "Fn::GetAtt": [
+          "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092",
+          "Arn"
+         ]
+        }
+       },
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "DeliveryPhotosF066DD78",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "DeliveryPhotosF066DD78",
+             "Arn"
+            ]
+           },
+           "/*"
+          ]
+         ]
+        }
+       ]
+      }
+     ],
+     "Version": "2012-10-17"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "BloomStack/DeliveryPhotos/Policy/Resource"
+   }
+  },
+  "DeliveryPhotosAutoDeleteObjectsCustomResource2409A313": {
+   "Type": "Custom::S3AutoDeleteObjects",
+   "Properties": {
+    "ServiceToken": {
+     "Fn::GetAtt": [
+      "CustomS3AutoDeleteObjectsCustomResourceProviderHandler9D90184F",
+      "Arn"
+     ]
+    },
+    "BucketName": {
+     "Ref": "DeliveryPhotosF066DD78"
+    }
+   },
+   "DependsOn": [
+    "DeliveryPhotosPolicy648E40C3"
+   ],
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "BloomStack/DeliveryPhotos/AutoDeleteObjectsCustomResource/Default"
+   }
+  },
+  "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Version": "2012-10-17",
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ]
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Sub": "arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "BloomStack/Custom::S3AutoDeleteObjectsCustomResourceProvider/Role"
+   }
+  },
+  "CustomS3AutoDeleteObjectsCustomResourceProviderHandler9D90184F": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": {
+      "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-us-east-1"
+     },
+     "S3Key": "faa95a81ae7d7373f3e1f242268f904eb748d8d0fdd306e8a6fe515a1905a7d6.zip"
+    },
+    "Timeout": 900,
+    "MemorySize": 128,
+    "Handler": "index.handler",
+    "Role": {
+     "Fn::GetAtt": [
+      "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092",
+      "Arn"
+     ]
+    },
+    "Runtime": "nodejs22.x",
+    "Description": {
+     "Fn::Join": [
+      "",
+      [
+       "Lambda function for auto-deleting objects in ",
+       {
+        "Ref": "DeliveryPhotosF066DD78"
+       },
+       " S3 bucket."
+      ]
+     ]
+    }
+   },
+   "DependsOn": [
+    "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "BloomStack/Custom::S3AutoDeleteObjectsCustomResourceProvider/Handler",
+    "aws:asset:path": "C:\\Users\\kpete\\AppData\\Local\\Temp\\cdk-custom-resourceJvGTAc",
+    "aws:asset:property": "Code"
+   }
+  },
+  "AppRunnerAccessRoleC89E5843": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "build.apprunner.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSAppRunnerServicePolicyForECRAccess"
+       ]
+      ]
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "BloomStack/AppRunnerAccessRole/Resource"
+   }
+  },
+  "AppRunnerInstanceRole96A5A063": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "tasks.apprunner.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "BloomStack/AppRunnerInstanceRole/Resource"
+   }
+  },
+  "AppRunnerInstanceRoleDefaultPolicy35195718": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:DescribeSecret"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Ref": "DbSecret685A0FA5"
+       }
+      },
+      {
+       "Action": [
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:DescribeSecret"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Ref": "JwtSecretB8834B39"
+       }
+      },
+      {
+       "Action": [
+        "s3:GetObject*",
+        "s3:GetBucket*",
+        "s3:List*",
+        "s3:DeleteObject*",
+        "s3:PutObject",
+        "s3:PutObjectLegalHold",
+        "s3:PutObjectRetention",
+        "s3:PutObjectTagging",
+        "s3:PutObjectVersionTagging",
+        "s3:Abort*"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "DeliveryPhotosF066DD78",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "DeliveryPhotosF066DD78",
+             "Arn"
+            ]
+           },
+           "/*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "ses:SendEmail",
+        "ses:SendRawEmail"
+       ],
+       "Effect": "Allow",
+       "Resource": "*"
+      },
+      {
+       "Action": [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+       ],
+       "Effect": "Allow",
+       "Resource": "*"
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "AppRunnerInstanceRoleDefaultPolicy35195718",
+    "Roles": [
+     {
+      "Ref": "AppRunnerInstanceRole96A5A063"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "BloomStack/AppRunnerInstanceRole/DefaultPolicy/Resource"
+   }
+  },
+  "ApiVpcConnector": {
+   "Type": "AWS::AppRunner::VpcConnector",
+   "Properties": {
+    "SecurityGroups": [
+     {
+      "Fn::GetAtt": [
+       "ApiSg8419ACD7",
+       "GroupId"
+      ]
+     }
+    ],
+    "Subnets": [
+     {
+      "Ref": "BloomVpcPrivateSubnet1SubnetAE431CA6"
+     },
+     {
+      "Ref": "BloomVpcPrivateSubnet2Subnet78657C21"
+     }
+    ],
+    "VpcConnectorName": "bloom-api-vpc"
+   },
+   "Metadata": {
+    "aws:cdk:path": "BloomStack/ApiVpcConnector"
+   }
+  },
+  "BloomApi": {
+   "Type": "AWS::AppRunner::Service",
+   "Properties": {
+    "HealthCheckConfiguration": {
+     "HealthyThreshold": 1,
+     "Interval": 10,
+     "Path": "/health",
+     "Protocol": "HTTP",
+     "Timeout": 5,
+     "UnhealthyThreshold": 5
+    },
+    "InstanceConfiguration": {
+     "Cpu": "1024",
+     "InstanceRoleArn": {
+      "Fn::GetAtt": [
+       "AppRunnerInstanceRole96A5A063",
+       "Arn"
+      ]
+     },
+     "Memory": "2048"
+    },
+    "NetworkConfiguration": {
+     "EgressConfiguration": {
+      "EgressType": "VPC",
+      "VpcConnectorArn": {
+       "Fn::GetAtt": [
+        "ApiVpcConnector",
+        "VpcConnectorArn"
+       ]
+      }
+     }
+    },
+    "ServiceName": "bloom-api",
+    "SourceConfiguration": {
+     "AuthenticationConfiguration": {
+      "AccessRoleArn": {
+       "Fn::GetAtt": [
+        "AppRunnerAccessRoleC89E5843",
+        "Arn"
+       ]
+      }
+     },
+     "AutoDeploymentsEnabled": true,
+     "ImageRepository": {
+      "ImageConfiguration": {
+       "Port": "8080",
+       "RuntimeEnvironmentVariables": [
+        {
+         "Name": "ENVIRONMENT",
+         "Value": "production"
+        },
+        {
+         "Name": "AWS_REGION",
+         "Value": "us-east-1"
+        },
+        {
+         "Name": "USE_COGNITO",
+         "Value": "true"
+        },
+        {
+         "Name": "USE_AWS_SECRETS",
+         "Value": "true"
+        },
+        {
+         "Name": "USE_CLOUDWATCH",
+         "Value": "true"
+        },
+        {
+         "Name": "COGNITO_USER_POOL_ID",
+         "Value": {
+          "Ref": "BloomUserPool855DF2A3"
+         }
+        },
+        {
+         "Name": "COGNITO_CLIENT_ID",
+         "Value": {
+          "Ref": "BloomUserPoolBloomWebClient83F1F812"
+         }
+        },
+        {
+         "Name": "COGNITO_REGION",
+         "Value": "us-east-1"
+        },
+        {
+         "Name": "S3_BUCKET_NAME",
+         "Value": {
+          "Ref": "DeliveryPhotosF066DD78"
+         }
+        },
+        {
+         "Name": "S3_REGION",
+         "Value": "us-east-1"
+        },
+        {
+         "Name": "SES_FROM_EMAIL",
+         "Value": "noreply@bloom.com"
+        },
+        {
+         "Name": "SES_REGION",
+         "Value": "us-east-1"
+        },
+        {
+         "Name": "DB_SECRET_NAME",
+         "Value": "bloom/prod/database"
+        },
+        {
+         "Name": "JWT_SECRET_NAME",
+         "Value": "bloom/prod/jwt-secret"
+        },
+        {
+         "Name": "CLOUDWATCH_LOG_GROUP",
+         "Value": "/bloom/prod/api"
+        },
+        {
+         "Name": "DB_HOST",
+         "Value": {
+          "Fn::GetAtt": [
+           "BloomDb64A7B6BB",
+           "Endpoint.Address"
+          ]
+         }
+        },
+        {
+         "Name": "DB_PORT",
+         "Value": {
+          "Fn::GetAtt": [
+           "BloomDb64A7B6BB",
+           "Endpoint.Port"
+          ]
+         }
+        },
+        {
+         "Name": "DB_NAME",
+         "Value": "bloom"
+        },
+        {
+         "Name": "DB_USER",
+         "Value": "bloom_admin"
+        }
+       ]
+      },
+      "ImageIdentifier": {
+       "Fn::Join": [
+        "",
+        [
+         {
+          "Fn::Select": [
+           4,
+           {
+            "Fn::Split": [
+             ":",
+             {
+              "Fn::GetAtt": [
+               "BloomApiRepoA2B7B972",
+               "Arn"
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         ".dkr.ecr.",
+         {
+          "Fn::Select": [
+           3,
+           {
+            "Fn::Split": [
+             ":",
+             {
+              "Fn::GetAtt": [
+               "BloomApiRepoA2B7B972",
+               "Arn"
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         ".",
+         {
+          "Ref": "AWS::URLSuffix"
+         },
+         "/",
+         {
+          "Ref": "BloomApiRepoA2B7B972"
+         },
+         ":latest"
+        ]
+       ]
+      },
+      "ImageRepositoryType": "ECR"
+     }
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "BloomStack/BloomApi"
+   }
+  },
+  "DeliveryLambdaLogs57B974B9": {
+   "Type": "AWS::Logs::LogGroup",
+   "Properties": {
+    "LogGroupName": "/aws/lambda/bloom-delivery-generation",
+    "RetentionInDays": 14
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "BloomStack/DeliveryLambdaLogs/Resource"
+   }
+  },
+  "DeliveryGenerationLambdaServiceRole2344742C": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     },
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
+       ]
+      ]
+     }
+    ]
+   },
+   "DependsOn": [
+    "BloomVpcPrivateSubnet1DefaultRoute12A083A4",
+    "BloomVpcPrivateSubnet1RouteTableAssociation4727934C",
+    "BloomVpcPrivateSubnet2DefaultRoute2D2FD3FB",
+    "BloomVpcPrivateSubnet2RouteTableAssociationB29D7303"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "BloomStack/DeliveryGenerationLambda/ServiceRole/Resource"
+   }
+  },
+  "DeliveryGenerationLambdaServiceRoleDefaultPolicy287FD3FA": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:DescribeSecret"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Ref": "DbSecret685A0FA5"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "DeliveryGenerationLambdaServiceRoleDefaultPolicy287FD3FA",
+    "Roles": [
+     {
+      "Ref": "DeliveryGenerationLambdaServiceRole2344742C"
+     }
+    ]
+   },
+   "DependsOn": [
+    "BloomVpcPrivateSubnet1DefaultRoute12A083A4",
+    "BloomVpcPrivateSubnet1RouteTableAssociation4727934C",
+    "BloomVpcPrivateSubnet2DefaultRoute2D2FD3FB",
+    "BloomVpcPrivateSubnet2RouteTableAssociationB29D7303"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "BloomStack/DeliveryGenerationLambda/ServiceRole/DefaultPolicy/Resource"
+   }
+  },
+  "DeliveryGenerationLambdaA0B3B9D4": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "ImageUri": {
+      "Fn::Sub": "${AWS::AccountId}.dkr.ecr.us-east-1.${AWS::URLSuffix}/cdk-hnb659fds-container-assets-${AWS::AccountId}-us-east-1:8b0f59bf2807660bbd35e4174c6d9342f1f91b1b531b135cc7ae6cafab886c8d"
+     }
+    },
+    "Environment": {
+     "Variables": {
+      "ENVIRONMENT": "production",
+      "USE_AWS_SECRETS": "true",
+      "DB_SECRET_NAME": "bloom/prod/database",
+      "DB_HOST": {
+       "Fn::GetAtt": [
+        "BloomDb64A7B6BB",
+        "Endpoint.Address"
+       ]
+      },
+      "DB_PORT": {
+       "Fn::GetAtt": [
+        "BloomDb64A7B6BB",
+        "Endpoint.Port"
+       ]
+      },
+      "DB_NAME": "bloom",
+      "DB_USER": "bloom_admin"
+     }
+    },
+    "FunctionName": "bloom-delivery-generation",
+    "LoggingConfig": {
+     "LogGroup": {
+      "Ref": "DeliveryLambdaLogs57B974B9"
+     }
+    },
+    "MemorySize": 512,
+    "PackageType": "Image",
+    "Role": {
+     "Fn::GetAtt": [
+      "DeliveryGenerationLambdaServiceRole2344742C",
+      "Arn"
+     ]
+    },
+    "Timeout": 300,
+    "VpcConfig": {
+     "SecurityGroupIds": [
+      {
+       "Fn::GetAtt": [
+        "LambdaSg30A6108C",
+        "GroupId"
+       ]
+      }
+     ],
+     "SubnetIds": [
+      {
+       "Ref": "BloomVpcPrivateSubnet1SubnetAE431CA6"
+      },
+      {
+       "Ref": "BloomVpcPrivateSubnet2Subnet78657C21"
+      }
+     ]
+    }
+   },
+   "DependsOn": [
+    "BloomVpcPrivateSubnet1DefaultRoute12A083A4",
+    "BloomVpcPrivateSubnet1RouteTableAssociation4727934C",
+    "BloomVpcPrivateSubnet2DefaultRoute2D2FD3FB",
+    "BloomVpcPrivateSubnet2RouteTableAssociationB29D7303",
+    "DeliveryGenerationLambdaServiceRoleDefaultPolicy287FD3FA",
+    "DeliveryGenerationLambdaServiceRole2344742C"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "BloomStack/DeliveryGenerationLambda/Resource",
+    "aws:asset:path": "C:\\Users\\kpete\\bloom-project\\apps\\api",
+    "aws:asset:dockerfile-path": "Dockerfile.lambda",
+    "aws:asset:property": "Code.ImageUri"
+   }
+  },
+  "DailyDeliveryRule6BCDCD22": {
+   "Type": "AWS::Events::Rule",
+   "Properties": {
+    "Name": "bloom-daily-delivery-generation",
+    "ScheduleExpression": "cron(0 6 ? * * *)",
+    "State": "ENABLED",
+    "Targets": [
+     {
+      "Arn": {
+       "Fn::GetAtt": [
+        "DeliveryGenerationLambdaA0B3B9D4",
+        "Arn"
+       ]
+      },
+      "Id": "Target0"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "BloomStack/DailyDeliveryRule/Resource"
+   }
+  },
+  "DailyDeliveryRuleAllowEventRuleBloomStackDeliveryGenerationLambda6BC634F5F80E1972": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "DeliveryGenerationLambdaA0B3B9D4",
+      "Arn"
+     ]
+    },
+    "Principal": "events.amazonaws.com",
+    "SourceArn": {
+     "Fn::GetAtt": [
+      "DailyDeliveryRule6BCDCD22",
+      "Arn"
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "BloomStack/DailyDeliveryRule/AllowEventRuleBloomStackDeliveryGenerationLambda6BC634F5"
+   }
+  },
+  "CDKMetadata": {
+   "Type": "AWS::CDK::Metadata",
+   "Properties": {
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/31SXW/bMAz8LX1XtCV52Ws+tiJA0Rl219eCVjhXiy0aIpUgEPzfB9mOna3Dnu54Osnk0Su9Wn/Rnx/gwgtzPC1qW+pYCJiTggu/RTQrHV9bo3Y/3Wu2U1koa2uKUDqUpM0spyD4AmWNsz5rG2YyFsSSm8yJfD1kCZ5BHkHwAleVeXsGwfnhgxP0DifD0MlYbUTAvDfoRBVogrdyffQU2r6H/woHV3lk7hSj8SjcgIMKvY5FX4/+xAZ4AV+h3H1vMvx90il/ZB33IFAC48GxgDOohpGmbvbbD8LN2ik0XsccW2Ir5Puh76qZboGxU4YqZ4V0/MHoM6I6+Sd+I7vajn3/qXSK1zpugzkNY49sgIxqa66zPNSdstDomNOw7R5n580DbeuDcynUtLTW7Mg5NEJ+CM+fbZq1pop1fKJqSuLGO1VDUx5Bxz2ZE/pDAxV+C87c/qN7nqFvLLMl18f3BsworO9ubpKi8IxOWMc8jM2HGrtO5cgUvEG1CyzUzGVK/p9HmaezPaJPO1D924VAZV2V7nwP0gbpVHaVd3Kf1nq51MuHX2ztwgcntkGdD/gbC6cfDIMDAAA="
+   },
+   "Metadata": {
+    "aws:cdk:path": "BloomStack/CDKMetadata/Default"
+   }
+  }
+ },
+ "Outputs": {
+  "ApiUrl": {
+   "Description": "App Runner API URL",
+   "Value": {
+    "Fn::GetAtt": [
+     "BloomApi",
+     "ServiceUrl"
+    ]
+   }
+  },
+  "DbEndpoint": {
+   "Description": "RDS endpoint",
+   "Value": {
+    "Fn::GetAtt": [
+     "BloomDb64A7B6BB",
+     "Endpoint.Address"
+    ]
+   }
+  },
+  "DbSecretArn": {
+   "Description": "DB credentials secret ARN",
+   "Value": {
+    "Ref": "DbSecret685A0FA5"
+   }
+  },
+  "JwtSecretArn": {
+   "Description": "JWT secret ARN",
+   "Value": {
+    "Ref": "JwtSecretB8834B39"
+   }
+  },
+  "EcrRepoUri": {
+   "Description": "ECR repo URI — use for docker push",
+   "Value": {
+    "Fn::Join": [
+     "",
+     [
+      {
+       "Fn::Select": [
+        4,
+        {
+         "Fn::Split": [
+          ":",
+          {
+           "Fn::GetAtt": [
+            "BloomApiRepoA2B7B972",
+            "Arn"
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      ".dkr.ecr.",
+      {
+       "Fn::Select": [
+        3,
+        {
+         "Fn::Split": [
+          ":",
+          {
+           "Fn::GetAtt": [
+            "BloomApiRepoA2B7B972",
+            "Arn"
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      ".",
+      {
+       "Ref": "AWS::URLSuffix"
+      },
+      "/",
+      {
+       "Ref": "BloomApiRepoA2B7B972"
+      }
+     ]
+    ]
+   }
+  },
+  "CognitoUserPoolId": {
+   "Description": "Cognito User Pool ID",
+   "Value": {
+    "Ref": "BloomUserPool855DF2A3"
+   }
+  },
+  "CognitoClientId": {
+   "Description": "Cognito App Client ID",
+   "Value": {
+    "Ref": "BloomUserPoolBloomWebClient83F1F812"
+   }
+  },
+  "S3BucketName": {
+   "Description": "Delivery photos S3 bucket",
+   "Value": {
+    "Ref": "DeliveryPhotosF066DD78"
+   }
+  },
+  "LambdaName": {
+   "Description": "Delivery generation Lambda",
+   "Value": {
+    "Ref": "DeliveryGenerationLambdaA0B3B9D4"
+   }
+  },
+  "VpcId": {
+   "Description": "VPC ID",
+   "Value": {
+    "Ref": "BloomVpc466B2B9C"
+   }
+  }
+ },
+ "Parameters": {
+  "BootstrapVersion": {
+   "Type": "AWS::SSM::Parameter::Value<String>",
+   "Default": "/cdk-bootstrap/hnb659fds/version",
+   "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]"
+  }
+ },
+ "Rules": {
+  "CheckBootstrapVersion": {
+   "Assertions": [
+    {
+     "Assert": {
+      "Fn::Not": [
+       {
+        "Fn::Contains": [
+         [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+         ],
+         {
+          "Ref": "BootstrapVersion"
+         }
+        ]
+       }
+      ]
+     },
+     "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI."
+    }
+   ]
+  }
+ }
+}

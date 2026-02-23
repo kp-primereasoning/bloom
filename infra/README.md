@@ -1,13 +1,27 @@
-# Bloom Infrastructure
+# Bloom Infrastructure (CDK)
 
-This directory contains infrastructure configuration for the Bloom platform.
+Single-stack AWS CDK deployment for the Bloom platform.
 
-## AWS Resources (Planned)
+## What's Created
 
-- AWS Amplify / S3 + CloudFront (Frontend)
-- AWS App Runner (Backend API)
-- Amazon RDS (Database)
-- AWS Cognito (Authentication)
-- AWS Lambda (Background jobs)
+| Resource | Service | Purpose |
+|----------|---------|---------|
+| VPC | EC2 | Network isolation (2 AZs, public + private subnets) |
+| Database | RDS PostgreSQL 15 | Primary data store (db.t3.micro) |
+| API | App Runner | FastAPI backend (Docker from ECR) |
+| Auth | Cognito | User authentication (email sign-in) |
+| Storage | S3 | Delivery photo uploads |
+| Background | Lambda + EventBridge | Daily delivery generation (6 AM UTC) |
+| Secrets | Secrets Manager | DB credentials, JWT secret |
+| Container Registry | ECR | Docker images for API |
 
-Infrastructure will be configured as needed for deployment.
+## Quick Start
+
+```bash
+cd infra
+pip install -r requirements.txt
+cdk bootstrap   # first time only
+cdk deploy
+```
+
+See [DEPLOY.md](./DEPLOY.md) for the full step-by-step guide.

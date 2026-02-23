@@ -1,0 +1,52 @@
+{
+  "version": "48.0.0",
+  "files": {
+    "faa95a81ae7d7373f3e1f242268f904eb748d8d0fdd306e8a6fe515a1905a7d6": {
+      "displayName": "BloomStack/Custom::S3AutoDeleteObjectsCustomResourceProvider Code",
+      "source": {
+        "path": "C:\\Users\\kpete\\AppData\\Local\\Temp\\cdk-custom-resourceJvGTAc",
+        "packaging": "zip"
+      },
+      "destinations": {
+        "current_account-us-east-1-e650c2de": {
+          "bucketName": "cdk-hnb659fds-assets-${AWS::AccountId}-us-east-1",
+          "objectKey": "faa95a81ae7d7373f3e1f242268f904eb748d8d0fdd306e8a6fe515a1905a7d6.zip",
+          "region": "us-east-1",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-file-publishing-role-${AWS::AccountId}-us-east-1"
+        }
+      }
+    },
+    "daface3a0f6edd299ed74af7125014f02dfa29b29a27bf72cec78e847fc9f6cc": {
+      "displayName": "BloomStack Template",
+      "source": {
+        "path": "BloomStack.template.json",
+        "packaging": "file"
+      },
+      "destinations": {
+        "current_account-us-east-1-3d17d61e": {
+          "bucketName": "cdk-hnb659fds-assets-${AWS::AccountId}-us-east-1",
+          "objectKey": "daface3a0f6edd299ed74af7125014f02dfa29b29a27bf72cec78e847fc9f6cc.json",
+          "region": "us-east-1",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-file-publishing-role-${AWS::AccountId}-us-east-1"
+        }
+      }
+    }
+  },
+  "dockerImages": {
+    "8b0f59bf2807660bbd35e4174c6d9342f1f91b1b531b135cc7ae6cafab886c8d": {
+      "displayName": "DeliveryGenerationLambda/AssetImage",
+      "source": {
+        "directory": "C:\\Users\\kpete\\bloom-project\\apps\\api",
+        "dockerFile": "Dockerfile.lambda"
+      },
+      "destinations": {
+        "current_account-us-east-1-c5634860": {
+          "repositoryName": "cdk-hnb659fds-container-assets-${AWS::AccountId}-us-east-1",
+          "imageTag": "8b0f59bf2807660bbd35e4174c6d9342f1f91b1b531b135cc7ae6cafab886c8d",
+          "region": "us-east-1",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-image-publishing-role-${AWS::AccountId}-us-east-1"
+        }
+      }
+    }
+  }
+}

@@ -1,32 +1,117 @@
 /**
  * Property Manager Settings Page
  *
- * Displays PM profile information and assigned property details.
+ * Displays PM profile information (read-only) and notification preferences
+ * with toggle switches. Uses optimistic UI: toggles update immediately,
+ * revert on API error with an error banner.
  */
 
-import { useState, useEffect } from 'react';
-import { getPMStats, type PMStatsResponse } from '@/lib/api';
+import { useState, useEffect, useCallback } from 'react';
+import {
+  getPMSettings,
+  updatePMSettings,
+  type PMSettingsResponse,
+  type NotificationPreferences,
+} from '@/lib/api';
+
+// =============================================================================
+// Toggle switch component
+// =============================================================================
+
+interface ToggleSwitchProps {
+  id: string;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+  label: string;
+  description: string;
+  disabled?: boolean;
+}
+
+function ToggleSwitch({ id, checked, onChange, label, description, disabled }: ToggleSwitchProps) {
+  return (
+    <div className="flex items-center justify-between py-4 border-b border-gray-100 last:border-b-0">
+      <div className="pr-4">
+        <label htmlFor={id} className="font-medium text-gray-900 cursor-pointer">
+          {label}
+        </label>
+        <p className="text-sm text-gray-500 mt-0.5">{description}</p>
+      </div>
+      <button
+        id={id}
+        role="switch"
+        type="button"
+        aria-checked={checked}
+        aria-label={`${label}: ${checked ? 'enabled' : 'disabled'}`}
+        disabled={disabled}
+        onClick={() => onChange(!checked)}
+        className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2 ${
+          checked ? 'bg-indigo-600' : 'bg-gray-200'
+        } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+      >
+        <span
+          aria-hidden="true"
+          className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+            checked ? 'translate-x-5' : 'translate-x-0'
+          }`}
+        />
+      </button>
+    </div>
+  );
+}
+
+// =============================================================================
+// Main component
+// =============================================================================
 
 export function SettingsPage() {
-  const [data, setData] = useState<PMStatsResponse | null>(null);
+  const [settings, setSettings] = useState<PMSettingsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   useEffect(() => {
-    async function fetchProfile() {
+    async function fetchSettings() {
       try {
         setLoading(true);
         setError(null);
-        const response = await getPMStats();
-        setData(response);
+        const data = await getPMSettings();
+        setSettings(data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load profile');
+        setError(err instanceof Error ? err.message : 'Failed to load settings');
       } finally {
         setLoading(false);
       }
     }
-    fetchProfile();
+    fetchSettings();
   }, []);
+
+  const handleToggle = useCallback(
+    async (key: keyof NotificationPreferences, newValue: boolean) => {
+      if (!settings) return;
+
+      const previousNotifications = { ...settings.notifications };
+      const updatedNotifications: NotificationPreferences = {
+        ...settings.notifications,
+        [key]: newValue,
+      };
+
+      // Optimistic update
+      setSettings({ ...settings, notifications: updatedNotifications });
+      setSaveError(null);
+
+      try {
+        const response = await updatePMSettings({ notifications: updatedNotifications });
+        setSettings(response);
+      } catch (err) {
+        // Revert on failure
+        setSettings({ ...settings, notifications: previousNotifications });
+        setSaveError(
+          err instanceof Error ? err.message : 'Failed to save notification preferences'
+        );
+      }
+    },
+    [settings]
+  );
 
   // Loading state
   if (loading) {
@@ -57,120 +142,92 @@ export function SettingsPage() {
     );
   }
 
+  // Empty state
+  if (!settings) {
+    return (
+      <div className="space-y-6">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+          <h1 className="text-2xl font-semibold text-gray-900 mb-2">Settings</h1>
+          <p className="text-gray-500">No settings data available.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
         <h1 className="text-2xl font-semibold text-gray-900 mb-2">Settings</h1>
         <p className="text-gray-500">
-          Manage your property manager account settings.
+          Manage your profile information and notification preferences.
         </p>
       </div>
 
-      {/* Property Assignment */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
-        <h2 className="text-lg font-medium text-gray-900 mb-4">Property Assignment</h2>
-        <p className="text-gray-500 mb-6">
-          The property you are assigned to manage.
-        </p>
-
-        {data?.property ? (
-          <div className="border border-indigo-200 rounded-lg p-6 bg-indigo-50/30">
-            <div className="flex items-start justify-between">
-              <div>
-                <h3 className="font-semibold text-gray-900 text-lg">{data.property.name}</h3>
-                <p className="text-gray-600 mt-1">{data.property.address}</p>
-                {data.property.delivery_cadence && (
-                  <div className="mt-3">
-                    <span className="inline-flex px-3 py-1 text-sm font-medium rounded-full bg-indigo-100 text-indigo-800">
-                      {data.property.delivery_cadence} Deliveries
-                    </span>
-                  </div>
-                )}
-              </div>
-              <div className="p-3 bg-indigo-100 rounded-full">
-                <svg className="h-6 w-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                </svg>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="bg-amber-50 border border-amber-200 rounded-lg p-6 text-center">
-            <p className="text-amber-800 font-medium">No Property Assigned</p>
-            <p className="text-amber-700 text-sm mt-1">
-              Contact Bloom admin to be assigned to a property.
-            </p>
-          </div>
-        )}
-      </div>
-
-      {/* Account Stats */}
-      {data?.property && (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
-          <h2 className="text-lg font-medium text-gray-900 mb-4">Property Statistics</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-gray-50 rounded-lg p-4 text-center">
-              <p className="text-2xl font-bold text-gray-900">{data.total_residents}</p>
-              <p className="text-sm text-gray-500">Total Residents</p>
-            </div>
-            <div className="bg-green-50 rounded-lg p-4 text-center">
-              <p className="text-2xl font-bold text-green-600">{data.active_subscriptions}</p>
-              <p className="text-sm text-gray-500">Active</p>
-            </div>
-            <div className="bg-yellow-50 rounded-lg p-4 text-center">
-              <p className="text-2xl font-bold text-yellow-600">{data.paused_subscriptions}</p>
-              <p className="text-sm text-gray-500">Paused</p>
-            </div>
-            <div className="bg-blue-50 rounded-lg p-4 text-center">
-              <p className="text-2xl font-bold text-blue-600">{data.pending_activations}</p>
-              <p className="text-sm text-gray-500">Pending</p>
-            </div>
+      {/* Save Error Banner */}
+      {saveError && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4" role="alert">
+          <div className="flex items-center gap-2">
+            <svg className="h-5 w-5 text-red-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+            <p className="text-red-700">{saveError}</p>
           </div>
         </div>
       )}
 
-      {/* Notifications Settings */}
+      {/* Profile Section (read-only) */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
-        <h2 className="text-lg font-medium text-gray-900 mb-4">Notification Preferences</h2>
-        <p className="text-gray-500 mb-6">
-          Configure how you receive updates about your property.
+        <h2 className="text-lg font-medium text-gray-900 mb-6">Profile Information</h2>
+        <dl className="space-y-4">
+          <div className="flex flex-col sm:flex-row sm:gap-4">
+            <dt className="text-sm font-medium text-gray-500 sm:w-40 flex-shrink-0">Email</dt>
+            <dd className="text-sm text-gray-900 mt-1 sm:mt-0">{settings.email}</dd>
+          </div>
+          <div className="flex flex-col sm:flex-row sm:gap-4">
+            <dt className="text-sm font-medium text-gray-500 sm:w-40 flex-shrink-0">Property</dt>
+            <dd className="text-sm text-gray-900 mt-1 sm:mt-0">
+              {settings.property_name || <span className="text-gray-400">Not assigned</span>}
+            </dd>
+          </div>
+          <div className="flex flex-col sm:flex-row sm:gap-4">
+            <dt className="text-sm font-medium text-gray-500 sm:w-40 flex-shrink-0">Address</dt>
+            <dd className="text-sm text-gray-900 mt-1 sm:mt-0">
+              {settings.property_address || <span className="text-gray-400">Not available</span>}
+            </dd>
+          </div>
+        </dl>
+      </div>
+
+      {/* Notification Preferences */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+        <h2 className="text-lg font-medium text-gray-900 mb-2">Notification Preferences</h2>
+        <p className="text-sm text-gray-500 mb-6">
+          Choose which notifications you'd like to receive.
         </p>
 
-        <div className="space-y-4">
-          <div className="flex items-center justify-between py-3 border-b border-gray-100">
-            <div>
-              <p className="font-medium text-gray-900">New Resident Sign-ups</p>
-              <p className="text-sm text-gray-500">Get notified when a resident joins the program</p>
-            </div>
-            <div className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
-              Enabled
-            </div>
-          </div>
-          <div className="flex items-center justify-between py-3 border-b border-gray-100">
-            <div>
-              <p className="font-medium text-gray-900">Weekly Summary</p>
-              <p className="text-sm text-gray-500">Receive a weekly report of participation metrics</p>
-            </div>
-            <div className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
-              Enabled
-            </div>
-          </div>
-          <div className="flex items-center justify-between py-3">
-            <div>
-              <p className="font-medium text-gray-900">Reward Tier Changes</p>
-              <p className="text-sm text-gray-500">Get notified when your property reaches a new tier</p>
-            </div>
-            <div className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
-              Enabled
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-6 bg-gray-50 border border-gray-200 rounded-lg p-4">
-          <p className="text-sm text-gray-600">
-            Notification settings will be customizable in a future update. All notifications are currently enabled by default.
-          </p>
+        <div>
+          <ToggleSwitch
+            id="toggle-delivery-reminders"
+            checked={settings.notifications.delivery_reminders}
+            onChange={(val) => handleToggle('delivery_reminders', val)}
+            label="Delivery Reminders"
+            description="Get notified about upcoming deliveries for your property"
+          />
+          <ToggleSwitch
+            id="toggle-participation-updates"
+            checked={settings.notifications.participation_updates}
+            onChange={(val) => handleToggle('participation_updates', val)}
+            label="Participation Updates"
+            description="Receive updates when residents join or leave the program"
+          />
+          <ToggleSwitch
+            id="toggle-rewards-milestones"
+            checked={settings.notifications.rewards_milestones}
+            onChange={(val) => handleToggle('rewards_milestones', val)}
+            label="Rewards Milestones"
+            description="Get notified when your property reaches a new reward tier"
+          />
         </div>
       </div>
     </div>

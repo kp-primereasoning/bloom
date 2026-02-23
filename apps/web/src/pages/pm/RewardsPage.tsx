@@ -1,32 +1,33 @@
 /**
  * Property Manager Rewards Page
  *
- * Displays rewards program information and progress.
- * Currently shows placeholder content for future rewards features.
+ * Displays rewards program information and progress using backend-computed
+ * tier data from GET /pm/rewards. Tier computation is server-side to ensure
+ * consistency and auditability.
  */
 
 import { useState, useEffect } from 'react';
-import { getPMStats, type PMStatsResponse } from '@/lib/api';
+import { getPMRewards, type PMRewardsResponse } from '@/lib/api';
 
 export function RewardsPage() {
-  const [stats, setStats] = useState<PMStatsResponse | null>(null);
+  const [rewards, setRewards] = useState<PMRewardsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    async function fetchStats() {
+    async function fetchRewards() {
       try {
         setLoading(true);
         setError(null);
-        const data = await getPMStats();
-        setStats(data);
+        const data = await getPMRewards();
+        setRewards(data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load data');
+        setError(err instanceof Error ? err.message : 'Failed to load rewards');
       } finally {
         setLoading(false);
       }
     }
-    fetchStats();
+    fetchRewards();
   }, []);
 
   // Loading state
@@ -58,13 +59,37 @@ export function RewardsPage() {
     );
   }
 
-  const participationRate = stats && stats.total_residents > 0
-    ? Math.round((stats.active_subscriptions / stats.total_residents) * 100)
-    : 0;
+  // Empty state (no rewards data)
+  if (!rewards) {
+    return (
+      <div className="space-y-6">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+          <h1 className="text-2xl font-semibold text-gray-900 mb-2">Rewards</h1>
+          <p className="text-gray-500">No rewards data available.</p>
+        </div>
+      </div>
+    );
+  }
 
-  // Calculate reward tier based on participation
-  const rewardTier = participationRate >= 75 ? 'Gold' : participationRate >= 50 ? 'Silver' : 'Bronze';
-  const tierColor = rewardTier === 'Gold' ? 'yellow' : rewardTier === 'Silver' ? 'gray' : 'orange';
+  const { current, tier_definitions } = rewards;
+
+  const tierGradient = current.tier === 'Gold'
+    ? 'from-yellow-400 to-yellow-600'
+    : current.tier === 'Silver'
+      ? 'from-gray-400 to-gray-600'
+      : 'from-orange-400 to-orange-600';
+
+  const tierProgressColor = current.tier === 'Gold'
+    ? 'bg-yellow-500'
+    : current.tier === 'Silver'
+      ? 'bg-gray-500'
+      : 'bg-orange-500';
+
+  const tierBorderStyles: Record<string, { active: string; icon: string }> = {
+    Bronze: { active: 'border-orange-500 bg-orange-50', icon: 'bg-orange-100 text-orange-600' },
+    Silver: { active: 'border-gray-500 bg-gray-50', icon: 'bg-gray-200 text-gray-600' },
+    Gold: { active: 'border-yellow-500 bg-yellow-50', icon: 'bg-yellow-100 text-yellow-600' },
+  };
 
   return (
     <div className="space-y-6">
@@ -77,17 +102,13 @@ export function RewardsPage() {
       </div>
 
       {/* Current Tier Card */}
-      <div className={`bg-gradient-to-r ${
-        rewardTier === 'Gold' ? 'from-yellow-400 to-yellow-600' :
-        rewardTier === 'Silver' ? 'from-gray-400 to-gray-600' :
-        'from-orange-400 to-orange-600'
-      } rounded-lg shadow-sm p-6 text-white`}>
+      <div className={`bg-gradient-to-r ${tierGradient} rounded-lg shadow-sm p-6 text-white`}>
         <div className="flex items-center justify-between">
           <div>
             <p className="text-white/80 text-sm font-medium">Current Tier</p>
-            <h2 className="text-3xl font-bold mt-1">{rewardTier}</h2>
+            <h2 className="text-3xl font-bold mt-1">{current.tier}</h2>
             <p className="text-white/80 mt-2">
-              {participationRate}% participation rate
+              {Math.round(current.participation_rate)}% participation rate
             </p>
           </div>
           <div className="p-4 bg-white/20 rounded-full">
@@ -103,146 +124,66 @@ export function RewardsPage() {
         <h2 className="text-lg font-medium text-gray-900 mb-6">Reward Tiers</h2>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Bronze */}
-          <div className={`border rounded-lg p-6 ${
-            rewardTier === 'Bronze' ? 'border-orange-500 bg-orange-50' : 'border-gray-200'
-          }`}>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 bg-orange-100 rounded-full">
-                <svg className="h-6 w-6 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-                </svg>
-              </div>
-              <div>
-                <h3 className="font-semibold text-gray-900">Bronze</h3>
-                <p className="text-sm text-gray-500">0-49% participation</p>
-              </div>
-            </div>
-            <ul className="space-y-2 text-sm text-gray-600">
-              <li className="flex items-center gap-2">
-                <svg className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                Monthly floral arrangement for lobby
-              </li>
-              <li className="flex items-center gap-2">
-                <svg className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                Quarterly property showcase
-              </li>
-            </ul>
-          </div>
+          {tier_definitions.map((tierDef) => {
+            const isActive = tierDef.name === current.tier;
+            const styles = tierBorderStyles[tierDef.name] ?? { active: 'border-gray-500 bg-gray-50', icon: 'bg-gray-200 text-gray-600' };
+            const rateLabel = tierDef.max_rate != null
+              ? `${tierDef.min_rate}-${tierDef.max_rate}% participation`
+              : `${tierDef.min_rate}%+ participation`;
 
-          {/* Silver */}
-          <div className={`border rounded-lg p-6 ${
-            rewardTier === 'Silver' ? 'border-gray-500 bg-gray-50' : 'border-gray-200'
-          }`}>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 bg-gray-200 rounded-full">
-                <svg className="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-                </svg>
+            return (
+              <div
+                key={tierDef.name}
+                className={`border rounded-lg p-6 ${isActive ? styles.active : 'border-gray-200'}`}
+              >
+                <div className="flex items-center gap-3 mb-4">
+                  <div className={`p-2 rounded-full ${styles.icon}`}>
+                    <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900">{tierDef.name}</h3>
+                    <p className="text-sm text-gray-500">{rateLabel}</p>
+                  </div>
+                </div>
+                <ul className="space-y-2 text-sm text-gray-600">
+                  {tierDef.benefits.map((benefit) => (
+                    <li key={benefit} className="flex items-center gap-2">
+                      <svg className="h-4 w-4 text-green-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      {benefit}
+                    </li>
+                  ))}
+                </ul>
               </div>
-              <div>
-                <h3 className="font-semibold text-gray-900">Silver</h3>
-                <p className="text-sm text-gray-500">50-74% participation</p>
-              </div>
-            </div>
-            <ul className="space-y-2 text-sm text-gray-600">
-              <li className="flex items-center gap-2">
-                <svg className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                All Bronze benefits
-              </li>
-              <li className="flex items-center gap-2">
-                <svg className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                Bi-weekly lobby arrangements
-              </li>
-              <li className="flex items-center gap-2">
-                <svg className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                Holiday special arrangements
-              </li>
-            </ul>
-          </div>
-
-          {/* Gold */}
-          <div className={`border rounded-lg p-6 ${
-            rewardTier === 'Gold' ? 'border-yellow-500 bg-yellow-50' : 'border-gray-200'
-          }`}>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 bg-yellow-100 rounded-full">
-                <svg className="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-                </svg>
-              </div>
-              <div>
-                <h3 className="font-semibold text-gray-900">Gold</h3>
-                <p className="text-sm text-gray-500">75%+ participation</p>
-              </div>
-            </div>
-            <ul className="space-y-2 text-sm text-gray-600">
-              <li className="flex items-center gap-2">
-                <svg className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                All Silver benefits
-              </li>
-              <li className="flex items-center gap-2">
-                <svg className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                Weekly lobby arrangements
-              </li>
-              <li className="flex items-center gap-2">
-                <svg className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                Priority florist matching
-              </li>
-              <li className="flex items-center gap-2">
-                <svg className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                Featured in Bloom newsletter
-              </li>
-            </ul>
-          </div>
+            );
+          })}
         </div>
       </div>
 
       {/* Progress to Next Tier */}
-      {rewardTier !== 'Gold' && (
+      {current.next_tier && (
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
           <h2 className="text-lg font-medium text-gray-900 mb-4">Progress to Next Tier</h2>
           <div className="flex items-center gap-4 mb-4">
             <div className="flex-1">
               <div className="h-4 bg-gray-200 rounded-full overflow-hidden">
                 <div
-                  className={`h-full transition-all duration-500 ${
-                    rewardTier === 'Bronze' ? 'bg-orange-500' : 'bg-gray-500'
-                  }`}
-                  style={{
-                    width: `${rewardTier === 'Bronze'
-                      ? (participationRate / 50) * 100
-                      : ((participationRate - 50) / 25) * 100
-                    }%`
-                  }}
+                  className={`h-full transition-all duration-500 ${tierProgressColor}`}
+                  style={{ width: `${Math.round(current.progress_to_next * 100)}%` }}
                 />
               </div>
             </div>
             <div className="text-lg font-bold text-gray-900">
-              {rewardTier === 'Bronze' ? 50 - participationRate : 75 - participationRate}% to go
+              {current.threshold_for_next != null
+                ? `${current.threshold_for_next - Math.round(current.participation_rate)}% to go`
+                : ''}
             </div>
           </div>
           <p className="text-sm text-gray-500">
-            Increase participation to {rewardTier === 'Bronze' ? '50%' : '75%'} to reach{' '}
-            {rewardTier === 'Bronze' ? 'Silver' : 'Gold'} tier!
+            Increase participation to {current.threshold_for_next}% to reach {current.next_tier} tier!
           </p>
         </div>
       )}

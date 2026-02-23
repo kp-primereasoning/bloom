@@ -1,0 +1,7 @@
+node_modules/
+build/
+.cache/
+*.db
+*.db-journal
+.env
+.env.local

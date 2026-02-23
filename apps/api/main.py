@@ -13,6 +13,7 @@ from fastapi.responses import JSONResponse
 
 from middleware.exceptions import http_exception_handler, validation_exception_handler
 from middleware.request_id import RequestIDMiddleware, get_request_id
+from middleware.rate_limit import RateLimitMiddleware
 from routes.auth import router as auth_router
 from routes.admin import router as admin_router
 from routes.florist import router as florist_router
@@ -23,6 +24,7 @@ from routes.properties import router as properties_router
 from routes.me import router as me_router
 from routes.public import router as public_router
 from routes.deliveries import router as deliveries_router
+from routes.florist_api import router as florist_api_router
 
 
 # Initialize Sentry if configured
@@ -121,15 +123,18 @@ async def generic_exception_handler(request: Request, exc: Exception):
                 scope.set_context("request", {
                     "url": str(request.url),
                     "method": request.method,
-                    "headers": dict(request.headers),
                 })
                 sentry_sdk.capture_exception(exc)
         except ImportError:
             pass  # Sentry not installed
     
+    # Never leak internal error details to clients in production
+    is_prod = os.environ.get("ENVIRONMENT") == "production"
+    message = "An internal error occurred. Please try again later." if is_prod else str(exc)
+    
     return JSONResponse(
         status_code=500,
-        content={"error": {"code": "INTERNAL_ERROR", "message": str(exc), "request_id": request_id}}
+        content={"error": {"code": "INTERNAL_ERROR", "message": message, "request_id": request_id}}
     )
 
 # CORS configuration
@@ -162,6 +167,9 @@ app.add_middleware(
 # Add request ID middleware for tracing
 app.add_middleware(RequestIDMiddleware)
 
+# Rate limiting: 60 requests/minute per IP
+app.add_middleware(RateLimitMiddleware, rate_limit=60, window=60)
+
 # Include routers
 app.include_router(auth_router)
 app.include_router(admin_router)
@@ -173,3 +181,4 @@ app.include_router(properties_router)
 app.include_router(me_router)
 app.include_router(public_router)
 app.include_router(deliveries_router)
+app.include_router(florist_api_router)

@@ -26,6 +26,10 @@ from db.database import Base, DATABASE_URL
 from models.property import Property
 from models.florist import Florist
 from models.property_assignment import PropertyAssignment
+from models.florist_connection import FloristConnection
+from models.florist_product import FloristProduct
+from models.florist_tier_mapping import FloristTierMapping
+from models.delivery import Delivery
 
 target_metadata = Base.metadata
 

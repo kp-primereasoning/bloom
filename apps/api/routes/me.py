@@ -171,6 +171,84 @@ async def update_my_plan(
     )
 
 
+class MeSkipDelivery(BaseModel):
+    """Schema for toggling skip next delivery."""
+    skip: bool = Field(..., description="True to skip next delivery, false to unskip")
+
+
+@router.patch("/skip-next-delivery")
+async def skip_next_delivery(
+    data: MeSkipDelivery,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(require_role(["CUSTOMER"]))
+):
+    """
+    Toggle skip for the next delivery cycle.
+
+    Can only skip if the delivery hasn't been generated yet (before the cutoff).
+    Returns the updated skip status and cutoff info.
+    """
+    user_id = UUID(current_user["id"])
+    user = await get_user_by_id(user_id)
+
+    if not user or not user.property_id:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error": {
+                    "code": "NO_PROPERTY",
+                    "message": "You must be assigned to a property first",
+                    "request_id": str(uuid4()),
+                }
+            },
+        )
+
+    # Check if there's already a SCHEDULED delivery for this user in the future
+    # If so, it's too late to skip
+    now = datetime.now(timezone.utc)
+    existing_scheduled = (
+        db.query(Delivery)
+        .filter(
+            Delivery.user_id == user_id,
+            Delivery.scheduled_for > now,
+            Delivery.status == "SCHEDULED",
+            Delivery.archived_at.is_(None),
+        )
+        .first()
+    )
+
+    if data.skip and existing_scheduled:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error": {
+                    "code": "PAST_CUTOFF",
+                    "message": "Too late to skip — your next delivery has already been scheduled",
+                    "request_id": str(uuid4()),
+                }
+            },
+        )
+
+    updated_user = await update_user(user_id, {"skip_next_delivery": data.skip})
+
+    # Get property info for cutoff display
+    prop = property_service.get_property(db, user.property_id)
+    cutoff_info = None
+    if prop and prop.next_delivery_date:
+        from datetime import timedelta
+        cutoff_date = prop.next_delivery_date - timedelta(days=prop.delivery_lead_days)
+        cutoff_info = {
+            "next_delivery_date": prop.next_delivery_date.isoformat(),
+            "cutoff_date": cutoff_date.isoformat(),
+            "delivery_cadence": prop.delivery_cadence,
+        }
+
+    return {
+        "skip_next_delivery": updated_user.skip_next_delivery,
+        "cutoff": cutoff_info,
+    }
+
+
 @router.get("/deliveries", response_model=MeDeliveriesResponse)
 async def get_my_deliveries(
     db: Session = Depends(get_db),

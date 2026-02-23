@@ -9,7 +9,7 @@ import uuid
 from datetime import datetime, timezone
 from enum import Enum
 
-from sqlalchemy import Column, String, DateTime, Enum as SQLEnum, ForeignKey
+from sqlalchemy import Column, String, Integer, DateTime, Enum as SQLEnum, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
@@ -53,6 +53,8 @@ class Property(Base):
         default=PropertyStatus.CREATED
     )
     delivery_cadence = Column(String(100), nullable=True)
+    next_delivery_date = Column(DateTime(timezone=True), nullable=True)
+    delivery_lead_days = Column(Integer, nullable=False, default=3)
     # Property manager assignment (references in-memory user store by ID)
     property_manager_id = Column(UUID(as_uuid=True), nullable=True)
     created_at = Column(

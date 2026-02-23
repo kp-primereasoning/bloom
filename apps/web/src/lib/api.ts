@@ -254,6 +254,9 @@ export interface PMStatsResponse {
   active_subscriptions: number;
   paused_subscriptions: number;
   pending_activations: number;
+  next_delivery_date: string | null;
+  upcoming_delivery_count: number;
+  participation_rate: number;
 }
 
 /**
@@ -268,11 +271,21 @@ export interface ResidentInfo {
 }
 
 /**
+ * Plan distribution breakdown by tier
+ */
+export interface PlanDistribution {
+  essential: number;
+  signature: number;
+  statement: number;
+}
+
+/**
  * PM residents list response
  */
 export interface PMResidentsResponse {
   property_name: string | null;
   residents: ResidentInfo[];
+  plan_distribution: PlanDistribution;
 }
 
 /**
@@ -289,4 +302,159 @@ export async function getPMStats(): Promise<PMStatsResponse> {
  */
 export async function getPMResidents(): Promise<PMResidentsResponse> {
   return apiRequest<PMResidentsResponse>('/pm/residents');
+}
+
+
+// =============================================================================
+// PM Deliveries API
+// =============================================================================
+
+/**
+ * Single delivery record for PM delivery history
+ */
+export interface PMDeliveryItem {
+  id: string;
+  resident_email: string;
+  unit: string | null;
+  subscription_plan: string;
+  status: string;
+  scheduled_for: string;
+  delivered_at: string | null;
+}
+
+/**
+ * Aggregated delivery counts by status
+ */
+export interface DeliverySummary {
+  delivered: number;
+  skipped: number;
+  missed: number;
+  scheduled: number;
+}
+
+/**
+ * PM deliveries response with pagination and summary
+ */
+export interface PMDeliveriesResponse {
+  deliveries: PMDeliveryItem[];
+  summary: DeliverySummary;
+  total: number;
+  page: number;
+  page_size: number;
+}
+
+/**
+ * Query parameters for PM deliveries endpoint
+ */
+export interface PMDeliveriesParams {
+  page?: number;
+  page_size?: number;
+  status?: string;
+}
+
+/**
+ * Get delivery history for the property manager's property.
+ * Requires PROPERTY_MANAGER role authentication.
+ * Supports pagination and optional status filtering.
+ */
+export async function getPMDeliveries(params?: PMDeliveriesParams): Promise<PMDeliveriesResponse> {
+  const searchParams = new URLSearchParams();
+  if (params?.page !== undefined) searchParams.set('page', String(params.page));
+  if (params?.page_size !== undefined) searchParams.set('page_size', String(params.page_size));
+  if (params?.status) searchParams.set('status', params.status);
+  const query = searchParams.toString();
+  return apiRequest<PMDeliveriesResponse>(`/pm/deliveries${query ? `?${query}` : ''}`);
+}
+
+
+// =============================================================================
+// PM Rewards API
+// =============================================================================
+
+/**
+ * Current reward tier information for a property
+ */
+export interface RewardTierInfo {
+  tier: string;
+  participation_rate: number;
+  benefits: string[];
+  next_tier: string | null;
+  progress_to_next: number;
+  threshold_for_next: number | null;
+}
+
+/**
+ * Definition of a reward tier with thresholds and benefits
+ */
+export interface TierDefinition {
+  name: string;
+  min_rate: number;
+  max_rate: number | null;
+  benefits: string[];
+}
+
+/**
+ * PM rewards response
+ */
+export interface PMRewardsResponse {
+  current: RewardTierInfo;
+  tier_definitions: TierDefinition[];
+}
+
+/**
+ * Get rewards tier for the property manager's property.
+ * Requires PROPERTY_MANAGER role authentication.
+ */
+export async function getPMRewards(): Promise<PMRewardsResponse> {
+  return apiRequest<PMRewardsResponse>('/pm/rewards');
+}
+
+
+// =============================================================================
+// PM Settings API
+// =============================================================================
+
+/**
+ * Notification preference toggles
+ */
+export interface NotificationPreferences {
+  delivery_reminders: boolean;
+  participation_updates: boolean;
+  rewards_milestones: boolean;
+}
+
+/**
+ * PM settings response with profile info and notification preferences
+ */
+export interface PMSettingsResponse {
+  email: string;
+  property_name: string | null;
+  property_address: string | null;
+  notifications: NotificationPreferences;
+}
+
+/**
+ * Request body for updating PM settings
+ */
+export interface PMSettingsUpdate {
+  notifications: NotificationPreferences;
+}
+
+/**
+ * Get property manager profile and notification preferences.
+ * Requires PROPERTY_MANAGER role authentication.
+ */
+export async function getPMSettings(): Promise<PMSettingsResponse> {
+  return apiRequest<PMSettingsResponse>('/pm/settings');
+}
+
+/**
+ * Update property manager notification preferences.
+ * Requires PROPERTY_MANAGER role authentication.
+ */
+export async function updatePMSettings(data: PMSettingsUpdate): Promise<PMSettingsResponse> {
+  return apiRequest<PMSettingsResponse>('/pm/settings', {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  });
 }

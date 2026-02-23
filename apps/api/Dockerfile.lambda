@@ -1,0 +1,14 @@
+FROM public.ecr.aws/lambda/python:3.11
+
+# Install system dependencies for psycopg2
+RUN yum install -y postgresql-devel gcc python3-devel && yum clean all
+
+# Copy requirements and install
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
+COPY . ${LAMBDA_TASK_ROOT}/
+
+# Lambda handler
+CMD ["lambda_handlers.generate_deliveries.handler"]

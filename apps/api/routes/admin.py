@@ -30,6 +30,8 @@ from models.user import UserResponse, UserRole, SubscriptionStatus
 from services import property_service, florist_service, assignment_service
 from db.users import get_all_users, get_user_by_email, get_user_by_id, create_user, update_user
 from auth.service import auth_service
+from auth.api_key import generate_api_key, hash_api_key
+from models.florist_connection import FloristConnection
 
 
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -180,6 +182,63 @@ async def delete_florist(
     """
     request_id = str(uuid4())
     return florist_service.archive_florist(db, florist_id, request_id)
+
+
+@router.post("/florists/{florist_id}/api-key")
+async def generate_florist_api_key(
+    florist_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(require_role(["ADMIN"]))
+):
+    """
+    Generate a new API key for a florist (ADMIN only).
+
+    Returns the raw key once — it cannot be retrieved again.
+    If the florist already has a connection, the old key is replaced.
+    The admin gives this key to the florist to paste into the Shopify app.
+    """
+    request_id = str(uuid4())
+    florist = florist_service.get_florist(db, florist_id)
+    if not florist:
+        raise HTTPException(
+            status_code=404,
+            detail={
+                "error": {
+                    "code": "NOT_FOUND",
+                    "message": "Florist not found",
+                    "request_id": request_id,
+                }
+            },
+        )
+
+    raw_key = generate_api_key()
+    key_hash = hash_api_key(raw_key)
+
+    # Upsert: delete any existing connection for this florist (key rotation)
+    existing = (
+        db.query(FloristConnection)
+        .filter(FloristConnection.florist_id == florist_id)
+        .first()
+    )
+    if existing:
+        existing.api_key_hash = key_hash
+    else:
+        # Create a placeholder connection — shop_domain will be set when the
+        # florist actually connects from the Shopify app.  For now use a
+        # placeholder so the key can be validated.
+        db.add(FloristConnection(
+            florist_id=florist_id,
+            shop_domain=f"pending-{florist_id}",
+            api_key_hash=key_hash,
+        ))
+
+    db.commit()
+
+    return {
+        "florist_id": str(florist_id),
+        "api_key": raw_key,
+        "message": "Save this key — it cannot be retrieved again.",
+    }
 
 
 # =============================================================================
@@ -457,6 +516,34 @@ async def update_user_endpoint(
         subscription_status=sub_status,
         created_at=updated_user.created_at
     )
+
+
+# =============================================================================
+# Delivery Generation (Manual Trigger)
+# =============================================================================
+
+@router.post("/generate-deliveries")
+async def trigger_delivery_generation(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(require_role(["ADMIN"]))
+):
+    """
+    Manually trigger delivery generation for all eligible properties (ADMIN only).
+
+    Same logic as the daily Lambda — finds properties within the lead-time
+    window and creates SCHEDULED deliveries for active subscribers.
+    """
+    from services.delivery_generation import run_delivery_generation
+
+    results = await run_delivery_generation(db)
+
+    return {
+        "properties_processed": len(results),
+        "total_deliveries_created": sum(r.get("created", 0) for r in results),
+        "total_skipped": sum(r.get("skipped", 0) for r in results),
+        "errors": [r for r in results if "error" in r],
+        "details": results,
+    }
 
 
 @router.delete("/users/{user_id}", response_model=EnrichedUserResponse)

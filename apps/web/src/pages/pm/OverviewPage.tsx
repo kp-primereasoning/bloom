@@ -1,31 +1,37 @@
 /**
  * Property Manager Overview Page
  *
- * Displays property information and subscription statistics dashboard.
+ * Displays property information, subscription statistics,
+ * upcoming delivery info, and delivery summary dashboard.
  */
 
 import { useState, useEffect } from 'react';
-import { getPMStats, type PMStatsResponse } from '@/lib/api';
+import { getPMStats, getPMDeliveries, type PMStatsResponse, type DeliverySummary } from '@/lib/api';
 
 export function OverviewPage() {
   const [stats, setStats] = useState<PMStatsResponse | null>(null);
+  const [deliverySummary, setDeliverySummary] = useState<DeliverySummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    async function fetchStats() {
+    async function fetchData() {
       try {
         setLoading(true);
         setError(null);
-        const data = await getPMStats();
-        setStats(data);
+        const [statsData, deliveriesData] = await Promise.all([
+          getPMStats(),
+          getPMDeliveries({ page: 1, page_size: 1 }),
+        ]);
+        setStats(statsData);
+        setDeliverySummary(deliveriesData.summary);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load dashboard');
       } finally {
         setLoading(false);
       }
     }
-    fetchStats();
+    fetchData();
   }, []);
 
   // Loading state
@@ -77,9 +83,21 @@ export function OverviewPage() {
     );
   }
 
-  const participationRate = stats.total_residents > 0
-    ? Math.round((stats.active_subscriptions / stats.total_residents) * 100)
-    : 0;
+  const participationRate = stats.participation_rate ?? (
+    stats.total_residents > 0
+      ? Math.round((stats.active_subscriptions / stats.total_residents) * 100)
+      : 0
+  );
+
+  const hasUpcomingDeliveries = stats.upcoming_delivery_count > 0;
+
+  const formattedNextDelivery = stats.next_delivery_date
+    ? new Date(stats.next_delivery_date).toLocaleDateString('en-US', {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric',
+      })
+    : null;
 
   return (
     <div className="space-y-6">
@@ -169,6 +187,58 @@ export function OverviewPage() {
           </div>
         </div>
       </div>
+
+      {/* Next Delivery Card */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <h3 className="text-lg font-medium text-gray-900 mb-4">Next Delivery</h3>
+        {hasUpcomingDeliveries ? (
+          <div className="flex items-center gap-6">
+            <div className="p-4 bg-indigo-50 rounded-lg">
+              <svg className="h-8 w-8 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-gray-900">{formattedNextDelivery}</p>
+              <p className="text-sm text-gray-500 mt-1">
+                {stats.upcoming_delivery_count} upcoming {stats.upcoming_delivery_count === 1 ? 'delivery' : 'deliveries'}
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center">
+            <svg className="h-10 w-10 text-gray-400 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <p className="text-gray-500 font-medium">No upcoming deliveries scheduled</p>
+            <p className="text-gray-400 text-sm mt-1">
+              Deliveries will appear here once they are scheduled for your property.
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* Delivery Summary */}
+      {deliverySummary && (
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">Delivery Summary</h3>
+          <p className="text-sm text-gray-500 mb-4">Last 90 days</p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="bg-green-50 rounded-lg p-4 text-center">
+              <p className="text-3xl font-bold text-green-700">{deliverySummary.delivered}</p>
+              <p className="text-sm font-medium text-green-600 mt-1">Delivered</p>
+            </div>
+            <div className="bg-yellow-50 rounded-lg p-4 text-center">
+              <p className="text-3xl font-bold text-yellow-700">{deliverySummary.skipped}</p>
+              <p className="text-sm font-medium text-yellow-600 mt-1">Skipped</p>
+            </div>
+            <div className="bg-red-50 rounded-lg p-4 text-center">
+              <p className="text-3xl font-bold text-red-700">{deliverySummary.missed}</p>
+              <p className="text-sm font-medium text-red-600 mt-1">Missed</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Participation Rate */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">

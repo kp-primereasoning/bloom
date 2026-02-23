@@ -29,6 +29,16 @@ class PropertyCreate(BaseModel):
         max_length=100,
         description="Delivery schedule (e.g., 'weekly', 'bi-weekly')"
     )
+    next_delivery_date: Optional[datetime] = Field(
+        None,
+        description="Date of the next scheduled delivery (set by admin)"
+    )
+    delivery_lead_days: int = Field(
+        3,
+        ge=0,
+        le=30,
+        description="Days before delivery date to generate orders (default 3)"
+    )
 
 
 class PropertyUpdate(BaseModel):
@@ -37,6 +47,16 @@ class PropertyUpdate(BaseModel):
     address: Optional[str] = Field(None, min_length=1, max_length=500)
     status: Optional[PropertyStatus] = Field(None, description="New status for the property")
     delivery_cadence: Optional[str] = Field(None, max_length=100)
+    next_delivery_date: Optional[datetime] = Field(
+        None,
+        description="Date of the next scheduled delivery"
+    )
+    delivery_lead_days: Optional[int] = Field(
+        None,
+        ge=0,
+        le=30,
+        description="Days before delivery date to generate orders"
+    )
 
 
 class PropertyResponse(BaseModel):
@@ -46,6 +66,8 @@ class PropertyResponse(BaseModel):
     address: str
     status: PropertyStatus
     delivery_cadence: Optional[str]
+    next_delivery_date: Optional[datetime] = None
+    delivery_lead_days: int = 3
     created_at: datetime
     updated_at: datetime
     

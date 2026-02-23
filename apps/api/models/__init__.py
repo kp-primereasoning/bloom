@@ -8,6 +8,8 @@ from models.property import Property, PropertyStatus
 from models.florist import Florist, FloristStatus
 from models.property_assignment import PropertyAssignment
 from models.delivery import Delivery, SubscriptionPlan, DeliveryStatus
+from models.property_reward import PropertyReward
+from models.pm_preference import PMPreference
 
 __all__ = [
     # User models
@@ -25,4 +27,7 @@ __all__ = [
     "Delivery",
     "SubscriptionPlan",
     "DeliveryStatus",
+    # PM Dashboard models
+    "PropertyReward",
+    "PMPreference",
 ]
