@@ -10,7 +10,7 @@
 
 import { describe, it, expect, afterEach, vi } from 'vitest';
 import * as fc from 'fast-check';
-import { render, screen, cleanup } from '@testing-library/react';
+import { render, cleanup } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { ALL_ROLES } from '@bloom/shared';
 import { sidebarConfig } from '../config/sidebarConfig';
@@ -24,7 +24,10 @@ vi.mock('../providers/AuthProvider', () => ({
       role: 'CUSTOMER',
       property_id: 'prop-1',
       property_name: 'Test Property',
+      property_address: '123 Main St',
+      unit: '4A',
       subscription_status: 'ACTIVE',
+      subscription_plan: 'ESSENTIAL',
       created_at: '2024-01-01T00:00:00Z',
     },
     isAuthenticated: true,

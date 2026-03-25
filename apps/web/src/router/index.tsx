@@ -17,6 +17,7 @@ import {
   SubscriptionPage as CustomerSubscriptionPage,
   DeliveriesPage as CustomerDeliveries,
   AccountPage,
+  BillingPage,
   HelpPage,
 } from '@/pages/customer';
 
@@ -41,6 +42,7 @@ import {
   PropertiesPage,
   FloristsPage,
   UsersPage,
+  PayoutsPage,
 } from '@/pages/admin';
 
 export const router = createBrowserRouter([
@@ -126,6 +128,14 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute allowedRoles={[UserRole.CUSTOMER]}>
             <AccountPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'customer/billing',
+        element: (
+          <ProtectedRoute allowedRoles={[UserRole.CUSTOMER]}>
+            <BillingPage />
           </ProtectedRoute>
         ),
       },
@@ -249,6 +259,14 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
             <UsersPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'admin/payouts',
+        element: (
+          <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+            <PayoutsPage />
           </ProtectedRoute>
         ),
       },

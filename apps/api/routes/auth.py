@@ -157,6 +157,13 @@ async def register(request: RegisterRequest):
     
     await create_user(new_user)
     
+    # Send welcome email (fire and forget)
+    try:
+        from services.email import send_welcome
+        send_welcome(new_user.email)
+    except Exception:
+        pass  # Non-fatal
+    
     # Generate custom JWT if not using Cognito
     if access_token is None:
         access_token = auth_service.create_access_token(new_user)

@@ -42,6 +42,7 @@ const mockUserWithProperty: MeResponse = {
   property_address: '123 Main St, San Francisco, CA 94102',
   unit: '4B',
   subscription_status: 'ACTIVE',
+  subscription_plan: 'ESSENTIAL',
   created_at: '2024-06-15T10:30:00Z',
 };
 
@@ -55,6 +56,7 @@ const mockUserWithoutProperty: MeResponse = {
   property_address: null,
   unit: null,
   subscription_status: 'CREATED',
+  subscription_plan: null,
   created_at: '2025-01-01T00:00:00Z',
 };
 
@@ -68,6 +70,7 @@ const mockUserWithPropertyNoUnit: MeResponse = {
   property_address: '456 Oak Ave, San Francisco, CA 94103',
   unit: null,
   subscription_status: 'ACTIVE',
+  subscription_plan: 'SIGNATURE',
   created_at: '2024-08-20T14:00:00Z',
 };
 
@@ -675,6 +678,7 @@ const meResponseWithPropertyArbitrary = fc.record({
   property_address: addressArbitrary,
   unit: unitArbitrary,
   subscription_status: fc.constantFrom('CREATED', 'ACTIVE', 'PAUSED') as fc.Arbitrary<'CREATED' | 'ACTIVE' | 'PAUSED'>,
+  subscription_plan: fc.constantFrom('ESSENTIAL', 'SIGNATURE', 'STATEMENT', null) as fc.Arbitrary<'ESSENTIAL' | 'SIGNATURE' | 'STATEMENT' | null>,
   created_at: dateArbitrary,
 });
 
@@ -688,6 +692,7 @@ const meResponseWithoutPropertyArbitrary = fc.record({
   property_address: fc.constant(null),
   unit: fc.constant(null),
   subscription_status: fc.constantFrom('CREATED', 'ACTIVE', 'PAUSED') as fc.Arbitrary<'CREATED' | 'ACTIVE' | 'PAUSED'>,
+  subscription_plan: fc.constant(null) as fc.Arbitrary<'ESSENTIAL' | 'SIGNATURE' | 'STATEMENT' | null>,
   created_at: dateArbitrary,
 });
 

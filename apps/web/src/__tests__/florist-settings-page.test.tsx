@@ -60,7 +60,7 @@ const mockFloristNoProperties: FloristMeResponse = {
 const mockFloristArchived: FloristMeResponse = {
   florist_id: 'florist-3',
   florist_name: 'Old Florist Shop',
-  florist_status: 'ARCHIVED',
+  florist_status: 'ONBOARDING' as FloristMeResponse['florist_status'],
   assigned_properties: [],
 };
 

@@ -458,3 +458,162 @@ export async function updatePMSettings(data: PMSettingsUpdate): Promise<PMSettin
     body: JSON.stringify(data),
   });
 }
+
+
+// =============================================================================
+// Payment API Methods
+// =============================================================================
+
+export interface SetupIntentResponse {
+  client_secret: string;
+  setup_intent_id: string;
+}
+
+export interface SubscribeRequest {
+  plan: string;
+}
+
+export interface SubscribeResponse {
+  subscription_id: string;
+  status: string;
+  client_secret: string | null;
+}
+
+export interface PaymentMethodInfo {
+  id: string;
+  brand: string;
+  last4: string;
+  exp_month: number;
+  exp_year: number;
+}
+
+export interface InvoiceItem {
+  id: string;
+  amount_cents: number;
+  currency: string;
+  status: string;
+  period_start: number | null;
+  period_end: number | null;
+  pdf_url: string | null;
+  created: number | null;
+}
+
+/**
+ * Create a Stripe SetupIntent for collecting a payment method.
+ * Requires CUSTOMER role authentication.
+ */
+export async function createSetupIntent(): Promise<SetupIntentResponse> {
+  return apiRequest<SetupIntentResponse>('/payments/setup-intent', { method: 'POST' });
+}
+
+/**
+ * Create a Stripe Subscription for the selected plan.
+ * Requires CUSTOMER role authentication.
+ */
+export async function createSubscription(plan: string): Promise<SubscribeResponse> {
+  return apiRequest<SubscribeResponse>('/payments/subscribe', {
+    method: 'POST',
+    body: JSON.stringify({ plan }),
+  });
+}
+
+/**
+ * Cancel the current Stripe Subscription.
+ * Requires CUSTOMER role authentication.
+ */
+export async function cancelSubscription(): Promise<{ subscription_id: string; status: string }> {
+  return apiRequest('/payments/cancel', { method: 'POST' });
+}
+
+/**
+ * Get the customer's current payment method on file.
+ * Requires CUSTOMER role authentication.
+ */
+export async function getPaymentMethod(): Promise<PaymentMethodInfo | null> {
+  return apiRequest<PaymentMethodInfo | null>('/payments/payment-method');
+}
+
+/**
+ * Update the customer's default payment method.
+ * Requires CUSTOMER role authentication.
+ */
+export async function updatePaymentMethod(paymentMethodId: string): Promise<PaymentMethodInfo> {
+  return apiRequest<PaymentMethodInfo>('/payments/payment-method', {
+    method: 'PATCH',
+    body: JSON.stringify({ payment_method_id: paymentMethodId }),
+  });
+}
+
+/**
+ * List the customer's invoices from Stripe.
+ * Requires CUSTOMER role authentication.
+ */
+export async function getInvoices(): Promise<InvoiceItem[]> {
+  return apiRequest<InvoiceItem[]>('/payments/invoices');
+}
+
+
+// =============================================================================
+// Notification Preferences API Methods
+// =============================================================================
+
+export interface UserNotificationPreferences {
+  email_notifications_enabled: boolean;
+}
+
+/**
+ * Get current user's notification preferences.
+ * Requires CUSTOMER or FLORIST role authentication.
+ */
+export async function getNotificationPreferences(): Promise<UserNotificationPreferences> {
+  return apiRequest<UserNotificationPreferences>('/me/notification-preferences');
+}
+
+/**
+ * Update current user's notification preferences.
+ * Requires CUSTOMER or FLORIST role authentication.
+ */
+export async function updateNotificationPreferences(
+  data: UserNotificationPreferences
+): Promise<UserNotificationPreferences> {
+  return apiRequest<UserNotificationPreferences>('/me/notification-preferences', {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  });
+}
+
+
+// =============================================================================
+// Florist Availability API Methods
+// =============================================================================
+
+export interface DayAvailability {
+  day_of_week: number;
+  is_available: boolean;
+  max_deliveries_per_day: number;
+}
+
+export interface AvailabilityResponse {
+  days: DayAvailability[];
+}
+
+/**
+ * Get florist's current availability for each day of the week.
+ * Requires FLORIST role authentication.
+ */
+export async function getFloristAvailability(): Promise<AvailabilityResponse> {
+  return apiRequest<AvailabilityResponse>('/florist/availability');
+}
+
+/**
+ * Bulk update florist availability for all days.
+ * Requires FLORIST role authentication.
+ */
+export async function updateFloristAvailability(
+  days: DayAvailability[]
+): Promise<AvailabilityResponse> {
+  return apiRequest<AvailabilityResponse>('/florist/availability', {
+    method: 'PUT',
+    body: JSON.stringify({ days }),
+  });
+}

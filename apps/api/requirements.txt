@@ -17,3 +17,5 @@ sentry-sdk[fastapi]>=1.40.0
 boto3>=1.34.0
 watchtower>=3.0.0
 requests>=2.31.0
+# Payments
+stripe>=8.0.0

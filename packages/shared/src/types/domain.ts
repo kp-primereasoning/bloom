@@ -168,6 +168,7 @@ export interface User {
   role: UserRole;
   property_id: string | null;
   subscription_status: SubscriptionStatus | null;
+  subscription_plan: SubscriptionPlan | null;
   created_at: string;
 }
 

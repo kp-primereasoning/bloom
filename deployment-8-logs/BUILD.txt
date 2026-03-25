@@ -1,0 +1,223 @@
+2026-02-23T04:20:40.996Z [INFO]: # Build environment configured with Standard build compute type: 8GiB Memory, 4vCPUs, 128GB Disk Space
+2026-02-23T04:20:41.401Z [INFO]: # Cloning repository: git@github.com:kp-primereasoning/bloom.git
+2026-02-23T04:20:42.120Z [INFO]: 
+2026-02-23T04:20:42.120Z [INFO]: Cloning into 'bloom'...
+2026-02-23T04:20:42.121Z [INFO]: # Checking for Git submodules at: /codebuild/output/src2076585192/src/bloom/.gitmodules
+2026-02-23T04:20:42.127Z [INFO]: # Retrieving environment cache...
+2026-02-23T04:20:42.178Z [WARNING]: ! Unable to write cache: {"code":"ERR_BAD_REQUEST","message":"Request failed with status code 404"})}
+2026-02-23T04:20:42.178Z [INFO]: ---- Setting Up SSM Secrets ----
+2026-02-23T04:20:42.178Z [INFO]: SSM params {"Path":"/amplify/dyspvdc2idyd3/main/","WithDecryption":true}
+2026-02-23T04:20:45.544Z [INFO]: # Patching NPM package '@aws-amplify/cli' from 14.0.0 to 14.2.5...
+2026-02-23T04:21:24.571Z [INFO]: # Installed '@aws-amplify/cli@14.2.5'
+2026-02-23T04:21:24.674Z [INFO]: # Done patching NPM package '@aws-amplify/cli' to version 14.2.5
+2026-02-23T04:21:24.678Z [INFO]: # Retrieving cache...
+2026-02-23T04:21:24.726Z [INFO]: # Retrieved cache
+2026-02-23T04:21:27.810Z [INFO]: ## Starting Backend Build
+                                 ## Checking for associated backend environment...
+                                 ## No backend environment association found, continuing...
+                                 ## Completed Backend Build
+2026-02-23T04:21:27.819Z [INFO]: {"backendDuration": 0}
+                                 ## Starting Frontend Build
+                                 # Starting phase: preBuild
+                                 # Executing command: npm install -g pnpm
+2026-02-23T04:21:28.681Z [INFO]: added 1 package in 814ms
+2026-02-23T04:21:28.681Z [INFO]: 1 package is looking for funding
+                                 run `npm fund` for details
+2026-02-23T04:21:28.688Z [INFO]: # Executing command: pnpm install
+2026-02-23T04:21:30.588Z [INFO]: Scope: all 5 workspace projects
+2026-02-23T04:21:30.670Z [INFO]: Lockfile is up to date, resolution step is skipped
+2026-02-23T04:21:30.758Z [INFO]: Progress: resolved 1, reused 0, downloaded 0, added 0
+2026-02-23T04:21:30.930Z [INFO]: Packages: +1259
+                                 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+2026-02-23T04:21:31.759Z [INFO]: Progress: resolved 1259, reused 0, downloaded 60, added 51
+2026-02-23T04:21:32.765Z [INFO]: Progress: resolved 1259, reused 0, downloaded 109, added 100
+2026-02-23T04:21:33.765Z [INFO]: Progress: resolved 1259, reused 0, downloaded 186, added 180
+2026-02-23T04:21:34.765Z [INFO]: Progress: resolved 1259, reused 0, downloaded 235, added 234
+2026-02-23T04:21:35.766Z [INFO]: Progress: resolved 1259, reused 0, downloaded 453, added 446
+2026-02-23T04:21:36.768Z [INFO]: Progress: resolved 1259, reused 0, downloaded 661, added 654
+2026-02-23T04:21:37.768Z [INFO]: Progress: resolved 1259, reused 0, downloaded 855, added 861
+2026-02-23T04:21:38.768Z [INFO]: Progress: resolved 1259, reused 0, downloaded 892, added 891
+2026-02-23T04:21:39.769Z [INFO]: Progress: resolved 1259, reused 0, downloaded 1039, added 1040
+2026-02-23T04:21:40.777Z [INFO]: Progress: resolved 1259, reused 0, downloaded 1224, added 1231
+2026-02-23T04:21:41.777Z [INFO]: Progress: resolved 1259, reused 0, downloaded 1249, added 1257
+2026-02-23T04:21:42.275Z [INFO]: Progress: resolved 1259, reused 0, downloaded 1251, added 1259, done
+2026-02-23T04:21:42.671Z [INFO]: .../sharp@0.34.5/node_modules/sharp install$ node install/check.js || npm run build
+2026-02-23T04:21:42.672Z [INFO]: .../node_modules/unrs-resolver postinstall$ napi-postinstall unrs-resolver 1.11.1 check
+2026-02-23T04:21:42.714Z [INFO]: .../esbuild@0.21.5/node_modules/esbuild postinstall$ node install.js
+2026-02-23T04:21:42.715Z [INFO]: .../esbuild@0.17.6/node_modules/esbuild postinstall$ node install.js
+2026-02-23T04:21:42.715Z [INFO]: .../esbuild@0.27.2/node_modules/esbuild postinstall$ node install.js
+2026-02-23T04:21:42.777Z [INFO]: .../node_modules/unrs-resolver postinstall: Done
+2026-02-23T04:21:42.786Z [INFO]: .../esbuild@0.25.12/node_modules/esbuild postinstall$ node install.js
+2026-02-23T04:21:42.810Z [INFO]: .../esbuild@0.21.5/node_modules/esbuild postinstall: Done
+2026-02-23T04:21:42.818Z [INFO]: .../esbuild@0.17.6/node_modules/esbuild postinstall: Done
+2026-02-23T04:21:42.848Z [INFO]: .../node_modules/@prisma/engines postinstall$ node scripts/postinstall.js
+2026-02-23T04:21:42.849Z [INFO]: .../esbuild@0.27.2/node_modules/esbuild postinstall: Done
+2026-02-23T04:21:42.865Z [INFO]: .../esbuild@0.25.12/node_modules/esbuild postinstall: Done
+2026-02-23T04:21:44.615Z [INFO]: .../sharp@0.34.5/node_modules/sharp install: Done
+2026-02-23T04:21:44.648Z [INFO]: .../node_modules/@prisma/engines postinstall: Done
+2026-02-23T04:21:45.585Z [INFO]: .../prisma@5.22.0/node_modules/prisma preinstall$ node scripts/preinstall-entry.js
+2026-02-23T04:21:45.625Z [INFO]: .../prisma@5.22.0/node_modules/prisma preinstall: Done
+2026-02-23T04:21:45.669Z [INFO]: .../node_modules/@prisma/client postinstall$ node scripts/postinstall.js
+2026-02-23T04:21:46.241Z [INFO]: .../node_modules/@prisma/client postinstall: prisma:warn We could not find your Prisma schema in the default locations (see: https://pris.ly/d/prisma-schema-location).
+2026-02-23T04:21:46.242Z [INFO]: .../node_modules/@prisma/client postinstall: If you have a Prisma schema file in a custom path, you will need to run
+2026-02-23T04:21:46.242Z [INFO]: .../node_modules/@prisma/client postinstall: `prisma generate --schema=./path/to/your/schema.prisma` to generate Prisma Client.
+2026-02-23T04:21:46.243Z [INFO]: .../node_modules/@prisma/client postinstall: If you do not have a Prisma schema file yet, you can ignore this message.
+2026-02-23T04:21:46.251Z [INFO]: .../node_modules/@prisma/client postinstall: Done
+2026-02-23T04:21:46.504Z [INFO]: devDependencies:
+                                 + concurrently 9.2.1
+2026-02-23T04:21:46.543Z [INFO]: Done in 16.3s
+2026-02-23T04:21:46.586Z [INFO]: # Completed phase: preBuild
+                                 # Starting phase: build
+2026-02-23T04:21:46.587Z [INFO]: # Executing command: cd apps/web && pnpm run build
+2026-02-23T04:21:47.295Z [INFO]: > web@0.0.0 build /codebuild/output/src2076585192/src/bloom/apps/web
+                                 > tsc -b && vite build
+2026-02-23T04:21:52.664Z [INFO]: src/__tests__/account-page.test.tsx(32,31): error TS2322: Type 'ReactElement<unknown, string | JSXElementConstructor<any>>' is not assignable to type 'ReactNode'.
+                                 Property 'children' is missing in type 'ReactElement<unknown, string | JSXElementConstructor<any>>' but required in type 'ReactPortal'.
+2026-02-23T04:21:52.669Z [INFO]: src/__tests__/account-page.test.tsx(36,7): error TS2741: Property 'subscription_plan' is missing in type '{ id: string; email: string; role: "CUSTOMER"; property_id: string; property_name: string; property_address: string; unit: string; subscription_status: "ACTIVE"; created_at: string; }' but required in type 'MeResponse'.
+                                 src/__tests__/account-page.test.tsx(49,7): error TS2741: Property 'subscription_plan' is missing in type '{ id: string; email: string; role: "CUSTOMER"; property_id: null; property_name: null; property_address: null; unit: null; subscription_status: "CREATED"; created_at: string; }' but required in type 'MeResponse'.
+                                 src/__tests__/account-page.test.tsx(62,7): error TS2741: Property 'subscription_plan' is missing in type '{ id: string; email: string; role: "CUSTOMER"; property_id: string; property_name: string; property_address: string; unit: null; subscription_status: "ACTIVE"; created_at: string; }' but required in type 'MeResponse'.
+                                 src/__tests__/account-page.test.tsx(756,48): error TS2345: Argument of type '{ id: string; email: string; role: "CUSTOMER"; property_id: string; property_name: string; property_address: string; unit: string | null; subscription_status: "CREATED" | "ACTIVE" | "PAUSED"; created_at: string; } | { ...; }' is not assignable to parameter of type 'MeResponse'.
+                                 Property 'subscription_plan' is missing in type '{ id: string; email: string; role: "CUSTOMER"; property_id: string; property_name: string; property_address: string; unit: string | null; subscription_status: "CREATED" | "ACTIVE" | "PAUSED"; created_at: string; }' but required in type 'MeResponse'.
+                                 src/__tests__/account-page.test.tsx(773,48): error TS2345: Argument of type '{ id: string; email: string; role: "CUSTOMER"; property_id: string; property_name: string; property_address: string; unit: string | null; subscription_status: "CREATED" | "ACTIVE" | "PAUSED"; created_at: string; } | { ...; }' is not assignable to parameter of type 'MeResponse'.
+                                 Property 'subscription_plan' is missing in type '{ id: string; email: string; role: "CUSTOMER"; property_id: string; property_name: string; property_address: string; unit: string | null; subscription_status: "CREATED" | "ACTIVE" | "PAUSED"; created_at: string; }' but required in type 'MeResponse'.
+                                 src/__tests__/account-page.test.tsx(815,48): error TS2345: Argument of type '{ id: string; email: string; role: "CUSTOMER"; property_id: string; property_name: string; property_address: string; unit: string | null; subscription_status: "CREATED" | "ACTIVE" | "PAUSED"; created_at: string; }' is not assignable to parameter of type 'MeResponse'.
+                                 Property 'subscription_plan' is missing in type '{ id: string; email: string; role: "CUSTOMER"; property_id: string; property_name: string; property_address: string; unit: string | null; subscription_status: "CREATED" | "ACTIVE" | "PAUSED"; created_at: string; }' but required in type 'MeResponse'.
+                                 src/__tests__/account-page.test.tsx(832,48): error TS2345: Argument of type '{ id: string; email: string; role: "CUSTOMER"; property_id: null; property_name: null; property_address: null; unit: null; subscription_status: "CREATED" | "ACTIVE" | "PAUSED"; created_at: string; }' is not assignable to parameter of type 'MeResponse'.
+                                 Property 'subscription_plan' is missing in type '{ id: string; email: string; role: "CUSTOMER"; property_id: null; property_name: null; property_address: null; unit: null; subscription_status: "CREATED" | "ACTIVE" | "PAUSED"; created_at: string; }' but required in type 'MeResponse'.
+                                 src/__tests__/account-page.test.tsx(867,48): error TS2345: Argument of type '{ id: string; email: string; role: "CUSTOMER"; property_id: string; property_name: string; property_address: string; unit: string | null; subscription_status: "CREATED" | "ACTIVE" | "PAUSED"; created_at: string; } | { ...; }' is not assignable to parameter of type 'MeResponse'.
+                                 Property 'subscription_plan' is missing in type '{ id: string; email: string; role: "CUSTOMER"; property_id: string; property_name: string; property_address: string; unit: string | null; subscription_status: "CREATED" | "ACTIVE" | "PAUSED"; created_at: string; }' but required in type 'MeResponse'.
+                                 src/__tests__/account-page.test.tsx(892,48): error TS2345: Argument of type '{ id: string; email: string; role: "CUSTOMER"; property_id: string; property_name: string; property_address: string; unit: string | null; subscription_status: "CREATED" | "ACTIVE" | "PAUSED"; created_at: string; } | { ...; }' is not assignable to parameter of type 'MeResponse'.
+                                 Property 'subscription_plan' is missing in type '{ id: string; email: string; role: "CUSTOMER"; property_id: string; property_name: string; property_address: string; unit: string | null; subscription_status: "CREATED" | "ACTIVE" | "PAUSED"; created_at: string; }' but required in type 'MeResponse'.
+                                 src/__tests__/deliveries-page.test.tsx(29,31): error TS2322: Type 'ReactElement<unknown, string | JSXElementConstructor<any>>' is not assignable to type 'ReactNode'.
+                                 Property 'children' is missing in type 'ReactElement<unknown, string | JSXElementConstructor<any>>' but required in type 'ReactPortal'.
+                                 src/__tests__/deliveries-page.test.tsx(33,7): error TS2739: Type '{ id: string; email: string; role: "CUSTOMER"; property_id: string; property_name: string; subscription_status: "ACTIVE"; created_at: string; }' is missing the following properties from type 'MeResponse': property_address, unit, subscription_plan
+                                 src/__tests__/deliveries-page.test.tsx(64,3): error TS2353: Object literal may only specify known properties, and 'archived_at' does not exist in type 'Delivery'.
+                                 src/__tests__/deliveries-page.test.tsx(78,5): error TS2353: Object literal may only specify known properties, and 'archived_at' does not exist in type 'Delivery'.
+                                 src/__tests__/deliveries-page.test.tsx(90,5): error TS2353: Object literal may only specify known properties, and 'archived_at' does not exist in type 'Delivery'.
+                                 src/__tests__/faq-accordion.test.tsx(45,7): error TS6133: 'clickSequenceArbitrary' is declared but its value is never read.
+                                 src/__tests__/florist-deliveries-page.test.tsx(30,31): error TS2322: Type 'ReactElement<unknown, string | JSXElementConstructor<any>>' is not assignable to type 'ReactNode'.
+                                 Property 'children' is missing in type 'ReactElement<unknown, string | JSXElementConstructor<any>>' but required in type 'ReactPortal'.
+                                 src/__tests__/florist-route-protection.test.ts(112,45): error TS2345: Argument of type '"CUSTOMER"' is not assignable to parameter of type '"FLORIST"'.
+                                 src/__tests__/florist-route-protection.test.ts(120,45): error TS2345: Argument of type '"PROPERTY_MANAGER"' is not assignable to parameter of type '"FLORIST"'.
+                                 src/__tests__/florist-route-protection.test.ts(130,45): error TS2345: Argument of type '"ADMIN"' is not assignable to parameter of type '"FLORIST"'.
+                                 src/__tests__/florist-settings-page.test.tsx(29,31): error TS2322: Type 'ReactElement<unknown, string | JSXElementConstructor<any>>' is not assignable to type 'ReactNode'.
+                                 Property 'children' is missing in type 'ReactElement<unknown, string | JSXElementConstructor<any>>' but required in type 'ReactPortal'.
+                                 src/__tests__/florist-settings-page.test.tsx(63,3): error TS2322: Type '"ARCHIVED"' is not assignable to type 'FloristStatus'.
+                                 src/__tests__/help-page-access.test.ts(44,41): error TS2345: Argument of type 'UserRole' is not assignable to parameter of type '"CUSTOMER"'.
+                                 Type '"PROPERTY_MANAGER"' is not assignable to type '"CUSTOMER"'.
+                                 src/__tests__/placeholder-pages.test.tsx(13,18): error TS6133: 'screen' is declared but its value is never read.
+                                 src/__tests__/subscription-page.test.tsx(44,31): error TS2322: Type 'ReactElement<unknown, string | JSXElementConstructor<any>>' is not assignable to type 'ReactNode'.
+                                 Property 'children' is missing in type 'ReactElement<unknown, string | JSXElementConstructor<any>>' but required in type 'ReactPortal'.
+                                 src/components/OnboardingLayout.tsx(97,13): error TS2322: Type '{ initial: { opacity: number; y: number; scale: number; }; animate: { opacity: number; y: number; scale: number; transition: { duration: number; ease: number[]; }; }; exit: { opacity: number; y: number; scale: number; transition: { ...; }; }; }' is not assignable to type 'Variants'.
+                                 Property 'animate' is incompatible with index signature.
+                                 Type '{ opacity: number; y: number; scale: number; transition: { duration: number; ease: number[]; }; }' is not assignable to type 'Variant'.
+                                 Type '{ opacity: number; y: number; scale: number; transition: { duration: number; ease: number[]; }; }' is not assignable to type 'TargetAndTransition'.
+                                 Type '{ opacity: number; y: number; scale: number; transition: { duration: number; ease: number[]; }; }' is not assignable to type '{ transition?: Transition<any> | undefined; transitionEnd?: ResolvedValues | undefined; }'.
+                                 Types of property 'transition' are incompatible.
+                                 Type '{ duration: number; ease: number[]; }' is not assignable to type 'Transition<any> | undefined'.
+                                 Type '{ duration: number; ease: number[]; }' is not assignable to type 'TransitionWithValueOverrides<any>'.
+                                 Type '{ duration: number; ease: number[]; }' is not assignable to type 'ValueAnimationTransition<any>'.
+                                 Types of property 'ease' are incompatible.
+                                 Type 'number[]' is not assignable to type 'Easing | Easing[] | undefined'.
+                                 Type 'number[]' is not assignable to type 'EasingFunction | Easing[]'.
+                                 Type 'number[]' is not assignable to type 'Easing[]'.
+                                 Type 'number' is not assignable to type 'Easing'.
+                                 src/components/OnboardingLayout.tsx(122,11): error TS2322: Type '{ initial: { opacity: number; y: number; boxShadow: string; }; animate: { opacity: number; y: number; boxShadow: string; transition: { duration: number; delay: number; ease: number[]; }; }; }' is not assignable to type 'Variants'.
+                                 Property 'animate' is incompatible with index signature.
+                                 Type '{ opacity: number; y: number; boxShadow: string; transition: { duration: number; delay: number; ease: number[]; }; }' is not assignable to type 'Variant'.
+                                 Type '{ opacity: number; y: number; boxShadow: string; transition: { duration: number; delay: number; ease: number[]; }; }' is not assignable to type 'TargetAndTransition'.
+                                 Type '{ opacity: number; y: number; boxShadow: string; transition: { duration: number; delay: number; ease: number[]; }; }' is not assignable to type '{ transition?: Transition<any> | undefined; transitionEnd?: ResolvedValues | undefined; }'.
+                                 Types of property 'transition' are incompatible.
+                                 Type '{ duration: number; delay: number; ease: number[]; }' is not assignable to type 'Transition<any> | undefined'.
+                                 Type '{ duration: number; delay: number; ease: number[]; }' is not assignable to type 'TransitionWithValueOverrides<any>'.
+                                 Type '{ duration: number; delay: number; ease: number[]; }' is not assignable to type 'ValueAnimationTransition<any>'.
+                                 Types of property 'ease' are incompatible.
+                                 Type 'number[]' is not assignable to type 'Easing | Easing[] | undefined'.
+                                 Type 'number[]' is not assignable to type 'EasingFunction | Easing[]'.
+                                 Type 'number[]' is not assignable to type 'Easing[]'.
+                                 Type 'number' is not assignable to type 'Easing'.
+                                 src/pages/customer/HomePage.test.tsx(34,32): error TS2322: Type 'React.ReactNode' is not assignable to type 'import("/codebuild/output/src2076585192/src/bloom/node_modules/.pnpm/@types+react@19.0.0/node_modules/@types/react/index").ReactNode'.
+                                 Type 'ReactElement<unknown, string | JSXElementConstructor<any>>' is not assignable to type 'ReactNode'.
+                                 Property 'children' is missing in type 'ReactElement<unknown, string | JSXElementConstructor<any>>' but required in type 'ReactPortal'.
+                                 src/pages/customer/HomePage.test.tsx(38,78): error TS2322: Type '{ id: string; email: string; role: UserRole; property_id: string | null; property_name: string | null; property_address?: string | null | undefined; unit?: string | null | undefined; subscription_status: SubscriptionStatus | null; subscription_plan?: SubscriptionPlan | ... 1 more ... | undefined; created_at: string; }' is not assignable to type 'MeResponse'.
+                                 Types of property 'property_address' are incompatible.
+                                 Type 'string | null | undefined' is not assignable to type 'string | null'.
+                                 Type 'undefined' is not assignable to type 'string | null'.
+                                 src/pages/onboarding/RegisterPage.tsx(106,15): error TS2345: Argument of type 'import("/codebuild/output/src2076585192/src/bloom/packages/shared/src/types/domain").User' is not assignable to parameter of type 'import("/codebuild/output/src2076585192/src/bloom/packages/shared/src/types/auth").User'.
+                                 Property 'subscription_plan' is missing in type 'import("/codebuild/output/src2076585192/src/bloom/packages/shared/src/types/domain").User' but required in type 'import("/codebuild/output/src2076585192/src/bloom/packages/shared/src/types/auth").User'.
+                                 src/pages/onboarding/RegisterPage.tsx(142,21): error TS2322: Type '{ hidden: { opacity: number; y: number; }; visible: { opacity: number; y: number; transition: { duration: number; ease: number[]; }; }; }' is not assignable to type 'Variants'.
+                                 Property 'visible' is incompatible with index signature.
+                                 Type '{ opacity: number; y: number; transition: { duration: number; ease: number[]; }; }' is not assignable to type 'Variant'.
+                                 Type '{ opacity: number; y: number; transition: { duration: number; ease: number[]; }; }' is not assignable to type 'TargetAndTransition'.
+                                 Type '{ opacity: number; y: number; transition: { duration: number; ease: number[]; }; }' is not assignable to type '{ transition?: Transition<any> | undefined; transitionEnd?: ResolvedValues | undefined; }'.
+                                 Types of property 'transition' are incompatible.
+                                 Type '{ duration: number; ease: number[]; }' is not assignable to type 'Transition<any> | undefined'.
+                                 Type '{ duration: number; ease: number[]; }' is not assignable to type 'TransitionWithValueOverrides<any>'.
+                                 Type '{ duration: number; ease: number[]; }' is not assignable to type 'ValueAnimationTransition<any>'.
+                                 Types of property 'ease' are incompatible.
+                                 Type 'number[]' is not assignable to type 'Easing | Easing[] | undefined'.
+                                 Type 'number[]' is not assignable to type 'EasingFunction | Easing[]'.
+                                 Type 'number[]' is not assignable to type 'Easing[]'.
+                                 Type 'number' is not assignable to type 'Easing'.
+                                 src/pages/onboarding/RegisterPage.tsx(158,21): error TS2322: Type '{ hidden: { opacity: number; y: number; }; visible: { opacity: number; y: number; transition: { duration: number; ease: number[]; }; }; }' is not assignable to type 'Variants'.
+                                 Property 'visible' is incompatible with index signature.
+                                 Type '{ opacity: number; y: number; transition: { duration: number; ease: number[]; }; }' is not assignable to type 'Variant'.
+                                 Type '{ opacity: number; y: number; transition: { duration: number; ease: number[]; }; }' is not assignable to type 'TargetAndTransition'.
+                                 Type '{ opacity: number; y: number; transition: { duration: number; ease: number[]; }; }' is not assignable to type '{ transition?: Transition<any> | undefined; transitionEnd?: ResolvedValues | undefined; }'.
+                                 Types of property 'transition' are incompatible.
+                                 Type '{ duration: number; ease: number[]; }' is not assignable to type 'Transition<any> | undefined'.
+                                 Type '{ duration: number; ease: number[]; }' is not assignable to type 'TransitionWithValueOverrides<any>'.
+                                 Type '{ duration: number; ease: number[]; }' is not assignable to type 'ValueAnimationTransition<any>'.
+                                 Types of property 'ease' are incompatible.
+                                 Type 'number[]' is not assignable to type 'Easing | Easing[] | undefined'.
+                                 Type 'number[]' is not assignable to type 'EasingFunction | Easing[]'.
+                                 Type 'number[]' is not assignable to type 'Easing[]'.
+                                 Type 'number' is not assignable to type 'Easing'.
+                                 src/pages/onboarding/RegisterPage.tsx(174,21): error TS2322: Type '{ hidden: { opacity: number; y: number; }; visible: { opacity: number; y: number; transition: { duration: number; ease: number[]; }; }; }' is not assignable to type 'Variants'.
+                                 Property 'visible' is incompatible with index signature.
+                                 Type '{ opacity: number; y: number; transition: { duration: number; ease: number[]; }; }' is not assignable to type 'Variant'.
+                                 Type '{ opacity: number; y: number; transition: { duration: number; ease: number[]; }; }' is not assignable to type 'TargetAndTransition'.
+                                 Type '{ opacity: number; y: number; transition: { duration: number; ease: number[]; }; }' is not assignable to type '{ transition?: Transition<any> | undefined; transitionEnd?: ResolvedValues | undefined; }'.
+                                 Types of property 'transition' are incompatible.
+                                 Type '{ duration: number; ease: number[]; }' is not assignable to type 'Transition<any> | undefined'.
+                                 Type '{ duration: number; ease: number[]; }' is not assignable to type 'TransitionWithValueOverrides<any>'.
+                                 Type '{ duration: number; ease: number[]; }' is not assignable to type 'ValueAnimationTransition<any>'.
+                                 Types of property 'ease' are incompatible.
+                                 Type 'number[]' is not assignable to type 'Easing | Easing[] | undefined'.
+                                 Type 'number[]' is not assignable to type 'EasingFunction | Easing[]'.
+                                 Type 'number[]' is not assignable to type 'Easing[]'.
+                                 Type 'number' is not assignable to type 'Easing'.
+                                 src/pages/onboarding/RegisterPage.tsx(190,21): error TS2322: Type '{ hidden: { opacity: number; y: number; }; visible: { opacity: number; y: number; transition: { duration: number; ease: number[]; }; }; }' is not assignable to type 'Variants'.
+                                 Property 'visible' is incompatible with index signature.
+                                 Type '{ opacity: number; y: number; transition: { duration: number; ease: number[]; }; }' is not assignable to type 'Variant'.
+                                 Type '{ opacity: number; y: number; transition: { duration: number; ease: number[]; }; }' is not assignable to type 'TargetAndTransition'.
+                                 Type '{ opacity: number; y: number; transition: { duration: number; ease: number[]; }; }' is not assignable to type '{ transition?: Transition<any> | undefined; transitionEnd?: ResolvedValues | undefined; }'.
+                                 Types of property 'transition' are incompatible.
+                                 Type '{ duration: number; ease: number[]; }' is not assignable to type 'Transition<any> | undefined'.
+                                 Type '{ duration: number; ease: number[]; }' is not assignable to type 'TransitionWithValueOverrides<any>'.
+                                 Type '{ duration: number; ease: number[]; }' is not assignable to type 'ValueAnimationTransition<any>'.
+                                 Types of property 'ease' are incompatible.
+                                 Type 'number[]' is not assignable to type 'Easing | Easing[] | undefined'.
+                                 Type 'number[]' is not assignable to type 'EasingFunction | Easing[]'.
+                                 Type 'number[]' is not assignable to type 'Easing[]'.
+                                 Type 'number' is not assignable to type 'Easing'.
+                                 src/pages/onboarding/RegisterPage.tsx(214,11): error TS2322: Type '{ hidden: { opacity: number; y: number; }; visible: { opacity: number; y: number; transition: { duration: number; ease: number[]; }; }; }' is not assignable to type 'Variants'.
+                                 Property 'visible' is incompatible with index signature.
+                                 Type '{ opacity: number; y: number; transition: { duration: number; ease: number[]; }; }' is not assignable to type 'Variant'.
+                                 Type '{ opacity: number; y: number; transition: { duration: number; ease: number[]; }; }' is not assignable to type 'TargetAndTransition'.
+                                 Type '{ opacity: number; y: number; transition: { duration: number; ease: number[]; }; }' is not assignable to type '{ transition?: Transition<any> | undefined; transitionEnd?: ResolvedValues | undefined; }'.
+                                 Types of property 'transition' are incompatible.
+                                 Type '{ duration: number; ease: number[]; }' is not assignable to type 'Transition<any> | undefined'.
+                                 Type '{ duration: number; ease: number[]; }' is not assignable to type 'TransitionWithValueOverrides<any>'.
+                                 Type '{ duration: number; ease: number[]; }' is not assignable to type 'ValueAnimationTransition<any>'.
+                                 Types of property 'ease' are incompatible.
+                                 Type 'number[]' is not assignable to type 'Easing | Easing[] | undefined'.
+                                 Type 'number[]' is not assignable to type 'EasingFunction | Easing[]'.
+                                 Type 'number[]' is not assignable to type 'Easing[]'.
+                                 Type 'number' is not assignable to type 'Easing'.
+2026-02-23T04:21:52.936Z [INFO]: ELIFECYCLE  Command failed with exit code 2.
+2026-02-23T04:21:52.953Z [ERROR]: !!! Build failed
+2026-02-23T04:21:52.953Z [ERROR]: !!! Error: Command failed with exit code 2
+2026-02-23T04:21:52.953Z [INFO]: # Starting environment caching...
+2026-02-23T04:21:52.953Z [INFO]: # Environment caching completed
+

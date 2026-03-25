@@ -38,7 +38,7 @@ function simulateHelpPageRouteGuard(
   }
 
   // /customer/help only allows CUSTOMER role
-  const allowedRoles = [UserRole.CUSTOMER];
+  const allowedRoles: readonly UserRole[] = [UserRole.CUSTOMER];
 
   // If user role is allowed, render
   if (userRole && allowedRoles.includes(userRole)) {

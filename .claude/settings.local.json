@@ -9,12 +9,7 @@
       "Bash(chmod:*)",
       "Bash(npm run test:*)",
       "Bash(python -m pytest:*)",
-      "Skill(ralph-wiggum:ralph-loop)",
-      "Bash(\"C:\\\\Users\\\\kpete\\\\bloom-project\\\\ralph-wiggum\\\\scripts\\\\setup-ralph-loop.sh\" \"Fix all broken tests - test_onboarding_integration.py has wrong import \\(db.session should be db.database\\), test_status_transitions.py references non-existent PropertyStatus.DRAFT. Run pytest to verify fixes.\" --completion-promise \"All pytest tests pass\" --max-iterations 15)",
-      "Bash(\"C:\\\\Users\\\\kpete\\\\bloom-project\\\\ralph-wiggum\\\\scripts\\\\setup-ralph-loop.sh\" \"Replace deprecated @app.on_event startup/shutdown handlers in apps/api/main.py with the lifespan context manager pattern. Run pytest to verify nothing breaks.\" --completion-promise \"No deprecation warnings\" --max-iterations 8)",
-      "Bash(\"C:\\\\Users\\\\kpete\\\\bloom-project\\\\ralph-wiggum\\\\scripts\\\\setup-ralph-loop.sh\" \"Complete the florist AvailabilityPage and ProductsPage in apps/web/src/pages/florist - they are currently placeholders. Add real UI components with forms for delivery capacity/windows and product catalog display. Run ''cd apps/web && pnpm test'' to verify no test errors.\" --completion-promise \"All frontend tests pass\" --max-iterations 15)",
       "Bash(pnpm test:*)",
-      "Bash(\"C:\\\\Users\\\\kpete\\\\bloom-project\\\\ralph-wiggum\\\\scripts\\\\setup-ralph-loop.sh\" \"Add subscription_plan field \\(ESSENTIAL/SIGNATURE/STATEMENT enum\\) to User model in apps/api/models/user.py, create Alembic migration, add PATCH /me/plan endpoint in routes/me.py to persist plan selection, and update apps/web/src/pages/customer/SubscriptionPage.tsx to call the API instead of only using localStorage. Run both backend \\(pytest\\) and frontend \\(pnpm test\\) tests.\" --completion-promise \"All tests pass\" --max-iterations 20)",
       "Bash(pnpm vitest:*)"
     ]
   }

@@ -41,10 +41,6 @@ const faqItemsArbitrary = fc.array(faqItemArbitrary, { minLength: 1, maxLength: 
   })
   .filter(items => items.length > 0);
 
-// Arbitrary for generating click sequences (indices into items array)
-const clickSequenceArbitrary = (maxIndex: number) =>
-  fc.array(fc.integer({ min: 0, max: maxIndex }), { minLength: 1, maxLength: 20 });
-
 // =============================================================================
 // Property 2: Single-Item Expansion Invariant
 // =============================================================================

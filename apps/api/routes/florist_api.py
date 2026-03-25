@@ -144,13 +144,47 @@ async def disconnect(
     data: DisconnectRequest,
     db: Session = Depends(get_db),
 ):
-    """Remove a florist connection by shop domain."""
+    """Remove a florist connection by shop domain.
+
+    When a florist disconnects their Shopify store mid-cycle, any future
+    SCHEDULED deliveries assigned to that florist are flagged as MISSED
+    so they don't silently disappear.
+    """
     conn = (
         db.query(FloristConnection)
         .filter(FloristConnection.shop_domain == data.shop_domain)
         .first()
     )
     if conn:
+        florist_id = conn.florist_id
+
+        # Flag future SCHEDULED deliveries for properties assigned to this florist
+        now = datetime.now(timezone.utc)
+        assigned_property_ids = [
+            a.property_id
+            for a in db.query(PropertyAssignment).filter(
+                PropertyAssignment.florist_id == florist_id,
+                PropertyAssignment.active == True,
+            ).all()
+        ]
+        if assigned_property_ids:
+            affected = (
+                db.query(Delivery)
+                .filter(
+                    Delivery.property_id.in_(assigned_property_ids),
+                    Delivery.status == DeliveryStatus.SCHEDULED,
+                    Delivery.scheduled_for > now,
+                    Delivery.archived_at.is_(None),
+                )
+                .update(
+                    {"status": DeliveryStatus.MISSED, "updated_at": now},
+                    synchronize_session="fetch",
+                )
+            )
+            logger.warning(
+                f"Florist {florist_id} disconnected — flagged {affected} future deliveries as MISSED"
+            )
+
         db.delete(conn)
         db.commit()
     return {"success": True}

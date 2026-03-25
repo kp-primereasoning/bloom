@@ -36,7 +36,10 @@ const mockUserActive: MeResponse = {
   role: 'CUSTOMER',
   property_id: 'prop-1',
   property_name: 'Test Property',
+  property_address: '123 Main St',
+  unit: '4A',
   subscription_status: 'ACTIVE',
+  subscription_plan: 'ESSENTIAL',
   created_at: '2024-01-01T00:00:00Z',
 };
 
@@ -61,7 +64,6 @@ const mockNextDelivery: Delivery = {
   delivered_at: null,
   created_at: '2024-12-01T00:00:00Z',
   updated_at: '2024-12-01T00:00:00Z',
-  archived_at: null,
 };
 
 const mockHistoryDeliveries: Delivery[] = [
@@ -75,7 +77,6 @@ const mockHistoryDeliveries: Delivery[] = [
     delivered_at: '2024-12-15T14:30:00Z',
     created_at: '2024-12-01T00:00:00Z',
     updated_at: '2024-12-15T14:30:00Z',
-    archived_at: null,
   },
   {
     id: 'del-3',
@@ -87,7 +88,6 @@ const mockHistoryDeliveries: Delivery[] = [
     delivered_at: null,
     created_at: '2024-11-15T00:00:00Z',
     updated_at: '2024-12-01T00:00:00Z',
-    archived_at: null,
   },
 ];
 

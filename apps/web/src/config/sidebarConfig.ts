@@ -14,6 +14,7 @@ export const sidebarConfig: Record<UserRole, RoleConfig> = {
       { label: 'Home', path: '/customer/home' },
       { label: 'My Subscription', path: '/customer/subscription' },
       { label: 'Deliveries', path: '/customer/deliveries' },
+      { label: 'Billing', path: '/customer/billing' },
       { label: 'Account', path: '/customer/account' },
       { label: 'Help', path: '/customer/help' },
     ],
@@ -48,6 +49,7 @@ export const sidebarConfig: Record<UserRole, RoleConfig> = {
       { label: 'Properties', path: '/admin/properties' },
       { label: 'Florists', path: '/admin/florists' },
       { label: 'Users', path: '/admin/users' },
+      { label: 'Payouts', path: '/admin/payouts' },
     ],
   },
 };

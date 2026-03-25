@@ -305,8 +305,46 @@ def archive_property(db: Session, property_id: UUID, request_id: str) -> Propert
                 }
             }
         )
-    
+
+    # 5.7: Prevent archiving if there are active subscriptions
+    import asyncio
+    from db.users import get_all_users
+    from models.user import SubscriptionStatus as SubStatus
+
+    all_users = asyncio.get_event_loop().run_until_complete(
+        get_all_users()
+    )
+    active_subs = [
+        u for u in all_users
+        if u.property_id == property_id
+        and getattr(u, "subscription_status", None) == SubStatus.ACTIVE
+    ]
+    if active_subs:
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "error": {
+                    "code": "ACTIVE_SUBSCRIPTIONS",
+                    "message": f"Cannot archive property with {len(active_subs)} active subscription(s). Pause them first.",
+                    "request_id": request_id,
+                }
+            }
+        )
+
     prop.status = PropertyStatus.ARCHIVED
+
+    # Cascade: archive all future SCHEDULED deliveries for this property
+    from models.delivery import Delivery, DeliveryStatus
+    from datetime import datetime, timezone
+
+    now = datetime.now(timezone.utc)
+    db.query(Delivery).filter(
+        Delivery.property_id == property_id,
+        Delivery.status == DeliveryStatus.SCHEDULED,
+        Delivery.scheduled_for > now,
+        Delivery.archived_at.is_(None),
+    ).update({"archived_at": now}, synchronize_session="fetch")
+
     db.commit()
     db.refresh(prop)
     return prop

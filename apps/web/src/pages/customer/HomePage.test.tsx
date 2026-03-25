@@ -30,7 +30,7 @@ const mockGetMe = vi.mocked(api.getMe);
 const mockUpdateMySubscription = vi.mocked(api.updateMySubscription);
 
 // Helper to render with router
-const renderWithRouter = (component: React.ReactNode) => {
+const renderWithRouter = (component: React.ReactElement) => {
   return render(<BrowserRouter>{component}</BrowserRouter>);
 };
 
@@ -41,7 +41,10 @@ const createMockUser = (overrides: Partial<MeResponse> = {}): MeResponse => ({
   role: 'CUSTOMER',
   property_id: 'prop-123',
   property_name: 'Test Property',
+  property_address: '123 Main St',
+  unit: '4A',
   subscription_status: 'ACTIVE',
+  subscription_plan: 'ESSENTIAL',
   created_at: '2024-01-01T00:00:00Z',
   ...overrides,
 });

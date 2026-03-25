@@ -265,6 +265,114 @@ class SESClient:
         
         return self.send_email(to_email, subject, body_html, body_text)
     
+    def send_welcome(self, to_email: str) -> bool:
+        """Send welcome email on registration."""
+        subject = "Welcome to Bloom 🌸"
+        body_html = """
+        <html>
+        <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h1 style="color: #e91e63;">Welcome to Bloom!</h1>
+            <p>Thanks for creating your account. You're one step closer to fresh flowers at your door.</p>
+            <p>Here's what to do next:</p>
+            <ol>
+                <li>Select your building</li>
+                <li>Choose a subscription plan</li>
+                <li>Add a payment method</li>
+            </ol>
+            <p>That's it — we'll handle the rest.</p>
+            <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
+            <p style="color: #999; font-size: 12px;">
+                This email was sent by Bloom. Please do not reply to this email.
+            </p>
+        </body>
+        </html>
+        """
+        body_text = (
+            "Welcome to Bloom!\n\n"
+            "Thanks for creating your account. You're one step closer to fresh flowers at your door.\n\n"
+            "Next steps:\n1. Select your building\n2. Choose a subscription plan\n3. Add a payment method\n\n"
+            "That's it — we'll handle the rest."
+        )
+        return self.send_email(to_email, subject, body_html, body_text)
+
+    def send_delivery_missed(
+        self, to_email: str, delivery_date: Optional[str] = None
+    ) -> bool:
+        """Send notification when a delivery was missed."""
+        subject = "Delivery Update — Missed Delivery"
+        date_text = f" scheduled for {delivery_date}" if delivery_date else ""
+        body_html = f"""
+        <html>
+        <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h1 style="color: #e91e63;">Delivery Update</h1>
+            <p>Unfortunately, your floral delivery{date_text} could not be completed.</p>
+            <p>This can happen if access wasn't available at the time of delivery. We'll make sure your next delivery goes smoothly.</p>
+            <p>If you have questions, please reach out to our support team.</p>
+            <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
+            <p style="color: #999; font-size: 12px;">
+                This email was sent by Bloom. Please do not reply to this email.
+            </p>
+        </body>
+        </html>
+        """
+        body_text = (
+            f"Delivery Update\n\n"
+            f"Unfortunately, your floral delivery{date_text} could not be completed.\n\n"
+            f"This can happen if access wasn't available at the time of delivery. "
+            f"We'll make sure your next delivery goes smoothly.\n\n"
+            f"If you have questions, please reach out to our support team."
+        )
+        return self.send_email(to_email, subject, body_html, body_text)
+
+    def send_payment_receipt(
+        self, to_email: str, amount: str, plan: Optional[str] = None
+    ) -> bool:
+        """Send payment receipt after successful charge."""
+        subject = "Bloom Payment Receipt"
+        plan_text = f" ({plan})" if plan else ""
+        body_html = f"""
+        <html>
+        <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h1 style="color: #e91e63;">Payment Received</h1>
+            <p>We've received your payment of <strong>{amount}</strong>{plan_text}.</p>
+            <p>You can view your full billing history in your account dashboard.</p>
+            <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
+            <p style="color: #999; font-size: 12px;">
+                This email was sent by Bloom. Please do not reply to this email.
+            </p>
+        </body>
+        </html>
+        """
+        body_text = (
+            f"Payment Received\n\n"
+            f"We've received your payment of {amount}{plan_text}.\n\n"
+            f"You can view your full billing history in your account dashboard."
+        )
+        return self.send_email(to_email, subject, body_html, body_text)
+
+    def send_payment_failed(self, to_email: str) -> bool:
+        """Send notification when a payment fails."""
+        subject = "Bloom Payment Issue"
+        body_html = """
+        <html>
+        <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h1 style="color: #e91e63;">Payment Issue</h1>
+            <p>We weren't able to process your latest payment. Your subscription has been paused.</p>
+            <p>Please update your payment method in your account dashboard to resume deliveries.</p>
+            <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
+            <p style="color: #999; font-size: 12px;">
+                This email was sent by Bloom. Please do not reply to this email.
+            </p>
+        </body>
+        </html>
+        """
+        body_text = (
+            "Payment Issue\n\n"
+            "We weren't able to process your latest payment. Your subscription has been paused.\n\n"
+            "Please update your payment method in your account dashboard to resume deliveries."
+        )
+        return self.send_email(to_email, subject, body_html, body_text)
+    
     def check_health(self) -> bool:
         """
         Check SES connectivity by getting send quota.

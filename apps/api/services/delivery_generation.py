@@ -169,8 +169,56 @@ async def generate_deliveries_for_property(
         logger.info(f"Deliveries already exist for {prop.name} on {delivery_date.date()}")
         return result
 
+    # Check florist availability for this delivery day
+    from models.florist_availability import FloristAvailability
+    from models.property_assignment import PropertyAssignment as PA
+
+    assignment = (
+        db.query(PA)
+        .filter(PA.property_id == property_id, PA.active == True)
+        .first()
+    )
+    if assignment:
+        dow = delivery_date.weekday()  # 0=Monday
+        avail = (
+            db.query(FloristAvailability)
+            .filter(
+                FloristAvailability.florist_id == assignment.florist_id,
+                FloristAvailability.day_of_week == dow,
+            )
+            .first()
+        )
+        # If availability record exists and florist is unavailable, skip
+        if avail and not avail.is_available:
+            logger.info(
+                f"Florist unavailable on day {dow} for {prop.name}, skipping generation"
+            )
+            result["skipped_reason"] = "florist_unavailable"
+            return result
+
     # Get eligible subscribers (active, not skipping)
     subscribers = await get_active_subscribers(property_id)
+
+    # If florist has a capacity cap, respect it
+    max_cap = None
+    if assignment:
+        dow = delivery_date.weekday()
+        avail = (
+            db.query(FloristAvailability)
+            .filter(
+                FloristAvailability.florist_id == assignment.florist_id,
+                FloristAvailability.day_of_week == dow,
+            )
+            .first()
+        )
+        if avail:
+            max_cap = avail.max_deliveries_per_day
+
+    if max_cap is not None and len(subscribers) > max_cap:
+        logger.warning(
+            f"Capping deliveries for {prop.name}: {len(subscribers)} subscribers but cap is {max_cap}"
+        )
+        subscribers = subscribers[:max_cap]
 
     # Create deliveries
     for user in subscribers:
@@ -183,6 +231,17 @@ async def generate_deliveries_for_property(
         )
         db.add(delivery)
         result["created"] += 1
+
+        # Send delivery scheduled email notification
+        try:
+            from services.email import send_delivery_scheduled
+            send_delivery_scheduled(
+                to_email=user.email,
+                delivery_date=delivery_date.strftime("%B %d, %Y"),
+                property_name=prop.name,
+            )
+        except Exception as e:
+            logger.debug(f"Failed to send delivery scheduled email to {user.email}: {e}")
 
     # Clear skip flags for users who skipped this cycle
     skippers = await get_skipping_subscribers(property_id)
@@ -201,6 +260,14 @@ async def generate_deliveries_for_property(
         f"Generated {result['created']} deliveries for {prop.name} "
         f"on {delivery_date.date()}, {result['skipped']} skipped"
     )
+
+    # Publish metric
+    try:
+        from services.metrics import record_deliveries_generated
+        record_deliveries_generated(result["created"])
+    except Exception:
+        pass
+
     return result
 
 

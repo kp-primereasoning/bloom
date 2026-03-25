@@ -18,6 +18,7 @@ from auth.dependencies import require_role
 from db.database import get_db
 from db.users import get_user_by_id
 from models.florist import Florist, FloristStatus
+from models.florist_availability import FloristAvailability
 from models.property_assignment import PropertyAssignment
 from models.property import Property
 from models.delivery import Delivery, DeliveryStatus
@@ -301,6 +302,17 @@ async def update_delivery_status(
     # Get customer email
     customer = await get_user_by_id(delivery.user_id)
     customer_email = customer.email if customer else "unknown@example.com"
+
+    # Send email notification based on new status
+    try:
+        from services.email import send_delivery_completed, send_delivery_missed
+        date_str = delivery.scheduled_for.strftime("%B %d, %Y") if delivery.scheduled_for else None
+        if data.status == "DELIVERED":
+            send_delivery_completed(customer_email, delivery_date=date_str)
+        elif data.status == "MISSED":
+            send_delivery_missed(customer_email, delivery_date=date_str)
+    except Exception:
+        pass  # Non-fatal
     
     return FloristDeliveryResponse(
         id=delivery.id,
@@ -312,3 +324,106 @@ async def update_delivery_status(
         status=delivery.status,
         scheduled_for=delivery.scheduled_for
     )
+
+
+# =============================================================================
+# Availability Endpoints
+# =============================================================================
+
+from pydantic import BaseModel, Field
+
+
+class DayAvailability(BaseModel):
+    """Single day availability config."""
+    day_of_week: int = Field(..., ge=0, le=6, description="0=Monday, 6=Sunday")
+    is_available: bool = True
+    max_deliveries_per_day: int = Field(10, ge=0, le=500)
+
+
+class AvailabilityUpdate(BaseModel):
+    """Bulk availability update for all days."""
+    days: List[DayAvailability]
+
+
+async def _get_florist_id(current_user: dict, db: Session) -> UUID:
+    """Helper to resolve florist_id from current user, raising on failure."""
+    user = await get_user_by_id(UUID(current_user["id"]))
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    florist_id = getattr(user, "florist_id", None)
+    if not florist_id:
+        raise HTTPException(status_code=403, detail="User is not linked to a florist account")
+    return florist_id
+
+
+@router.get("/availability")
+async def get_availability(
+    current_user: dict = Depends(require_role(["FLORIST"])),
+    db: Session = Depends(get_db),
+):
+    """
+    Get florist's current availability for each day of the week.
+    Returns 7 entries (Mon-Sun). Missing days default to available with 10 max.
+    """
+    florist_id = await _get_florist_id(current_user, db)
+
+    rows = (
+        db.query(FloristAvailability)
+        .filter(FloristAvailability.florist_id == florist_id)
+        .order_by(FloristAvailability.day_of_week)
+        .all()
+    )
+
+    by_day = {r.day_of_week: r for r in rows}
+    days = []
+    for d in range(7):
+        if d in by_day:
+            r = by_day[d]
+            days.append({
+                "day_of_week": d,
+                "is_available": r.is_available,
+                "max_deliveries_per_day": r.max_deliveries_per_day,
+            })
+        else:
+            days.append({
+                "day_of_week": d,
+                "is_available": True,
+                "max_deliveries_per_day": 10,
+            })
+
+    return {"days": days}
+
+
+@router.put("/availability")
+async def update_availability(
+    data: AvailabilityUpdate,
+    current_user: dict = Depends(require_role(["FLORIST"])),
+    db: Session = Depends(get_db),
+):
+    """
+    Bulk upsert availability for all days of the week.
+    Replaces existing records for the florist.
+    """
+    florist_id = await _get_florist_id(current_user, db)
+
+    # Delete existing rows
+    db.query(FloristAvailability).filter(
+        FloristAvailability.florist_id == florist_id
+    ).delete()
+
+    # Insert new rows
+    now = datetime.now(timezone.utc)
+    for day in data.days:
+        row = FloristAvailability(
+            florist_id=florist_id,
+            day_of_week=day.day_of_week,
+            is_available=day.is_available,
+            max_deliveries_per_day=day.max_deliveries_per_day,
+            created_at=now,
+            updated_at=now,
+        )
+        db.add(row)
+
+    db.commit()
+
+    return await get_availability(current_user=current_user, db=db)

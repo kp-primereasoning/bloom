@@ -44,7 +44,10 @@ class User(BaseModel):
     subscription_status: SubscriptionStatus = SubscriptionStatus.CREATED
     subscription_plan: Optional[SubscriptionPlan] = None  # Selected plan tier
     florist_id: Optional[UUID] = None  # Associated florist (for FLORIST role users)
+    stripe_customer_id: Optional[str] = None  # Stripe Customer ID
+    stripe_subscription_id: Optional[str] = None  # Stripe Subscription ID
     skip_next_delivery: bool = False  # Customer wants to skip next delivery cycle
+    email_notifications_enabled: bool = True  # Whether to send email notifications
     created_at: datetime
 
 

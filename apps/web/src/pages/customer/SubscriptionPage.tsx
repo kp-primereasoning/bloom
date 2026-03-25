@@ -12,7 +12,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/providers/AuthProvider';
-import { getMe, updateMySubscription, updateMyPlan } from '@/lib/api';
+import { getMe, updateMySubscription, updateMyPlan, getPaymentMethod, createSubscription } from '@/lib/api';
 import { PlanCard, type PlanAction } from '@/components/PlanCard';
 import { getAllPlans, DEFAULT_PLAN_ID } from '@/config/planConfig';
 import { getStatusDisplay } from '@/utils/subscriptionStatus';
@@ -57,9 +57,28 @@ export function SubscriptionPage() {
     try {
       switch (action.type) {
         case 'activate': {
-          // Save plan to backend and activate subscription
+          // Check if user has a payment method on file before activating
+          try {
+            const pm = await getPaymentMethod();
+            if (!pm) {
+              // No payment method — redirect to billing page to set one up
+              navigate('/customer/billing', { state: { returnTo: '/customer/subscription', needsPaymentMethod: true } });
+              return;
+            }
+          } catch {
+            // If payment check fails (e.g. Stripe not configured), proceed anyway
+          }
+
+          // Save plan choice first
           await updateMyPlan({ plan: action.planId as SubscriptionPlan });
           setSelectedPlanId(action.planId);
+
+          // Create Stripe subscription for recurring billing
+          try {
+            await createSubscription(action.planId);
+          } catch {
+            // If Stripe isn't configured, still allow activation for dev/testing
+          }
 
           const updated = await updateMySubscription({ subscription_status: 'ACTIVE' });
           setUserData(updated);

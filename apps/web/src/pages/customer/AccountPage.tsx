@@ -13,7 +13,7 @@
 
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getMe, listProperties, updateMyProperty } from '@/lib/api';
+import { getMe, listProperties, updateMyProperty, getNotificationPreferences, updateNotificationPreferences } from '@/lib/api';
 import type { MeResponse, PropertyListItem } from '@bloom/shared';
 
 // =============================================================================
@@ -287,6 +287,8 @@ export function AccountPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isChangeAddressModalOpen, setIsChangeAddressModalOpen] = useState(false);
+  const [emailNotificationsEnabled, setEmailNotificationsEnabled] = useState(true);
+  const [notifLoading, setNotifLoading] = useState(false);
 
   // Fetch user data
   const fetchUserData = async () => {
@@ -303,11 +305,29 @@ export function AccountPage() {
   // Fetch user data on mount
   useEffect(() => {
     fetchUserData();
+    // Load notification preferences
+    getNotificationPreferences()
+      .then((prefs) => setEmailNotificationsEnabled(prefs.email_notifications_enabled))
+      .catch(() => {}); // Non-fatal
   }, []);
 
   // Handle address save - refresh user data
   const handleAddressSave = () => {
     fetchUserData();
+  };
+
+  // Handle notification toggle
+  const handleNotificationToggle = async () => {
+    const newValue = !emailNotificationsEnabled;
+    setEmailNotificationsEnabled(newValue); // Optimistic
+    setNotifLoading(true);
+    try {
+      await updateNotificationPreferences({ email_notifications_enabled: newValue });
+    } catch {
+      setEmailNotificationsEnabled(!newValue); // Rollback
+    } finally {
+      setNotifLoading(false);
+    }
   };
 
   // Loading state
@@ -396,24 +416,45 @@ export function AccountPage() {
         </div>
       </Card>
 
-      {/* Billing Card (Placeholder) */}
+      {/* Billing Card */}
       <Card className="p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Billing</h2>
         <p className="text-gray-600 mb-4">
-          Billing is coming soon. You'll manage payment methods and invoices here.
+          Manage your payment method and view invoice history.
         </p>
         <div className="flex gap-3">
           <button
-            disabled
-            className="px-4 py-2 bg-gray-100 text-gray-400 rounded cursor-not-allowed"
+            onClick={() => navigate('/customer/billing')}
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
           >
-            Update payment method
+            Manage billing
           </button>
+        </div>
+      </Card>
+
+      {/* Notifications Card */}
+      <Card className="p-6">
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">Notifications</h2>
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-gray-900">Email notifications</p>
+            <p className="text-sm text-gray-500">Delivery updates, payment receipts, and reminders</p>
+          </div>
           <button
-            disabled
-            className="px-4 py-2 bg-gray-100 text-gray-400 rounded cursor-not-allowed"
+            role="switch"
+            aria-checked={emailNotificationsEnabled}
+            aria-label="Toggle email notifications"
+            disabled={notifLoading}
+            onClick={handleNotificationToggle}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+              emailNotificationsEnabled ? 'bg-blue-600' : 'bg-gray-200'
+            } ${notifLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
           >
-            View invoices
+            <span
+              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                emailNotificationsEnabled ? 'translate-x-6' : 'translate-x-1'
+              }`}
+            />
           </button>
         </div>
       </Card>

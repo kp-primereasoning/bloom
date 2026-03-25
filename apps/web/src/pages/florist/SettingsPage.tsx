@@ -6,7 +6,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { getFloristMe } from '@/lib/api';
+import { getFloristMe, getNotificationPreferences, updateNotificationPreferences } from '@/lib/api';
 import { OnboardingSteps } from '@/components/OnboardingSteps';
 import type { FloristMeResponse, AssignedProperty } from '@bloom/shared';
 
@@ -30,6 +30,8 @@ export function SettingsPage() {
   const [floristData, setFloristData] = useState<FloristMeResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [emailNotificationsEnabled, setEmailNotificationsEnabled] = useState(true);
+  const [notifLoading, setNotifLoading] = useState(false);
 
   // Fetch florist profile on mount
   useEffect(() => {
@@ -46,7 +48,24 @@ export function SettingsPage() {
       }
     }
     fetchFloristProfile();
+    // Load notification preferences
+    getNotificationPreferences()
+      .then((prefs) => setEmailNotificationsEnabled(prefs.email_notifications_enabled))
+      .catch(() => {});
   }, []);
+
+  const handleNotificationToggle = async () => {
+    const newValue = !emailNotificationsEnabled;
+    setEmailNotificationsEnabled(newValue);
+    setNotifLoading(true);
+    try {
+      await updateNotificationPreferences({ email_notifications_enabled: newValue });
+    } catch {
+      setEmailNotificationsEnabled(!newValue);
+    } finally {
+      setNotifLoading(false);
+    }
+  };
 
   // Loading state
   if (loading) {
@@ -143,6 +162,33 @@ export function SettingsPage() {
             </p>
           </div>
         )}
+      </div>
+
+      {/* Notifications Card */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+        <h2 className="text-lg font-medium text-gray-900 mb-4">Notifications</h2>
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-gray-900">Email notifications</p>
+            <p className="text-sm text-gray-500">Delivery assignments, status updates, and platform alerts</p>
+          </div>
+          <button
+            role="switch"
+            aria-checked={emailNotificationsEnabled}
+            aria-label="Toggle email notifications"
+            disabled={notifLoading}
+            onClick={handleNotificationToggle}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
+              emailNotificationsEnabled ? 'bg-indigo-600' : 'bg-gray-200'
+            } ${notifLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+          >
+            <span
+              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                emailNotificationsEnabled ? 'translate-x-6' : 'translate-x-1'
+              }`}
+            />
+          </button>
+        </div>
       </div>
     </div>
   );

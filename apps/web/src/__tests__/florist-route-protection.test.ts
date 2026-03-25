@@ -98,7 +98,7 @@ describe('Florist Route Protection - Role-Based Access', () => {
 
   it('should allow FLORIST role to access florist routes', () => {
     // FLORIST role is in the allowedRoles array
-    const allowedRoles = [UserRole.FLORIST];
+    const allowedRoles: readonly UserRole[] = [UserRole.FLORIST];
     const userRole = UserRole.FLORIST;
     
     const hasAccess = allowedRoles.includes(userRole);
@@ -106,7 +106,7 @@ describe('Florist Route Protection - Role-Based Access', () => {
   });
 
   it('should deny CUSTOMER role access to florist routes', () => {
-    const allowedRoles = [UserRole.FLORIST];
+    const allowedRoles: readonly UserRole[] = [UserRole.FLORIST];
     const userRole = UserRole.CUSTOMER;
     
     const hasAccess = allowedRoles.includes(userRole);
@@ -114,7 +114,7 @@ describe('Florist Route Protection - Role-Based Access', () => {
   });
 
   it('should deny PROPERTY_MANAGER role access to florist routes', () => {
-    const allowedRoles = [UserRole.FLORIST];
+    const allowedRoles: readonly UserRole[] = [UserRole.FLORIST];
     const userRole = UserRole.PROPERTY_MANAGER;
     
     const hasAccess = allowedRoles.includes(userRole);
@@ -124,7 +124,7 @@ describe('Florist Route Protection - Role-Based Access', () => {
   it('should deny ADMIN role access to florist routes', () => {
     // Note: ADMIN might have special access in some systems,
     // but in Bloom, each role has its own namespace
-    const allowedRoles = [UserRole.FLORIST];
+    const allowedRoles: readonly UserRole[] = [UserRole.FLORIST];
     const userRole = UserRole.ADMIN;
     
     const hasAccess = allowedRoles.includes(userRole);

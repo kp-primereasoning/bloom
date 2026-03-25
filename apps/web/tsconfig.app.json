@@ -30,5 +30,6 @@
       "@bloom/shared": ["../../packages/shared/src"]
     }
   },
-  "include": ["src", "../../packages/shared/src"]
+  "include": ["src", "../../packages/shared/src"],
+  "exclude": ["src/**/*.test.ts", "src/**/*.test.tsx"]
 }

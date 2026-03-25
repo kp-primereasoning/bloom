@@ -25,6 +25,9 @@ from routes.me import router as me_router
 from routes.public import router as public_router
 from routes.deliveries import router as deliveries_router
 from routes.florist_api import router as florist_api_router
+from routes.payments import router as payments_router
+from routes.webhooks import router as webhooks_router
+from routes.admin_payouts import router as admin_payouts_router
 
 
 # Initialize Sentry if configured
@@ -97,9 +100,27 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="Bloom API",
-    description="Backend API for the Bloom floral subscription platform",
+    description="Backend API for the Bloom floral subscription platform. "
+    "Bloom orchestrates property-based floral subscriptions — connecting residents, "
+    "property managers, florists, and admins.",
     version="0.1.0",
     lifespan=lifespan,
+    openapi_tags=[
+        {"name": "health", "description": "Health checks and service status"},
+        {"name": "auth", "description": "Authentication and registration"},
+        {"name": "me", "description": "Customer self-service (profile, subscription, deliveries)"},
+        {"name": "payments", "description": "Stripe payment methods, subscriptions, and invoices"},
+        {"name": "customer", "description": "Customer dashboard endpoints"},
+        {"name": "florist", "description": "Florist dashboard, deliveries, and availability"},
+        {"name": "florist-api", "description": "Shopify app integration endpoints (API key auth)"},
+        {"name": "pm", "description": "Property manager dashboard and settings"},
+        {"name": "admin", "description": "Admin CRUD for properties, florists, users, assignments"},
+        {"name": "admin-payouts", "description": "Admin florist payout generation and history"},
+        {"name": "webhooks", "description": "Stripe and Shopify webhook handlers"},
+        {"name": "properties", "description": "Public property listing"},
+        {"name": "public", "description": "Public endpoints (FAQ, etc.)"},
+        {"name": "deliveries", "description": "Delivery management (admin)"},
+    ],
 )
 
 # Register global exception handlers for consistent error format
@@ -182,3 +203,6 @@ app.include_router(me_router)
 app.include_router(public_router)
 app.include_router(deliveries_router)
 app.include_router(florist_api_router)
+app.include_router(payments_router)
+app.include_router(webhooks_router)
+app.include_router(admin_payouts_router)
