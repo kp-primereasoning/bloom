@@ -2,267 +2,383 @@
 
 import Link from "next/link"
 import { useEffect, useRef } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { ArrowRight, CheckCircle, Leaf } from "lucide-react"
+import { ArrowRight, Leaf } from "lucide-react"
 import gsap from "gsap"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
-import dynamic from "next/dynamic"
-
-const HeroScene = dynamic(() => import("@/components/HeroScene"), {
-  ssr: false,
-  loading: () => <div className="absolute inset-0 bg-gradient-to-br from-rose-50 via-[#FFF5EE] to-rose-100" />
-})
 
 gsap.registerPlugin(ScrollTrigger)
 
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "/register"
+
+const PLANS = [
+  {
+    name: "Essential",
+    price: "$75",
+    stems: "10–12 stems",
+    cadence: "Every two weeks",
+    extras: null,
+    featured: false,
+  },
+  {
+    name: "Signature",
+    price: "$100",
+    stems: "18–20 stems",
+    cadence: "Every two weeks",
+    extras: "One vase per year",
+    featured: true,
+  },
+  {
+    name: "Statement",
+    price: "$125",
+    stems: "28–30 stems",
+    cadence: "Every two weeks",
+    extras: "Four vases per year, quarterly refresh",
+    featured: false,
+  },
+]
+
 export default function HomePage() {
-  const headlineRef = useRef<HTMLHeadingElement>(null)
-  const subtitleRef = useRef<HTMLParagraphElement>(null)
-  const ctaRef = useRef<HTMLDivElement>(null)
+  const heroRef = useRef<HTMLDivElement>(null)
+  const widgetRef = useRef<HTMLDivElement>(null)
+
   useEffect(() => {
     const ctx = gsap.context(() => {
-      const tl = gsap.timeline({ defaults: { ease: "power3.out" } })
+      gsap.fromTo(
+        heroRef.current,
+        { opacity: 0, y: 40 },
+        { opacity: 1, y: 0, duration: 1, ease: "power3.out" }
+      )
+      gsap.fromTo(
+        widgetRef.current,
+        { opacity: 0, x: 30 },
+        { opacity: 1, x: 0, duration: 0.9, ease: "power3.out", delay: 0.4 }
+      )
 
-      tl.fromTo(headlineRef.current,
-        { opacity: 0, y: 50 },
-        { opacity: 1, y: 0, duration: 1.2 }
-      )
-      .fromTo(subtitleRef.current,
-        { opacity: 0, y: 30 },
-        { opacity: 1, y: 0, duration: 0.8 },
-        "-=0.8"
-      )
-      .fromTo(ctaRef.current,
-        { opacity: 0, y: 20 },
-        { opacity: 1, y: 0, duration: 0.6 },
-        "-=0.6"
-      )
+      gsap.utils.toArray<HTMLElement>(".reveal").forEach((el) => {
+        gsap.fromTo(
+          el,
+          { opacity: 0, y: 24 },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.7,
+            ease: "power2.out",
+            scrollTrigger: { trigger: el, start: "top 85%" },
+          }
+        )
+      })
     })
-
     return () => ctx.revert()
   }, [])
 
   return (
-    <div className="min-h-screen bg-bloom-cream text-bloom-dark selection:bg-bloom-rose selection:text-white">
+    <div className="min-h-screen bg-bloom-cream text-bloom-dark">
 
-      {/* HERO */}
-      <section className="relative min-h-screen flex items-center overflow-hidden pt-20 lg:pt-0">
-        <HeroScene />
-        <div className="container relative z-10 mx-auto px-6 lg:px-12">
-          <div className="max-w-2xl pt-10 lg:pt-0">
-              <h1
-                ref={headlineRef}
-                className="font-serif text-6xl md:text-7xl lg:text-8xl leading-[1.05] tracking-tight mb-8"
-              >
-                Flowers, <br />
-                <span className="italic text-bloom-sage">on repeat.</span>
-              </h1>
+      {/* ── HERO ─────────────────────────────────────────────── */}
+      <section className="min-h-screen flex items-center pt-20 pb-16 lg:pt-0 lg:pb-0">
+        <div className="w-full max-w-7xl mx-auto px-6 lg:px-12">
+          <div className="grid lg:grid-cols-[7fr_5fr] gap-12 lg:gap-20 items-center min-h-[85vh]">
 
-              <p
-                ref={subtitleRef}
-                className="text-xl md:text-2xl text-stone-600 leading-relaxed mb-10 max-w-lg font-light"
-              >
-                Fresh flowers from a local florist, delivered to your building every month. You don't have to do a thing.
+            {/* Left: headline */}
+            <div ref={heroRef}>
+              <p className="text-sm tracking-[0.2em] uppercase text-bloom-sage mb-8 font-medium">
+                Floral subscriptions for apartment buildings
               </p>
-
-              <div ref={ctaRef} className="flex flex-col sm:flex-row gap-5">
-                <Button
-                  asChild
-                  size="lg"
-                  className="bg-bloom-dark hover:bg-stone-800 text-bloom-cream text-lg px-8 py-7 rounded-full transition-transform hover:scale-105"
+              <h1 className="font-serif text-[clamp(3rem,7vw,6rem)] leading-[1.0] tracking-tight mb-8">
+                Your building<br />
+                gets a{" "}
+                <em className="not-italic text-bloom-sage">florist.</em>
+              </h1>
+              <p className="text-[18px] text-stone-600 leading-relaxed mb-4 max-w-md font-light">
+                Fresh flowers every two weeks, from one local florist assigned to your building.
+                No subscription box. No trip to the shop. Just flowers at your door.
+              </p>
+              <p className="text-[15px] text-stone-400 mb-12 max-w-sm">
+                Bloom doesn't sell flowers — your florist does. We handle the contract, the schedule, and the delivery coordination.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <a
+                  href={APP_URL}
+                  className="inline-flex items-center justify-center gap-2 bg-bloom-dark text-bloom-cream px-8 py-4 rounded-full text-[15px] font-medium hover:bg-stone-800 transition-colors"
                 >
-                  <a href="#sign-up">
-                    Get Started
-                  </a>
-                </Button>
-                <Button
-                  asChild
-                  variant="outline"
-                  size="lg"
-                  className="border-bloom-dark text-bloom-dark hover:bg-bloom-dark hover:text-bloom-cream text-lg px-8 py-7 rounded-full bg-transparent transition-colors"
+                  Check your building
+                  <ArrowRight className="h-4 w-4" />
+                </a>
+                <a
+                  href="#how-it-works"
+                  className="inline-flex items-center justify-center gap-2 border border-stone-300 text-stone-700 px-8 py-4 rounded-full text-[15px] font-medium hover:border-stone-500 transition-colors bg-transparent"
                 >
-                  <a href="#how-it-works">
-                    How does it work?
-                  </a>
-                </Button>
+                  How it works
+                </a>
               </div>
-          </div>
-        </div>
-      </section>
+            </div>
 
-      {/* HOW IT WORKS */}
-      <section id="how-it-works" className="py-24 bg-[#FFFBF7]">
-        <div className="max-w-6xl mx-auto px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="font-serif text-4xl md:text-5xl text-stone-900 mb-6">
-              Here's how it works
-            </h2>
-            <p className="text-lg text-stone-600">
-              We handle the florists, the schedule, and the delivery. You just enjoy the flowers.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            {[
-              { step: "1", title: "Your building signs up", desc: "Your property manager activates Bloom and picks a delivery schedule." },
-              { step: "2", title: "Pick your size", desc: "Choose Petit, Grand, or Luxe — whatever fits your space and budget." },
-              { step: "3", title: "Flowers show up", desc: "A local florist delivers fresh arrangements to your door every month." }
-            ].map((item, i) => (
-              <div key={i} className="p-8 rounded-3xl bg-white border border-stone-100 hover:shadow-lg transition-shadow">
-                <div className="w-10 h-10 bg-bloom-sage text-white rounded-full flex items-center justify-center text-sm font-bold mb-6">
-                  {item.step}
+            {/* Right: upcoming delivery widget */}
+            <div ref={widgetRef} className="hidden lg:block">
+              <div className="bg-white border border-stone-200 rounded-2xl p-8 shadow-sm max-w-sm ml-auto">
+                <p className="text-[11px] tracking-[0.18em] uppercase text-stone-400 mb-6">Next delivery</p>
+                <div className="space-y-5">
+                  <div>
+                    <p className="text-[13px] text-stone-500 mb-1">Building</p>
+                    <p className="text-[15px] font-medium">The Meridian, Unit 4B</p>
+                  </div>
+                  <div>
+                    <p className="text-[13px] text-stone-500 mb-1">Date</p>
+                    <p className="text-[15px] font-medium">Thursday, April 3rd</p>
+                  </div>
+                  <div>
+                    <p className="text-[13px] text-stone-500 mb-1">Florist</p>
+                    <p className="text-[15px] font-medium">Field & Flora, SF</p>
+                  </div>
+                  <div>
+                    <p className="text-[13px] text-stone-500 mb-1">Arrangement</p>
+                    <p className="text-[15px] font-medium">Signature — 18 stems</p>
+                  </div>
+                  <div className="pt-2 border-t border-stone-100">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-bloom-sage" />
+                      <p className="text-[13px] text-stone-500">Scheduled</p>
+                    </div>
+                  </div>
                 </div>
-                <h3 className="font-serif text-xl text-stone-900 mb-2">{item.title}</h3>
-                <p className="text-stone-600 text-sm leading-relaxed">{item.desc}</p>
               </div>
-            ))}
+              <p className="text-[12px] text-stone-400 mt-3 text-right pr-1">Example delivery — yours will look like this.</p>
+            </div>
+
           </div>
         </div>
       </section>
 
-      {/* PRICING */}
-      <section className="py-24 bg-white">
-        <div className="max-w-6xl mx-auto px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="font-serif text-4xl md:text-5xl text-stone-900 mb-6">
-              Choose your size
+      {/* ── MARQUEE ──────────────────────────────────────────── */}
+      <div className="bg-bloom-dark py-4 overflow-hidden border-y border-stone-800">
+        <div className="marquee-track flex whitespace-nowrap">
+          {[...Array(3)].map((_, i) => (
+            <span key={i} className="flex items-center shrink-0">
+              {[
+                "Ranunculus", "Garden Roses", "Lisianthus",
+                "Sweet Peas", "Anemones", "Tulips",
+                "Peonies", "Dahlias", "Scabiosa",
+                "Hellebores", "Fritillaria", "Clematis",
+              ].map((flower) => (
+                <span key={flower} className="inline-flex items-center gap-4 mx-4">
+                  <span className="text-[13px] tracking-widest uppercase text-stone-400 font-light">{flower}</span>
+                  <Leaf className="h-3 w-3 text-bloom-sage opacity-60 shrink-0" />
+                </span>
+              ))}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      {/* ── HOW IT WORKS ─────────────────────────────────────── */}
+      <section id="how-it-works" className="pt-28 pb-20 bg-white">
+        <div className="max-w-7xl mx-auto px-6 lg:px-12">
+
+          <div className="reveal mb-20">
+            <p className="text-sm tracking-[0.2em] uppercase text-bloom-sage mb-4 font-medium">How it works</p>
+            <h2 className="font-serif text-[clamp(2rem,4vw,3.5rem)] leading-tight max-w-xl">
+              Two steps. Then just answer the door.
             </h2>
-            <p className="text-lg text-stone-600">
-              Three sizes. One monthly delivery. Included with your building.
+          </div>
+
+          {/* Step 1 — 7/5 left-heavy */}
+          <div className="reveal grid lg:grid-cols-[7fr_5fr] gap-16 items-start mb-20 pb-20 border-b border-stone-100">
+            <div>
+              <span className="font-serif text-[80px] leading-none text-stone-100 select-none block -mb-4">01</span>
+              <h3 className="font-serif text-3xl mb-5">Your building signs up.</h3>
+              <p className="text-[17px] text-stone-600 leading-relaxed mb-4">
+                Property managers activate Bloom for their building — they pick a florist from our local network, set the delivery schedule, and configure how many units are on the program.
+              </p>
+              <p className="text-[15px] text-stone-400">
+                If your building isn't live yet, you can request it. We'll reach out to your property manager.
+              </p>
+            </div>
+            <div className="bg-stone-50 rounded-2xl p-8 self-start">
+              <p className="text-[12px] tracking-widest uppercase text-stone-400 mb-6">For property managers</p>
+              <ul className="space-y-4 text-[14px] text-stone-600">
+                {[
+                  "Select a florist from the local network",
+                  "Set delivery day and cadence",
+                  "Residents subscribe themselves — no manual tracking",
+                  "Dashboard shows participation, deliveries, and billing",
+                ].map((item) => (
+                  <li key={item} className="flex items-start gap-3">
+                    <span className="w-1.5 h-1.5 rounded-full bg-bloom-sage mt-2 shrink-0" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+              <Link
+                href="/property-managers"
+                className="inline-flex items-center gap-1.5 text-[13px] text-bloom-sage mt-6 hover:underline"
+              >
+                Details for buildings <ArrowRight className="h-3 w-3" />
+              </Link>
+            </div>
+          </div>
+
+          {/* Step 2 — 5/7 right-heavy */}
+          <div className="reveal grid lg:grid-cols-[5fr_7fr] gap-16 items-start">
+            <div className="bg-bloom-dark rounded-2xl p-8 self-start order-2 lg:order-1">
+              <p className="text-[12px] tracking-widest uppercase text-stone-500 mb-6">For residents</p>
+              <ul className="space-y-4 text-[14px] text-stone-400">
+                {[
+                  "Sign up with your email and unit number",
+                  "Pick Essential, Signature, or Statement",
+                  "Enter a card — billed monthly",
+                  "Flowers show up every two weeks",
+                ].map((item) => (
+                  <li key={item} className="flex items-start gap-3">
+                    <span className="w-1.5 h-1.5 rounded-full bg-bloom-sage mt-2 shrink-0" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="order-1 lg:order-2">
+              <span className="font-serif text-[80px] leading-none text-stone-100 select-none block -mb-4">02</span>
+              <h3 className="font-serif text-3xl mb-5">You pick a size and subscribe.</h3>
+              <p className="text-[17px] text-stone-600 leading-relaxed mb-4">
+                Once your building is live, residents sign up individually. Choose your arrangement size, add a card, and you're done. The florist handles the rest — sourcing, arranging, and delivering to your door.
+              </p>
+              <p className="text-[15px] text-stone-400">
+                You can skip a delivery any time before the cutoff. Pause or cancel without calling anyone.
+              </p>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      {/* ── THE FLORIST BIT ───────────────────────────────────── */}
+      <section className="py-24 bg-bloom-cream">
+        <div className="max-w-7xl mx-auto px-6 lg:px-12">
+          <div className="reveal grid lg:grid-cols-2 gap-16 items-end">
+            <div>
+              <p className="text-sm tracking-[0.2em] uppercase text-bloom-sage mb-6 font-medium">The florist</p>
+              <h2 className="font-serif text-[clamp(2rem,4vw,3.5rem)] leading-tight mb-8">
+                One florist.<br />
+                <em className="not-italic text-stone-400 font-light">Your building's florist.</em>
+              </h2>
+              <p className="text-[18px] text-stone-600 leading-relaxed mb-6">
+                Each building works with a single local florist — not a rotating pool, not a warehouse fulfillment center. Your florist knows your building's delivery window, your lobby, and what's in season.
+              </p>
+              <p className="text-[16px] text-stone-500 leading-relaxed">
+                We source from independent shops and studios in your city. They set their own prices, keep their margins, and build a predictable revenue line from the buildings they serve.
+              </p>
+              <Link
+                href="/florists"
+                className="inline-flex items-center gap-2 mt-8 text-[14px] font-medium text-bloom-dark hover:text-bloom-sage transition-colors"
+              >
+                For florists <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+            {/* Offset quote — deliberately not centered */}
+            <div className="relative">
+              <div className="bg-stone-900 rounded-2xl p-10 text-bloom-cream">
+                <p className="font-serif text-2xl leading-snug mb-8">
+                  "We do 40 units at The Meridian every other Thursday. It's become the best part of our week."
+                </p>
+                <div>
+                  <p className="text-[14px] font-medium">Sarah K.</p>
+                  <p className="text-[13px] text-stone-400">Field & Flora, San Francisco</p>
+                </div>
+              </div>
+              <div className="absolute -bottom-4 -right-4 w-32 h-32 bg-bloom-sage/10 rounded-full -z-10" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── PRICING ──────────────────────────────────────────── */}
+      <section id="pricing" className="py-24 bg-white">
+        <div className="max-w-7xl mx-auto px-6 lg:px-12">
+          <div className="reveal mb-16">
+            <p className="text-sm tracking-[0.2em] uppercase text-bloom-sage mb-4 font-medium">Pricing</p>
+            <h2 className="font-serif text-[clamp(2rem,4vw,3.5rem)] leading-tight mb-4">
+              Three sizes. Every two weeks.
+            </h2>
+            <p className="text-[17px] text-stone-500 max-w-lg">
+              Billed monthly. Skip any delivery before the Thursday cutoff. Cancel anytime.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-            {[
-              {
-                name: "Petit", price: "$45", period: "/mo",
-                description: "Perfect for a side table or nightstand.",
-                features: ["Small seasonal bouquet", "Monthly delivery", "Care instructions included"],
-                featured: false
-              },
-              {
-                name: "Grand", price: "$75", period: "/mo",
-                description: "Our signature centerpiece size.",
-                features: ["Large mixed bouquet", "Premium flower varieties", "Personalization options"],
-                featured: true
-              },
-              {
-                name: "Luxe", price: "$120", period: "/mo",
-                description: "The biggest we offer. Hard to miss.",
-                features: ["Designer arrangements", "Exotic and rare flowers", "Multiple arrangements", "Priority delivery"],
-                featured: false
-              }
-            ].map((plan, index) => (
-              <Card key={index} className={`rounded-3xl border-stone-200 ${plan.featured ? 'border-rose-300 border-2 relative shadow-xl shadow-rose-100' : 'hover:shadow-lg transition-shadow'}`}>
+          <div className="reveal grid md:grid-cols-3 gap-6 max-w-5xl">
+            {PLANS.map((plan) => (
+              <div
+                key={plan.name}
+                className={`rounded-2xl p-8 border ${
+                  plan.featured
+                    ? "border-bloom-sage bg-stone-900 text-bloom-cream"
+                    : "border-stone-200 bg-white"
+                }`}
+              >
                 {plan.featured && (
-                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                    <span className="bg-rose-500 text-white text-xs font-medium px-3 py-1 rounded-full">Most Popular</span>
-                  </div>
+                  <p className="text-[11px] tracking-[0.18em] uppercase text-bloom-sage mb-6">Most popular</p>
                 )}
-                <CardContent className="p-8">
-                  <h3 className="font-serif text-xl text-stone-900 mb-1">{plan.name}</h3>
-                  <p className="text-stone-500 text-sm mb-4">{plan.description}</p>
-                  <div className="mb-6">
-                    <span className="text-4xl font-semibold text-stone-900">{plan.price}</span>
-                    <span className="text-stone-500">{plan.period}</span>
-                  </div>
-                  <ul className="space-y-3 mb-8">
-                    {plan.features.map((feature, i) => (
-                      <li key={i} className="flex items-center gap-3 text-stone-600 text-sm">
-                        <CheckCircle className="h-4 w-4 text-rose-400 flex-shrink-0" />
-                        <span>{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <Button className={`w-full rounded-full ${plan.featured ? 'bg-stone-900 hover:bg-stone-800' : 'bg-white border border-stone-200 text-stone-900 hover:bg-stone-50'}`}>
-                    Choose {plan.name}
-                  </Button>
-                </CardContent>
-              </Card>
+                <div className="flex items-baseline justify-between mb-1">
+                  <h3 className={`font-serif text-2xl ${plan.featured ? "text-bloom-cream" : "text-stone-900"}`}>
+                    {plan.name}
+                  </h3>
+                  <span className={`text-3xl font-light ${plan.featured ? "text-bloom-cream" : "text-stone-900"}`}>
+                    {plan.price}
+                  </span>
+                </div>
+                <p className={`text-[13px] mb-1 ${plan.featured ? "text-stone-400" : "text-stone-500"}`}>per month</p>
+                <div className={`border-t mt-6 pt-6 space-y-3 ${plan.featured ? "border-stone-700" : "border-stone-100"}`}>
+                  <p className={`text-[14px] ${plan.featured ? "text-stone-300" : "text-stone-600"}`}>{plan.stems}</p>
+                  <p className={`text-[14px] ${plan.featured ? "text-stone-300" : "text-stone-600"}`}>{plan.cadence}</p>
+                  {plan.extras && (
+                    <p className="text-[14px] text-bloom-sage">{plan.extras}</p>
+                  )}
+                </div>
+                <a
+                  href={APP_URL}
+                  className={`mt-8 flex items-center justify-center gap-2 px-6 py-3 rounded-full text-[14px] font-medium transition-colors ${
+                    plan.featured
+                      ? "bg-bloom-sage text-white hover:bg-green-600"
+                      : "border border-stone-200 text-stone-700 hover:border-stone-400"
+                  }`}
+                >
+                  Get started
+                </a>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* SIGN UP */}
-      <section id="sign-up" className="py-24 bg-[#FFFBF7]">
-        <div className="max-w-3xl mx-auto px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="font-serif text-4xl md:text-5xl text-stone-900 mb-6">
-              Get started
-            </h2>
-            <p className="text-lg text-stone-600">
-              Fill this out and we'll get you set up.
+      {/* ── FOOTER NOTE ──────────────────────────────────────── */}
+      <section className="py-20 bg-bloom-cream border-t border-stone-100">
+        <div className="max-w-7xl mx-auto px-6 lg:px-12">
+          <div className="reveal max-w-2xl">
+            <p className="font-serif text-2xl text-stone-900 leading-relaxed mb-6">
+              Bloom started with one building in San Francisco in 2024. If yours isn't on the list yet,{" "}
+              <a href="mailto:hello@bloom.com" className="underline underline-offset-4 decoration-stone-300 hover:decoration-stone-600 transition-colors">
+                reach out.
+              </a>
+            </p>
+            <p className="text-[15px] text-stone-500">
+              We add new buildings as we bring on florists in each city. It takes a few weeks.
             </p>
           </div>
-
-          <Card className="rounded-3xl border-stone-200 shadow-xl shadow-stone-100">
-            <CardContent className="p-8 md:p-10">
-              <form className="space-y-6">
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div>
-                    <label htmlFor="firstName" className="block text-sm font-medium text-stone-700 mb-2">First Name</label>
-                    <Input id="firstName" placeholder="Jane" className="rounded-xl border-stone-200 focus:border-rose-300 focus:ring-rose-300" required />
-                  </div>
-                  <div>
-                    <label htmlFor="lastName" className="block text-sm font-medium text-stone-700 mb-2">Last Name</label>
-                    <Input id="lastName" placeholder="Smith" className="rounded-xl border-stone-200 focus:border-rose-300 focus:ring-rose-300" required />
-                  </div>
-                </div>
-
-                <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-stone-700 mb-2">Email</label>
-                  <Input id="email" type="email" placeholder="jane@example.com" className="rounded-xl border-stone-200 focus:border-rose-300 focus:ring-rose-300" required />
-                </div>
-
-                <div>
-                  <label htmlFor="buildingAddress" className="block text-sm font-medium text-stone-700 mb-2">Building Address</label>
-                  <Input id="buildingAddress" placeholder="123 Main St" className="rounded-xl border-stone-200 focus:border-rose-300 focus:ring-rose-300" required />
-                </div>
-
-                <div>
-                  <label htmlFor="apartmentNumber" className="block text-sm font-medium text-stone-700 mb-2">Unit Number</label>
-                  <Input id="apartmentNumber" placeholder="4B" className="rounded-xl border-stone-200 focus:border-rose-300 focus:ring-rose-300" required />
-                </div>
-
-                <div>
-                  <label htmlFor="plan" className="block text-sm font-medium text-stone-700 mb-2">Preferred Size</label>
-                  <select id="plan" className="w-full h-10 px-3 py-2 border border-stone-200 bg-white rounded-xl text-sm focus:border-rose-300 focus:ring-rose-300 focus:outline-none" required>
-                    <option value="">Pick one</option>
-                    <option value="petit">Petit — $45/mo</option>
-                    <option value="grand">Grand — $75/mo</option>
-                    <option value="luxe">Luxe — $120/mo</option>
-                  </select>
-                </div>
-
-                <Button type="submit" className="w-full bg-stone-900 hover:bg-stone-800 rounded-full py-6 text-base">
-                  Sign Up
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
         </div>
       </section>
 
-      {/* FOOTER */}
-      <footer className="py-12 bg-stone-900 text-stone-400">
-        <div className="max-w-6xl mx-auto px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+      {/* ── FOOTER ───────────────────────────────────────────── */}
+      <footer className="py-12 bg-bloom-dark">
+        <div className="max-w-7xl mx-auto px-6 lg:px-12">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
             <div className="flex items-center gap-2">
-              <Leaf className="h-6 w-6 text-rose-400" />
-              <span className="text-white font-medium">Bloom</span>
+              <Leaf className="h-5 w-5 text-bloom-sage" />
+              <span className="text-bloom-cream font-serif text-xl">Bloom</span>
             </div>
-            <div className="flex gap-8 text-sm">
-              <a href="/florists" className="hover:text-white transition-colors">Florists</a>
-              <a href="/property-managers" className="hover:text-white transition-colors">Buildings</a>
-              <a href="#" className="hover:text-white transition-colors">Contact</a>
+            <div className="flex flex-wrap gap-x-10 gap-y-2 text-[13px] text-stone-500">
+              <Link href="/florists" className="hover:text-stone-300 transition-colors">Florists</Link>
+              <Link href="/property-managers" className="hover:text-stone-300 transition-colors">Buildings</Link>
+              <a href="mailto:hello@bloom.com" className="hover:text-stone-300 transition-colors">hello@bloom.com</a>
             </div>
-          </div>
-          <div className="mt-8 text-xs text-stone-600 text-center md:text-left">
-            © 2026 Bloom. All rights reserved.
+            <p className="text-[12px] text-stone-600">© 2026 Bloom</p>
           </div>
         </div>
       </footer>
