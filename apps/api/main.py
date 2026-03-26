@@ -98,6 +98,8 @@ async def lifespan(app: FastAPI):
     # Shutdown (nothing needed currently)
 
 
+is_production = os.environ.get("ENVIRONMENT") == "production"
+
 app = FastAPI(
     title="Bloom API",
     description="Backend API for the Bloom floral subscription platform. "
@@ -105,6 +107,10 @@ app = FastAPI(
     "property managers, florists, and admins.",
     version="0.1.0",
     lifespan=lifespan,
+    # Disable interactive docs in production
+    docs_url=None if is_production else "/docs",
+    redoc_url=None if is_production else "/redoc",
+    openapi_url=None if is_production else "/openapi.json",
     openapi_tags=[
         {"name": "health", "description": "Health checks and service status"},
         {"name": "auth", "description": "Authentication and registration"},
@@ -158,13 +164,16 @@ async def generic_exception_handler(request: Request, exc: Exception):
         content={"error": {"code": "INTERNAL_ERROR", "message": message, "request_id": request_id}}
     )
 
-# CORS configuration
-allowed_origins = [
-    "http://localhost:5173",
-    "http://localhost:5174",
-    "http://127.0.0.1:5173",
-    "http://127.0.0.1:5174",
-]
+# CORS configuration — localhost only allowed outside production
+allowed_origins: list[str] = []
+
+if not is_production:
+    allowed_origins += [
+        "http://localhost:5173",
+        "http://localhost:5174",
+        "http://127.0.0.1:5173",
+        "http://127.0.0.1:5174",
+    ]
 
 # Add production domain if configured (WEB_DOMAIN for single domain)
 if prod_domain := os.environ.get("WEB_DOMAIN"):

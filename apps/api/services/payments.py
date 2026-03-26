@@ -36,7 +36,12 @@ def _get_stripe_key() -> str:
         if settings.use_aws_secrets:
             from services.aws.secrets import get_secrets_client
             client = get_secrets_client(settings.aws_region)
-            secret = client.get_secret("bloom/dev/stripe-api-key")
+            env = settings.environment
+            secret_name = os.environ.get(
+                "STRIPE_SECRET_KEY_NAME",
+                f"bloom/{env}/stripe-api-key",
+            )
+            secret = client.get_secret(secret_name)
             if secret:
                 return secret
     except Exception as e:
@@ -187,7 +192,12 @@ def verify_webhook_signature(payload: bytes, sig_header: str) -> dict:
             if settings.use_aws_secrets:
                 from services.aws.secrets import get_secrets_client
                 client = get_secrets_client(settings.aws_region)
-                webhook_secret = client.get_secret("bloom/dev/stripe-webhook-secret") or ""
+                env = settings.environment
+                secret_name = os.environ.get(
+                    "STRIPE_WEBHOOK_SECRET_NAME",
+                    f"bloom/{env}/stripe-webhook-secret",
+                )
+                webhook_secret = client.get_secret(secret_name) or ""
         except Exception:
             pass
 

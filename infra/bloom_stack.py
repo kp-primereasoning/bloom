@@ -98,6 +98,22 @@ class BloomStack(Stack):
             ),
         )
 
+        # Stripe secrets — placeholders; replace values in Secrets Manager console
+        # with real keys before go-live (sk_live_... / whsec_...)
+        stripe_api_key_secret = secretsmanager.Secret(
+            self,
+            "StripeApiKeySecret",
+            secret_name="bloom/prod/stripe-api-key",
+            secret_string_value=cdk.SecretValue.unsafe_plain_text("REPLACE_WITH_STRIPE_SECRET_KEY"),
+        )
+
+        stripe_webhook_secret = secretsmanager.Secret(
+            self,
+            "StripeWebhookSecret",
+            secret_name="bloom/prod/stripe-webhook-secret",
+            secret_string_value=cdk.SecretValue.unsafe_plain_text("REPLACE_WITH_STRIPE_WEBHOOK_SECRET"),
+        )
+
         # =====================================================================
         # RDS PostgreSQL 15 — db.t3.micro, private subnet
         # =====================================================================
@@ -215,6 +231,8 @@ class BloomStack(Stack):
         )
         db_secret.grant_read(apprunner_instance_role)
         jwt_secret.grant_read(apprunner_instance_role)
+        stripe_api_key_secret.grant_read(apprunner_instance_role)
+        stripe_webhook_secret.grant_read(apprunner_instance_role)
         photos_bucket.grant_read_write(apprunner_instance_role)
         apprunner_instance_role.add_to_policy(
             iam.PolicyStatement(
@@ -276,6 +294,17 @@ class BloomStack(Stack):
                             apprunner.CfnService.KeyValuePairProperty(name="DB_NAME", value="bloom"),
                             apprunner.CfnService.KeyValuePairProperty(name="DB_USER", value="bloom_admin"),
                             apprunner.CfnService.KeyValuePairProperty(name="SENTRY_DSN", value=""),  # Set via console or Secrets Manager
+                            # Stripe — override secret name (resolved from Secrets Manager at runtime)
+                            apprunner.CfnService.KeyValuePairProperty(name="STRIPE_SECRET_KEY_NAME", value="bloom/prod/stripe-api-key"),
+                            apprunner.CfnService.KeyValuePairProperty(name="STRIPE_WEBHOOK_SECRET_NAME", value="bloom/prod/stripe-webhook-secret"),
+                            # Stripe publishable key (not secret — safe as env var)
+                            apprunner.CfnService.KeyValuePairProperty(name="STRIPE_PUBLISHABLE_KEY", value=""),  # Set to pk_live_... before go-live
+                            # Stripe price IDs — set after creating products in Stripe dashboard
+                            apprunner.CfnService.KeyValuePairProperty(name="STRIPE_PRICE_ESSENTIAL", value=""),
+                            apprunner.CfnService.KeyValuePairProperty(name="STRIPE_PRICE_SIGNATURE", value=""),
+                            apprunner.CfnService.KeyValuePairProperty(name="STRIPE_PRICE_STATEMENT", value=""),
+                            # Production frontend domain for CORS
+                            apprunner.CfnService.KeyValuePairProperty(name="WEB_DOMAIN", value=""),  # Set to https://your-amplify-domain.com
                         ],
                     ),
                 ),
@@ -351,7 +380,7 @@ class BloomStack(Stack):
         )
 
         # =====================================================================
-        # CloudWatch Alarm — 5xx error rate on App Runner
+        # CloudWatch Alarms + SNS
         # =====================================================================
         alarm_topic = sns.Topic(
             self, "BloomAlarmTopic",
@@ -359,6 +388,14 @@ class BloomStack(Stack):
             display_name="Bloom API Alarms",
         )
 
+        # Subscribe ops email — set OPS_EMAIL context var: cdk deploy -c ops_email=you@example.com
+        ops_email = self.node.try_get_context("ops_email")
+        if ops_email:
+            alarm_topic.add_subscription(
+                __import__("aws_cdk.aws_sns_subscriptions", fromlist=["EmailSubscription"]).EmailSubscription(ops_email)
+            )
+
+        # Alarm 1: API 5xx errors (existing — kept)
         cloudwatch.Alarm(
             self,
             "Api5xxAlarm",
@@ -373,6 +410,75 @@ class BloomStack(Stack):
             ),
             threshold=5,
             evaluation_periods=1,
+            comparison_operator=cloudwatch.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+            treat_missing_data=cloudwatch.TreatMissingData.NOT_BREACHING,
+        ).add_alarm_action(cw_actions.SnsAction(alarm_topic))
+
+        # Alarm 2: Payment failure rate > 10% in 1 hour (custom metric)
+        cloudwatch.Alarm(
+            self,
+            "PaymentFailureAlarm",
+            alarm_name="bloom-payment-failures",
+            alarm_description="Payment failure count exceeded threshold in the last hour",
+            metric=cloudwatch.Metric(
+                namespace="Bloom",
+                metric_name="payments.failed",
+                statistic="Sum",
+                period=Duration.hours(1),
+            ),
+            threshold=10,
+            evaluation_periods=1,
+            comparison_operator=cloudwatch.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+            treat_missing_data=cloudwatch.TreatMissingData.NOT_BREACHING,
+        ).add_alarm_action(cw_actions.SnsAction(alarm_topic))
+
+        # Alarm 3: Zero deliveries generated on a scheduled day
+        # Lambda runs daily at 6 AM — if bloom.deliveries.generated = 0 it fires
+        cloudwatch.Alarm(
+            self,
+            "ZeroDeliveriesAlarm",
+            alarm_name="bloom-zero-deliveries-generated",
+            alarm_description="No deliveries were generated on a scheduled delivery day",
+            metric=cloudwatch.Metric(
+                namespace="Bloom",
+                metric_name="deliveries.generated",
+                statistic="Sum",
+                period=Duration.hours(4),  # Window around 6 AM run
+            ),
+            threshold=1,
+            evaluation_periods=1,
+            comparison_operator=cloudwatch.ComparisonOperator.LESS_THAN_THRESHOLD,
+            treat_missing_data=cloudwatch.TreatMissingData.BREACHING,  # Missing = no deliveries
+        ).add_alarm_action(cw_actions.SnsAction(alarm_topic))
+
+        # Alarm 4: API error rate > 5% sustained 5 minutes
+        # Uses App Runner request metrics to compute 5xx ratio
+        total_requests = cloudwatch.Metric(
+            namespace="AWS/AppRunner",
+            metric_name="Requests",
+            dimensions_map={"ServiceName": "bloom-api"},
+            statistic="Sum",
+            period=Duration.minutes(5),
+        )
+        error_requests = cloudwatch.Metric(
+            namespace="AWS/AppRunner",
+            metric_name="5xxStatusResponses",
+            dimensions_map={"ServiceName": "bloom-api"},
+            statistic="Sum",
+            period=Duration.minutes(5),
+        )
+        cloudwatch.Alarm(
+            self,
+            "ApiErrorRateAlarm",
+            alarm_name="bloom-api-error-rate",
+            alarm_description="API 5xx error rate exceeded 5% for 5 minutes",
+            metric=cloudwatch.MathExpression(
+                expression="(errors / MAX([errors, requests])) * 100",
+                using_metrics={"errors": error_requests, "requests": total_requests},
+                period=Duration.minutes(5),
+            ),
+            threshold=5,
+            evaluation_periods=3,
             comparison_operator=cloudwatch.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
             treat_missing_data=cloudwatch.TreatMissingData.NOT_BREACHING,
         ).add_alarm_action(cw_actions.SnsAction(alarm_topic))
@@ -413,3 +519,9 @@ class BloomStack(Stack):
         CfnOutput(self, "AlarmTopicArn",
                   value=alarm_topic.topic_arn,
                   description="SNS topic for API alarms — subscribe your email")
+        CfnOutput(self, "StripeApiKeySecretArn",
+                  value=stripe_api_key_secret.secret_arn,
+                  description="Stripe API key secret — update value in Secrets Manager before go-live")
+        CfnOutput(self, "StripeWebhookSecretArn",
+                  value=stripe_webhook_secret.secret_arn,
+                  description="Stripe webhook secret — update value in Secrets Manager before go-live")
