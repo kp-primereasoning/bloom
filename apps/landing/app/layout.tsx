@@ -1,18 +1,11 @@
 import type { Metadata } from 'next'
-import { Inter, Playfair_Display } from 'next/font/google'
 import './globals.css'
 import { Navigation } from '@/components/navigation'
 import SmoothScroll from '@/components/SmoothScroll'
 
-const inter = Inter({ subsets: ['latin'] })
-const playfair = Playfair_Display({
-  subsets: ['latin'],
-  variable: '--font-serif'
-})
-
 export const metadata: Metadata = {
-  title: 'Bloom - Fresh Flowers Delivered',
-  description: 'Artisan floral arrangements delivered to your doorstep. Fresh. Beautiful. Effortless.',
+  title: 'Bloom — Flowers for your building',
+  description: 'Fresh flowers every two weeks from a local florist, delivered to your apartment door.',
 }
 
 export default function RootLayout({
@@ -22,7 +15,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.className} ${playfair.variable}`} suppressHydrationWarning>
+      <body suppressHydrationWarning>
         <SmoothScroll>
           <Navigation />
           <main>{children}</main>
