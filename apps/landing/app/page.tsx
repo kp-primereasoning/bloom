@@ -273,15 +273,27 @@ export default function HomePage() {
                 For florists <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
-            {/* Offset quote — deliberately not centered */}
+            {/* Florist economics breakdown */}
             <div className="relative">
               <div className="bg-stone-900 rounded-2xl p-10 text-bloom-cream">
-                <p className="font-serif text-2xl leading-snug mb-8">
-                  "We do 40 units at The Meridian every other Thursday. It's become the best part of our week."
-                </p>
-                <div>
-                  <p className="text-[14px] font-medium">Sarah K.</p>
-                  <p className="text-[13px] text-stone-400">Field & Flora, San Francisco</p>
+                <p className="text-[11px] tracking-[0.18em] uppercase text-stone-500 mb-8">What florists get</p>
+                <div className="space-y-6">
+                  <div className="flex justify-between items-baseline border-b border-stone-800 pb-6">
+                    <span className="text-[14px] text-stone-400">Predictable orders</span>
+                    <span className="font-serif text-xl">Every 2 weeks</span>
+                  </div>
+                  <div className="flex justify-between items-baseline border-b border-stone-800 pb-6">
+                    <span className="text-[14px] text-stone-400">Revenue per building</span>
+                    <span className="font-serif text-xl">Fixed monthly</span>
+                  </div>
+                  <div className="flex justify-between items-baseline border-b border-stone-800 pb-6">
+                    <span className="text-[14px] text-stone-400">Delivery window</span>
+                    <span className="font-serif text-xl">Set by you</span>
+                  </div>
+                  <div className="flex justify-between items-baseline">
+                    <span className="text-[14px] text-stone-400">Customer service</span>
+                    <span className="font-serif text-xl">Handled by Bloom</span>
+                  </div>
                 </div>
               </div>
               <div className="absolute -bottom-4 -right-4 w-32 h-32 bg-bloom-sage/10 rounded-full -z-10" />
