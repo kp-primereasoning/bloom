@@ -1,104 +1,107 @@
 """
-In-memory user store for MLP.
-Will be replaced with database in future iterations.
+User persistence layer — backed by Postgres via SQLAlchemy.
+All functions keep the same async signatures as the previous in-memory store
+so callers require no changes.
 """
 
 from typing import Optional
 from uuid import UUID
 
-from models.user import User, UserRole
+from sqlalchemy.exc import IntegrityError
 
-
-# In-memory user storage
-_users: dict[str, User] = {}
+from db.database import SessionLocal
+from models.user import User, UserRole, UserStatus, UserDB
 
 
 async def get_user_by_email(email: str) -> Optional[User]:
     """Get a user by email address."""
-    return _users.get(email.lower())
+    with SessionLocal() as db:
+        row = db.query(UserDB).filter(UserDB.email == email.lower()).first()
+        return row.to_pydantic() if row else None
 
 
 async def get_user_by_id(user_id: UUID) -> Optional[User]:
     """Get a user by ID."""
-    for user in _users.values():
-        if user.id == user_id:
-            return user
-    return None
+    with SessionLocal() as db:
+        row = db.query(UserDB).filter(UserDB.id == user_id).first()
+        return row.to_pydantic() if row else None
+
+
+async def get_user_by_cognito_sub(cognito_sub: str) -> Optional[User]:
+    """Get a user by their Cognito sub claim."""
+    with SessionLocal() as db:
+        row = db.query(UserDB).filter(UserDB.cognito_sub == cognito_sub).first()
+        return row.to_pydantic() if row else None
 
 
 async def get_user_by_role(role: str) -> Optional[User]:
     """Get the first user with the specified role."""
-    for user in _users.values():
-        if user.role.value == role:
-            return user
-    return None
+    with SessionLocal() as db:
+        row = db.query(UserDB).filter(UserDB.role == role).first()
+        return row.to_pydantic() if row else None
 
 
 async def create_user(user: User) -> User:
-    """Create a new user."""
-    _users[user.email.lower()] = user
-    return user
+    """Persist a new user. Raises IntegrityError on duplicate email."""
+    with SessionLocal() as db:
+        row = UserDB(
+            id=user.id,
+            email=user.email.lower(),
+            hashed_password=user.hashed_password,
+            role=user.role,
+            status=user.status,
+            property_id=user.property_id,
+            unit=user.unit,
+            subscription_status=user.subscription_status,
+            subscription_plan=user.subscription_plan,
+            florist_id=user.florist_id,
+            stripe_customer_id=user.stripe_customer_id,
+            stripe_subscription_id=user.stripe_subscription_id,
+            skip_next_delivery=user.skip_next_delivery,
+            email_notifications_enabled=user.email_notifications_enabled,
+            created_at=user.created_at,
+        )
+        db.add(row)
+        db.commit()
+        db.refresh(row)
+        return row.to_pydantic()
 
 
 async def get_all_users(include_archived: bool = False) -> list[User]:
     """Get all users, excluding ARCHIVED by default."""
-    from models.user import UserStatus
-    
-    users = list(_users.values())
-    if not include_archived:
-        users = [u for u in users if getattr(u, 'status', UserStatus.ACTIVE) != UserStatus.ARCHIVED]
-    return users
+    with SessionLocal() as db:
+        q = db.query(UserDB)
+        if not include_archived:
+            q = q.filter(UserDB.status != UserStatus.ARCHIVED)
+        return [row.to_pydantic() for row in q.all()]
 
 
 async def update_user(user_id: UUID, updates: dict) -> Optional[User]:
-    """
-    Update a user by ID.
-    
-    Args:
-        user_id: ID of the user to update
-        updates: Dictionary of fields to update
-        
-    Returns:
-        Updated user or None if not found
-    """
-    for email, user in _users.items():
-        if user.id == user_id:
-            # Create updated user with new values
-            user_dict = user.model_dump()
-            user_dict.update(updates)
-            updated_user = User(**user_dict)
-            _users[email] = updated_user
-            return updated_user
-    return None
+    """Update a user by ID. Returns updated user or None if not found."""
+    with SessionLocal() as db:
+        row = db.query(UserDB).filter(UserDB.id == user_id).first()
+        if not row:
+            return None
+        for key, value in updates.items():
+            setattr(row, key, value)
+        db.commit()
+        db.refresh(row)
+        return row.to_pydantic()
 
 
 async def user_count() -> int:
-    """Get the number of users."""
-    return len(_users)
-
-
-def clear_users() -> None:
-    """Clear all users (for testing)."""
-    _users.clear()
+    """Return total number of users in the database."""
+    with SessionLocal() as db:
+        return db.query(UserDB).count()
 
 
 async def archive_user(user_id: UUID) -> Optional[User]:
-    """
-    Soft delete a user by setting status to ARCHIVED.
-    
-    Args:
-        user_id: ID of the user to archive
-        
-    Returns:
-        Archived user or None if not found
-    """
-    from models.user import UserStatus
-    
-    for email, user in _users.items():
-        if user.id == user_id:
-            user_dict = user.model_dump()
-            user_dict["status"] = UserStatus.ARCHIVED
-            archived_user = User(**user_dict)
-            _users[email] = archived_user
-            return archived_user
-    return None
+    """Soft-delete a user by setting status to ARCHIVED."""
+    return await update_user(user_id, {"status": UserStatus.ARCHIVED})
+
+
+def clear_users() -> None:
+    """Delete all users (test environments only)."""
+    with SessionLocal() as db:
+        db.query(UserDB).delete()
+        db.commit()

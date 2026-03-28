@@ -15,7 +15,7 @@ from uuid import uuid4
 from datetime import datetime, timezone
 
 from main import app
-from db.users import _users, clear_users
+from db.users import clear_users, create_user
 from models.user import User, UserRole, UserStatus
 from auth.service import auth_service
 
@@ -25,21 +25,24 @@ client = TestClient(app)
 
 def get_admin_token():
     """Get admin JWT token for authenticated requests."""
+    import asyncio
     admin_email = "validation-admin@bloom.example.com"
-    if admin_email.lower() not in _users:
-        admin = User(
-            id=uuid4(),
-            email=admin_email,
-            hashed_password=auth_service.hash_password("testpass123"),
-            role=UserRole.ADMIN,
-            status=UserStatus.ACTIVE,
-            created_at=datetime.now(timezone.utc)
-        )
-        _users[admin_email.lower()] = admin
-    
+    admin = User(
+        id=uuid4(),
+        email=admin_email,
+        hashed_password=auth_service.hash_password("testpass123"),
+        role=UserRole.ADMIN,
+        status=UserStatus.ACTIVE,
+        created_at=datetime.now(timezone.utc),
+    )
+    try:
+        asyncio.get_event_loop().run_until_complete(create_user(admin))
+    except Exception:
+        pass  # Already exists
+
     response = client.post("/auth/login", json={
         "email": admin_email,
-        "password": "testpass123"
+        "password": "testpass123",
     })
     return response.json()["access_token"]
 

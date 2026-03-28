@@ -42,29 +42,32 @@ def get_record_counts() -> Dict[str, int]:
 
 
 def get_user_counts() -> Dict[str, int]:
-    """Get counts of users by role from in-memory store."""
-    from db.users import _users
-    from models.user import UserRole
-    
-    counts = {
-        "total": len(_users),
-        "admin": 0,
-        "florist": 0,
-        "pm": 0,
-        "customer": 0,
-    }
-    
-    for user in _users.values():
-        if user.role == UserRole.ADMIN:
-            counts["admin"] += 1
-        elif user.role == UserRole.FLORIST:
-            counts["florist"] += 1
-        elif user.role == UserRole.PROPERTY_MANAGER:
-            counts["pm"] += 1
-        elif user.role == UserRole.CUSTOMER:
-            counts["customer"] += 1
-    
-    return counts
+    """Get counts of users by role from the database."""
+    from db.database import SessionLocal
+    from models.user import UserDB, UserRole
+
+    db = SessionLocal()
+    try:
+        all_users = db.query(UserDB).all()
+        counts = {
+            "total": len(all_users),
+            "admin": 0,
+            "florist": 0,
+            "pm": 0,
+            "customer": 0,
+        }
+        for user in all_users:
+            if user.role == UserRole.ADMIN:
+                counts["admin"] += 1
+            elif user.role == UserRole.FLORIST:
+                counts["florist"] += 1
+            elif user.role == UserRole.PROPERTY_MANAGER:
+                counts["pm"] += 1
+            elif user.role == UserRole.CUSTOMER:
+                counts["customer"] += 1
+        return counts
+    finally:
+        db.close()
 
 
 def run_seed_sync():
@@ -190,18 +193,21 @@ class TestSeedIdempotence:
         database_url = os.environ.get("DATABASE_URL")
         if not database_url:
             pytest.skip("DATABASE_URL not set - skipping seed test")
-        
-        from db.users import _users
-        from models.user import UserRole, SubscriptionStatus
-        
+
+        from db.database import SessionLocal
+        from models.user import UserDB, UserRole, SubscriptionStatus
+
         run_seed_sync()
-        
-        customers = [u for u in _users.values() if u.role == UserRole.CUSTOMER]
-        
-        created_count = len([c for c in customers if c.subscription_status == SubscriptionStatus.CREATED])
-        active_count = len([c for c in customers if c.subscription_status == SubscriptionStatus.ACTIVE])
-        paused_count = len([c for c in customers if c.subscription_status == SubscriptionStatus.PAUSED])
-        
+
+        db = SessionLocal()
+        try:
+            customers = db.query(UserDB).filter(UserDB.role == UserRole.CUSTOMER).all()
+            created_count = sum(1 for c in customers if c.subscription_status == SubscriptionStatus.CREATED)
+            active_count = sum(1 for c in customers if c.subscription_status == SubscriptionStatus.ACTIVE)
+            paused_count = sum(1 for c in customers if c.subscription_status == SubscriptionStatus.PAUSED)
+        finally:
+            db.close()
+
         assert created_count == 10, f"Expected 10 CREATED customers, got {created_count}"
         assert active_count == 15, f"Expected 15 ACTIVE customers, got {active_count}"
         assert paused_count == 5, f"Expected 5 PAUSED customers, got {paused_count}"
@@ -211,19 +217,20 @@ class TestSeedIdempotence:
         database_url = os.environ.get("DATABASE_URL")
         if not database_url:
             pytest.skip("DATABASE_URL not set - skipping seed test")
-        
-        from db.users import _users
-        from models.user import UserRole
-        
+
+        from db.database import SessionLocal
+        from models.user import UserDB, UserRole
+
         run_seed_sync()
-        
-        pms = [u for u in _users.values() if u.role == UserRole.PROPERTY_MANAGER]
-        
-        assert len(pms) == 2, f"Expected 2 PMs, got {len(pms)}"
-        
-        # Both PMs should have property_id set
-        for pm in pms:
-            assert pm.property_id is not None, f"PM {pm.email} should have property_id"
+
+        db = SessionLocal()
+        try:
+            pms = db.query(UserDB).filter(UserDB.role == UserRole.PROPERTY_MANAGER).all()
+            assert len(pms) == 2, f"Expected 2 PMs, got {len(pms)}"
+            for pm in pms:
+                assert pm.property_id is not None, f"PM {pm.email} should have property_id"
+        finally:
+            db.close()
 
 
     def test_seed_creates_deliveries_for_active_customers(self):
@@ -237,26 +244,25 @@ class TestSeedIdempotence:
         if not database_url:
             pytest.skip("DATABASE_URL not set - skipping seed test")
         
-        from db.users import _users
         from db.database import SessionLocal
-        from models.user import UserRole, SubscriptionStatus
+        from models.user import UserDB, UserRole, SubscriptionStatus
         from models.delivery import Delivery
         from datetime import datetime, timezone
-        
+
         run_seed_sync()
-        
+
         db = SessionLocal()
         try:
             now = datetime.now(timezone.utc)
-            
+
             # Get ACTIVE customers
-            active_customers = [
-                u for u in _users.values()
-                if u.role == UserRole.CUSTOMER and u.subscription_status == SubscriptionStatus.ACTIVE
-            ]
-            
+            active_customers = db.query(UserDB).filter(
+                UserDB.role == UserRole.CUSTOMER,
+                UserDB.subscription_status == SubscriptionStatus.ACTIVE,
+            ).all()
+
             assert len(active_customers) == 15, f"Expected 15 ACTIVE customers, got {len(active_customers)}"
-            
+
             # Check each ACTIVE customer has deliveries
             for customer in active_customers:
                 deliveries = db.query(Delivery).filter(Delivery.user_id == customer.id).all()
@@ -285,24 +291,23 @@ class TestSeedIdempotence:
         if not database_url:
             pytest.skip("DATABASE_URL not set - skipping seed test")
         
-        from db.users import _users
         from db.database import SessionLocal
-        from models.user import UserRole, SubscriptionStatus
+        from models.user import UserDB, UserRole, SubscriptionStatus
         from models.delivery import Delivery
         from datetime import datetime, timezone
-        
+
         run_seed_sync()
-        
+
         db = SessionLocal()
         try:
             now = datetime.now(timezone.utc)
-            
+
             # Get PAUSED customers
-            paused_customers = [
-                u for u in _users.values()
-                if u.role == UserRole.CUSTOMER and u.subscription_status == SubscriptionStatus.PAUSED
-            ]
-            
+            paused_customers = db.query(UserDB).filter(
+                UserDB.role == UserRole.CUSTOMER,
+                UserDB.subscription_status == SubscriptionStatus.PAUSED,
+            ).all()
+
             assert len(paused_customers) == 5, f"Expected 5 PAUSED customers, got {len(paused_customers)}"
             
             # Check each PAUSED customer has only past deliveries
@@ -333,21 +338,20 @@ class TestSeedIdempotence:
         if not database_url:
             pytest.skip("DATABASE_URL not set - skipping seed test")
         
-        from db.users import _users
         from db.database import SessionLocal
-        from models.user import UserRole, SubscriptionStatus
+        from models.user import UserDB, UserRole, SubscriptionStatus
         from models.delivery import Delivery
-        
+
         run_seed_sync()
-        
+
         db = SessionLocal()
         try:
             # Get CREATED customers
-            created_customers = [
-                u for u in _users.values()
-                if u.role == UserRole.CUSTOMER and u.subscription_status == SubscriptionStatus.CREATED
-            ]
-            
+            created_customers = db.query(UserDB).filter(
+                UserDB.role == UserRole.CUSTOMER,
+                UserDB.subscription_status == SubscriptionStatus.CREATED,
+            ).all()
+
             assert len(created_customers) == 10, f"Expected 10 CREATED customers, got {len(created_customers)}"
             
             # Check each CREATED customer has NO deliveries

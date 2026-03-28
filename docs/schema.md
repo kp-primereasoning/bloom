@@ -7,7 +7,7 @@
 
 ## Notes
 
-- **`users` is not a database table.** It is an in-memory Pydantic store. Fields referencing `user_id` have no FK constraint.
+- **`users` is a database table** (migration 011). Fields referencing `user_id` in other tables are still logical references with no FK constraint (deliveries, payments, invoices, pm_preferences).
 - All primary keys are `UUID`.
 - Soft deletes are used throughout — records are archived, not dropped.
 - Stripe IDs are stored as plain strings (never card numbers or secrets).
@@ -18,6 +18,25 @@
 
 ```mermaid
 erDiagram
+    users {
+        uuid        id                          PK
+        string      email                       UNIQUE
+        string      hashed_password
+        string      role                        "CUSTOMER|PROPERTY_MANAGER|FLORIST|ADMIN"
+        string      status                      "ACTIVE|ARCHIVED"
+        uuid        property_id                 FK
+        string      unit
+        string      subscription_status         "CREATED|ACTIVE|PAUSED"
+        string      subscription_plan           "ESSENTIAL|SIGNATURE|STATEMENT"
+        uuid        florist_id                  FK
+        string      stripe_customer_id
+        string      stripe_subscription_id
+        bool        skip_next_delivery
+        bool        email_notifications_enabled
+        string      cognito_sub                 UNIQUE
+        timestamp   created_at
+    }
+
     properties {
         uuid        id              PK
         string      name
@@ -168,6 +187,9 @@ erDiagram
         timestamp   created_at
     }
 
+    users                }o--o| properties             : "lives in"
+    users                }o--o| florists               : "assigned to"
+
     properties           ||--o{ property_assignments  : "assigned florist"
     florists             ||--o{ property_assignments  : "assigned to"
     properties           ||--o{ deliveries            : "delivers to"
@@ -183,6 +205,29 @@ erDiagram
 ---
 
 ## Tables
+
+### `users`
+
+| Column | Type | Constraints | Notes |
+|--------|------|-------------|-------|
+| id | uuid | PK | |
+| email | varchar(255) | NOT NULL, UNIQUE | Stored lowercase |
+| hashed_password | varchar(255) | NOT NULL | bcrypt |
+| role | enum | NOT NULL | CUSTOMER \| PROPERTY_MANAGER \| FLORIST \| ADMIN |
+| status | enum | NOT NULL, default ACTIVE | ACTIVE \| ARCHIVED |
+| property_id | uuid | FK → properties.id SET NULL | Null for non-customers |
+| unit | varchar(50) | | Apartment/unit number |
+| subscription_status | enum | NOT NULL, default CREATED | CREATED \| ACTIVE \| PAUSED |
+| subscription_plan | enum | | ESSENTIAL \| SIGNATURE \| STATEMENT |
+| florist_id | uuid | FK → florists.id SET NULL | Which florist serves this customer |
+| stripe_customer_id | varchar(255) | | Stripe cus_… ID |
+| stripe_subscription_id | varchar(255) | | Stripe sub_… ID |
+| skip_next_delivery | bool | NOT NULL, default false | |
+| email_notifications_enabled | bool | NOT NULL, default true | |
+| cognito_sub | varchar(255) | UNIQUE | AWS Cognito user sub |
+| created_at | timestamptz | | |
+
+---
 
 ### `properties`
 
@@ -441,7 +486,6 @@ erDiagram
 
 | Thing | Where it lives |
 |-------|---------------|
-| Users (all roles) | In-memory Pydantic store (`db/users.py`) — no SQL table |
 | Shopify access tokens | AWS Secrets Manager |
 | Stripe secret keys | AWS Secrets Manager |
 | Delivery photos | S3 (`bloom-delivery-photos-{account}`) |

@@ -14,7 +14,7 @@ from fastapi.testclient import TestClient
 from uuid import uuid4
 
 from main import app
-from db.users import _users, clear_users
+from db.users import clear_users, create_user
 from models.user import User, UserRole, UserStatus, SubscriptionStatus
 from auth.service import auth_service
 
@@ -24,25 +24,26 @@ client = TestClient(app)
 
 def get_admin_token():
     """Get admin JWT token for authenticated requests."""
+    import asyncio
     from datetime import datetime, timezone
-    
-    # Create admin user if not exists
+
     admin_email = "test-admin@bloom.example.com"
-    if admin_email.lower() not in _users:
-        admin = User(
-            id=uuid4(),
-            email=admin_email,
-            hashed_password=auth_service.hash_password("testpass123"),
-            role=UserRole.ADMIN,
-            status=UserStatus.ACTIVE,
-            created_at=datetime.now(timezone.utc)
-        )
-        _users[admin_email.lower()] = admin
-    
-    # Login to get token
+    admin = User(
+        id=uuid4(),
+        email=admin_email,
+        hashed_password=auth_service.hash_password("testpass123"),
+        role=UserRole.ADMIN,
+        status=UserStatus.ACTIVE,
+        created_at=datetime.now(timezone.utc),
+    )
+    try:
+        asyncio.get_event_loop().run_until_complete(create_user(admin))
+    except Exception:
+        pass  # Already exists
+
     response = client.post("/auth/login", json={
         "email": admin_email,
-        "password": "testpass123"
+        "password": "testpass123",
     })
     return response.json()["access_token"]
 
@@ -73,7 +74,10 @@ class TestSoftDeleteBehavior:
         
         assert response.status_code == 200
         # User should still exist in storage but be archived
-        assert user_id in [str(u.id) for u in _users.values()]
+        from db.database import SessionLocal
+        from models.user import UserDB
+        with SessionLocal() as db:
+            assert db.query(UserDB).filter(UserDB.id == user_id).first() is not None
     
     def test_archived_user_excluded_from_default_list(self):
         """Archived users should not appear in default list query."""
