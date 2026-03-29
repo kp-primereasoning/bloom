@@ -35,8 +35,9 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         self._hits[key] = [t for t in self._hits[key] if t > cutoff]
 
     async def dispatch(self, request: Request, call_next):
-        # Skip rate limiting for health checks
-        if request.url.path in ("/health", "/health/db"):
+        # Skip rate limiting for health checks and test environments
+        import os
+        if request.url.path in ("/health", "/health/db") or os.environ.get("TESTING") == "true":
             return await call_next(request)
 
         client_ip = self._get_client_ip(request)

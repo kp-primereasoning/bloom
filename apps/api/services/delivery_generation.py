@@ -86,16 +86,14 @@ def get_eligible_properties(db: Session, as_of: datetime) -> list[Property]:
     return eligible
 
 
-async def get_active_subscribers(property_id: UUID) -> list[User]:
+async def get_active_subscribers(property_id: UUID, db: Optional[Session] = None) -> list[User]:
     """
     Get all customers with ACTIVE subscriptions for a given property
     who are not skipping the next delivery.
-
-    Uses the in-memory user store.
     """
     from db.users import get_all_users
 
-    all_users = await get_all_users()
+    all_users = await get_all_users(db=db)
     return [
         u
         for u in all_users
@@ -107,11 +105,11 @@ async def get_active_subscribers(property_id: UUID) -> list[User]:
     ]
 
 
-async def get_skipping_subscribers(property_id: UUID) -> list[User]:
+async def get_skipping_subscribers(property_id: UUID, db: Optional[Session] = None) -> list[User]:
     """Get customers who are skipping the next delivery (to clear their flag)."""
     from db.users import get_all_users
 
-    all_users = await get_all_users()
+    all_users = await get_all_users(db=db)
     return [
         u
         for u in all_users
@@ -197,7 +195,7 @@ async def generate_deliveries_for_property(
             return result
 
     # Get eligible subscribers (active, not skipping)
-    subscribers = await get_active_subscribers(property_id)
+    subscribers = await get_active_subscribers(property_id, db)
 
     # If florist has a capacity cap, respect it
     max_cap = None
@@ -244,9 +242,9 @@ async def generate_deliveries_for_property(
             logger.debug(f"Failed to send delivery scheduled email to {user.email}: {e}")
 
     # Clear skip flags for users who skipped this cycle
-    skippers = await get_skipping_subscribers(property_id)
+    skippers = await get_skipping_subscribers(property_id, db)
     for user in skippers:
-        await update_user(user.id, {"skip_next_delivery": False})
+        await update_user(user.id, {"skip_next_delivery": False}, db)
         result["skipped"] += 1
 
     # Advance the property's next_delivery_date

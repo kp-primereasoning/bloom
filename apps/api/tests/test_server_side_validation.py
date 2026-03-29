@@ -15,41 +15,44 @@ from uuid import uuid4
 from datetime import datetime, timezone
 
 from main import app
-from db.users import _users, clear_users
+from db.users import get_user_by_email, create_user, clear_users
 from models.user import User, UserRole, UserStatus
 from auth.service import auth_service
 
 
 client = TestClient(app)
 
+ADMIN_EMAIL = "validation-admin@bloom.example.com"
+ADMIN_PASSWORD = "testpass123"
+
 
 def get_admin_token():
     """Get admin JWT token for authenticated requests."""
-    admin_email = "validation-admin@bloom.example.com"
-    if admin_email.lower() not in _users:
+    import asyncio
+    existing = asyncio.get_event_loop().run_until_complete(get_user_by_email(ADMIN_EMAIL))
+    if not existing:
         admin = User(
             id=uuid4(),
-            email=admin_email,
-            hashed_password=auth_service.hash_password("testpass123"),
+            email=ADMIN_EMAIL,
+            hashed_password=auth_service.hash_password(ADMIN_PASSWORD),
             role=UserRole.ADMIN,
             status=UserStatus.ACTIVE,
             created_at=datetime.now(timezone.utc)
         )
-        _users[admin_email.lower()] = admin
-    
+        asyncio.get_event_loop().run_until_complete(create_user(admin))
+
     response = client.post("/auth/login", json={
-        "email": admin_email,
-        "password": "testpass123"
+        "email": ADMIN_EMAIL,
+        "password": ADMIN_PASSWORD
     })
     return response.json()["access_token"]
 
 
 class TestServerSideValidation:
     """Property tests for server-side validation."""
-    
+
     def setup_method(self):
-        """Clear users before each test."""
-        clear_users()
+        """Set up admin token before each test."""
         self.token = get_admin_token()
         self.headers = {"Authorization": f"Bearer {self.token}"}
     

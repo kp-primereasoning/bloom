@@ -88,12 +88,13 @@ def run_seeding_sync():
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Lifespan context manager for startup and shutdown events."""
-    # Startup
-    run_migrations()
-    if os.environ.get("ENVIRONMENT") == "development":
-        print("Seeding dev data...")
-        run_seeding_sync()
-        print("Dev data seeded.")
+    # Skip DB operations during testing
+    if os.environ.get("TESTING") != "true":
+        run_migrations()
+        if os.environ.get("ENVIRONMENT") == "development":
+            print("Seeding dev data...")
+            run_seeding_sync()
+            print("Dev data seeded.")
     yield
     # Shutdown (nothing needed currently)
 

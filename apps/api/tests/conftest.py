@@ -9,6 +9,9 @@ import pytest
 from sqlalchemy import create_engine, text
 from sqlalchemy.exc import OperationalError
 
+# Disable rate limiting during tests
+os.environ.setdefault("TESTING", "true")
+
 
 def is_db_available():
     """Check if PostgreSQL database is available."""
@@ -71,6 +74,7 @@ def pytest_collection_modifyitems(config, items):
             "test_assignment_validates_florist_exists",
             "test_validation_error_for_invalid_property_id_update",
             "test_pm_with_invalid_property_id_rejected",
+            "test_duplicate_email_returns_error_envelope",
         ]
         if item.name in db_required_tests:
             item.add_marker(skip_db)

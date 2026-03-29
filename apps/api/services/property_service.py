@@ -153,10 +153,6 @@ def assign_property_manager(
     Raises:
         HTTPException: If property not found or user is not a PM
     """
-    from db.users import get_user_by_id
-    from models.user import UserRole
-    import asyncio
-    
     prop = get_property(db, property_id)
     if not prop:
         raise HTTPException(
@@ -170,9 +166,9 @@ def assign_property_manager(
             }
         )
     
-    # Get user and validate role
-    # Note: Using asyncio.run since users are in async in-memory store
-    user = asyncio.get_event_loop().run_until_complete(get_user_by_id(user_id))
+    # Get user and validate role — direct DB query (no async needed)
+    from models.user import User, UserRole
+    user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(
             status_code=404,
@@ -185,8 +181,7 @@ def assign_property_manager(
             }
         )
     
-    if user.role != UserRole.PROPERTY_MANAGER:
-        raise HTTPException(
+    if user.role != UserRole.PROPERTY_MANAGER:        raise HTTPException(
             status_code=400,
             detail={
                 "error": {
@@ -232,7 +227,7 @@ async def get_enriched_properties(db: Session, include_archived: bool = False) -
     properties = get_properties(db, include_archived=include_archived)
     
     # Get all users for counting
-    all_users = await get_all_users()
+    all_users = await get_all_users(db=db)
     
     # Build enriched response
     enriched = []
@@ -257,7 +252,7 @@ async def get_enriched_properties(db: Session, include_archived: bool = False) -
         property_manager_email = None
         if prop.property_manager_id:
             from db.users import get_user_by_id
-            pm_user = await get_user_by_id(prop.property_manager_id)
+            pm_user = await get_user_by_id(prop.property_manager_id, db)
             if pm_user:
                 property_manager_email = pm_user.email
         
@@ -307,18 +302,16 @@ def archive_property(db: Session, property_id: UUID, request_id: str) -> Propert
         )
 
     # 5.7: Prevent archiving if there are active subscriptions
-    import asyncio
-    from db.users import get_all_users
-    from models.user import SubscriptionStatus as SubStatus
+    from models.user import User, SubscriptionStatus as SubStatus
 
-    all_users = asyncio.get_event_loop().run_until_complete(
-        get_all_users()
+    active_subs = (
+        db.query(User)
+        .filter(
+            User.property_id == property_id,
+            User.subscription_status == SubStatus.ACTIVE,
+        )
+        .all()
     )
-    active_subs = [
-        u for u in all_users
-        if u.property_id == property_id
-        and getattr(u, "subscription_status", None) == SubStatus.ACTIVE
-    ]
     if active_subs:
         raise HTTPException(
             status_code=409,
