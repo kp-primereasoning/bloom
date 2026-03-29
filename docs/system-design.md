@@ -1,276 +1,352 @@
-# Bloom Platform - System Design Document
+# Bloom Platform — System Design
 
 ## Overview
 
-Bloom is a property-based floral subscription orchestration platform that connects properties, florists, and residents. The platform does NOT sell flowers or manage inventory - Shopify is the system of record for all products and pricing.
+Bloom is a property-based floral subscription orchestration platform. It connects properties, florists, and residents. Bloom does **not** sell flowers — it orchestrates deliveries. Shopify is the system of record for products and pricing.
 
 ### Core Principles
-- **Bloom does NOT sell flowers** - orchestration only
-- **Shopify is the system of record** for products and pricing
-- **One delivery cadence per property** (no per-resident customization)
-- **Bloom controls florist assignment** (residents cannot choose florists)
+- Bloom does NOT sell flowers (orchestration only)
+- Shopify is the system of record for products and pricing
+- One delivery cadence per property (no per-resident customization)
+- Bloom controls florist assignment (residents cannot choose florists)
 
 ---
 
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                              FRONTEND (React + Vite)                        │
-│                           AWS Amplify Hosting                               │
-├─────────────────────────────────────────────────────────────────────────────┤
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐    │
-│  │   Customer   │  │   Property   │  │   Florist    │  │    Admin     │    │
-│  │  Dashboard   │  │   Manager    │  │  Dashboard   │  │  Dashboard   │    │
-│  │  /customer/* │  │    /pm/*     │  │  /florist/*  │  │   /admin/*   │    │
-│  └──────────────┘  └──────────────┘  └──────────────┘  └──────────────┘    │
-└─────────────────────────────────────────────────────────────────────────────┘
-                                      │
-                                      ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                         BACKEND API (FastAPI + Python)                      │
-│                              AWS App Runner                                 │
-├─────────────────────────────────────────────────────────────────────────────┤
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐    │
-│  │  /auth/*     │  │  /admin/*    │  │  /florist/*  │  │   /me/*      │    │
-│  │  /public/*   │  │  /pm/*       │  │  /customer/* │  │ /properties  │    │
-│  └──────────────┘  └──────────────┘  └──────────────┘  └──────────────┘    │
-└─────────────────────────────────────────────────────────────────────────────┘
-                                      │
-                                      ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                           DATABASE (PostgreSQL)                             │
-│                              Amazon RDS                                     │
-├─────────────────────────────────────────────────────────────────────────────┤
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐    │
-│  │    users     │  │  properties  │  │   florists   │  │  deliveries  │    │
-│  │  (in-memory) │  │              │  │              │  │              │    │
-│  └──────────────┘  └──────────────┘  └──────────────┘  └──────────────┘    │
-│                    ┌──────────────────────────────────┐                     │
-│                    │     property_assignments         │                     │
-│                    └──────────────────────────────────┘                     │
-└─────────────────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│                  FRONTEND (React + Vite)                    │
+│                   AWS Amplify Hosting                       │
+│                                                             │
+│  /customer/*   /pm/*   /florist/*   /admin/*   /onboarding  │
+└─────────────────────────┬───────────────────────────────────┘
+                          │ HTTPS / JWT
+                          ▼
+┌─────────────────────────────────────────────────────────────┐
+│               BACKEND API (FastAPI + Python)                │
+│                    AWS App Runner                           │
+│                                                             │
+│  /auth   /me   /admin   /florist   /pm   /payments          │
+│  /webhooks   /deliveries   /public   /health                │
+└─────────────────────────┬───────────────────────────────────┘
+                          │ SQLAlchemy
+                          ▼
+┌─────────────────────────────────────────────────────────────┐
+│              DATABASE (PostgreSQL 15)                       │
+│                   Amazon RDS                                │
+│                                                             │
+│  users*  properties  florists  deliveries  payments         │
+│  invoices  florist_payouts  property_assignments            │
+│  florist_connections  florist_products  florist_tier_mappings│
+│  florist_availability  pm_preferences  property_rewards     │
+│  webhook_events                                             │
+└─────────────────────────────────────────────────────────────┘
+
+* users table is currently in-memory — see Known Issues
 ```
+
+### Supporting AWS Services
+- **Secrets Manager** — DB credentials, JWT secret
+- **S3** — Delivery proof photos
+- **SES** — Transactional emails
+- **EventBridge + Lambda** — Daily delivery generation
+- **CloudWatch** — Logs and metrics
+- **Sentry** — Error tracking
 
 ---
 
 ## User Roles
 
-| Role | Description | Capabilities |
-|------|-------------|--------------|
-| **CUSTOMER** | Residents who subscribe to floral deliveries | Subscribe/unsubscribe, skip deliveries, upgrade orders, manage preferences |
-| **PROPERTY_MANAGER** | Building/complex managers | View participation metrics, redeem rewards, view resident engagement |
-| **FLORIST** | Flower vendors connected to Bloom | Connect Shopify store, fulfill deliveries, update delivery status |
-| **ADMIN** | Bloom platform administrators | Manage properties, florists, users, assignments |
+| Role | Description | Key Capabilities |
+|------|-------------|-----------------|
+| CUSTOMER | Residents who subscribe | Subscribe, skip deliveries, manage billing |
+| PROPERTY_MANAGER | Building managers | View participation, rewards, resident list |
+| FLORIST | Flower vendors | Fulfill deliveries, manage availability, connect Shopify |
+| ADMIN | Bloom operators | Manage properties, florists, users, payouts |
 
 ---
 
-## Data Models
+## Data Model
 
-### User
-```typescript
-interface User {
-  id: UUID;
-  email: string;
-  role: 'CUSTOMER' | 'PROPERTY_MANAGER' | 'FLORIST' | 'ADMIN';
-  status: 'ACTIVE' | 'ARCHIVED';
-  property_id: UUID | null;        // Associated property (for residents/PMs)
-  unit: string | null;             // Unit number within property
-  subscription_status: 'CREATED' | 'ACTIVE' | 'PAUSED' | null;
-  subscription_plan: 'ESSENTIAL' | 'SIGNATURE' | 'STATEMENT' | null;
-  florist_id: UUID | null;         // Associated florist (for FLORIST role)
-  created_at: datetime;
-}
+### ⚠️ Known Issue: Users Are In-Memory
+
+The `User` model is currently stored in a Python dict (`db/users.py`) and is **not persisted to PostgreSQL**. This means:
+- All users are lost when the API restarts
+- No FK constraints between users and deliveries/payments
+- Stripe customer/subscription IDs are lost on restart
+- Cannot query users alongside deliveries in SQL
+
+**This must be migrated to a `users` table before production use.** See the migration plan at the end of this document.
+
+---
+
+### Users (currently in-memory)
+
+```
+User
+├── id                    UUID (PK)
+├── email                 String (unique)
+├── hashed_password       String
+├── role                  CUSTOMER | PROPERTY_MANAGER | FLORIST | ADMIN
+├── status                ACTIVE | ARCHIVED
+├── property_id           UUID → properties.id (nullable, CUSTOMER/PM only)
+├── unit                  String (nullable, CUSTOMER only)
+├── subscription_status   CREATED | ACTIVE | PAUSED (CUSTOMER only)
+├── subscription_plan     ESSENTIAL | SIGNATURE | STATEMENT (nullable)
+├── florist_id            UUID → florists.id (nullable, FLORIST role only)
+├── stripe_customer_id    String (nullable)
+├── stripe_subscription_id String (nullable)
+├── skip_next_delivery    Boolean (default false)
+├── email_notifications_enabled Boolean (default true)
+└── created_at            DateTime
 ```
 
-### Property
-```typescript
-interface Property {
-  id: UUID;
-  name: string;
-  address: string;
-  status: 'CREATED' | 'PENDING_FLORIST' | 'PENDING_PM' | 'ACTIVE' | 'ARCHIVED';
-  delivery_cadence: string | null;
-  property_manager_id: UUID | null;
-  created_at: datetime;
-  updated_at: datetime;
-}
+**Status transitions:**
+- `CREATED` → Account exists, no subscription activated
+- `ACTIVE` → Subscription active, deliveries scheduled
+- `PAUSED` → Subscription paused, no new deliveries
+
+---
+
+### Properties
+
+```
+Property
+├── id                    UUID (PK)
+├── name                  String
+├── address               String
+├── status                CREATED | PENDING_FLORIST | PENDING_PM | ACTIVE | ARCHIVED
+├── delivery_cadence      String (e.g. "weekly", "bi-weekly", "monthly")
+├── next_delivery_date    DateTime (nullable)
+├── delivery_lead_days    Integer (default 3)
+├── property_manager_id   UUID → users.id (nullable, in-memory ref)
+├── created_at            DateTime
+└── updated_at            DateTime
 ```
 
-**Property Status Transitions (Computed):**
-- `CREATED` → No florist, no PM assigned
-- `PENDING_FLORIST` → Has PM, needs florist
-- `PENDING_PM` → Has florist, needs PM
-- `ACTIVE` → Has both florist and PM assigned
-- `ARCHIVED` → Soft deleted
-
-### Florist
-```typescript
-interface Florist {
-  id: UUID;
-  name: string;
-  status: 'ONBOARDING' | 'READY' | 'ARCHIVED';
-  created_at: datetime;
-}
+**Status is computed from assignments:**
 ```
-
-### PropertyAssignment
-```typescript
-interface PropertyAssignment {
-  id: UUID;
-  property_id: UUID;
-  florist_id: UUID;
-  active: boolean;
-  created_at: datetime;
-}
-```
-*Note: Only one active assignment per property (enforced by partial unique index)*
-
-### Delivery
-```typescript
-interface Delivery {
-  id: UUID;
-  user_id: UUID;
-  property_id: UUID;
-  subscription_plan: 'ESSENTIAL' | 'SIGNATURE' | 'STATEMENT';
-  status: 'SCHEDULED' | 'DELIVERED' | 'SKIPPED' | 'MISSED';
-  scheduled_for: datetime;
-  delivered_at: datetime | null;
-  created_at: datetime;
-  updated_at: datetime;
-  archived_at: datetime | null;
-}
+has_florist AND has_pm  → ACTIVE
+has_florist only        → PENDING_PM
+has_pm only             → PENDING_FLORIST
+neither                 → CREATED
 ```
 
 ---
 
-## API Endpoints
+### Florists
 
-### Authentication (`/auth`)
+```
+Florist
+├── id          UUID (PK)
+├── name        String
+├── status      ONBOARDING | READY | ARCHIVED
+├── created_at  DateTime
+```
 
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| POST | `/auth/register` | Public | Register new customer account |
-| POST | `/auth/login` | Public | Authenticate and get JWT |
-| GET | `/auth/me` | JWT | Get current user with enriched property data |
-| POST | `/auth/dev/switch-role` | Dev only | Switch role for testing |
-
-### Admin (`/admin`) - ADMIN role only
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| **Properties** | | |
-| POST | `/admin/properties` | Create new property |
-| GET | `/admin/properties` | List all properties (enriched) |
-| PATCH | `/admin/properties/{id}` | Update property |
-| PATCH | `/admin/properties/{id}/assign-pm` | Assign property manager |
-| DELETE | `/admin/properties/{id}` | Soft delete (archive) property |
-| **Florists** | | |
-| POST | `/admin/florists` | Create new florist |
-| GET | `/admin/florists` | List all florists |
-| DELETE | `/admin/florists/{id}` | Soft delete (archive) florist |
-| **Assignments** | | |
-| POST | `/admin/property-assignments` | Create property-florist assignment |
-| GET | `/admin/property-assignments` | List all assignments |
-| **Users** | | |
-| GET | `/admin/users` | List all users (enriched) |
-| POST | `/admin/users` | Create new user |
-| PATCH | `/admin/users/{id}` | Update user |
-| DELETE | `/admin/users/{id}` | Soft delete (archive) user |
-
-### Customer Self-Service (`/me`) - CUSTOMER role only
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| PATCH | `/me/property` | Assign property to self |
-| PATCH | `/me/subscription` | Update subscription status (ACTIVE/PAUSED) |
-| PATCH | `/me/plan` | Update subscription plan |
-| GET | `/me/deliveries` | Get next delivery and history |
-
-### Property Manager (`/pm`) - PROPERTY_MANAGER role only
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/pm/stats` | Get dashboard statistics |
-| GET | `/pm/residents` | Get list of residents at property |
-
-### Florist (`/florist`) - FLORIST role only
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/florist/me` | Get florist profile with assigned properties |
-| GET | `/florist/deliveries` | Get upcoming deliveries for assigned properties |
-| PATCH | `/florist/deliveries/{id}` | Update delivery status (DELIVERED/MISSED) |
-
-### Public Endpoints
-
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| GET | `/properties` | Public | List available properties for selection |
-| GET | `/public/faq` | Public | Get FAQ content |
-| GET | `/health` | Public | Basic health check |
-| GET | `/health/db` | Public | Database connectivity check |
+A florist must be `READY` before being assigned to a property.
 
 ---
 
-## Frontend Pages
+### PropertyAssignments
 
-### Customer Dashboard (`/customer/*`)
+```
+PropertyAssignment
+├── id           UUID (PK)
+├── property_id  UUID → properties.id (CASCADE)
+├── florist_id   UUID → florists.id (CASCADE)
+├── active       Boolean
+└── created_at   DateTime
 
-| Route | Page | Description |
-|-------|------|-------------|
-| `/customer/home` | HomePage | Dashboard overview with subscription status |
-| `/customer/subscription` | SubscriptionPage | Manage subscription plan |
-| `/customer/deliveries` | DeliveriesPage | View upcoming and past deliveries |
-| `/customer/account` | AccountPage | Account settings |
-| `/customer/help` | HelpPage | FAQ and support |
-
-### Property Manager Dashboard (`/pm/*`)
-
-| Route | Page | Description |
-|-------|------|-------------|
-| `/pm/overview` | OverviewPage | Property stats and metrics |
-| `/pm/participation` | ParticipationPage | Resident participation details |
-| `/pm/rewards` | RewardsPage | Property-level rewards |
-| `/pm/settings` | SettingsPage | PM settings |
-
-### Florist Dashboard (`/florist/*`)
-
-| Route | Page | Description |
-|-------|------|-------------|
-| `/florist/deliveries` | DeliveriesPage | Upcoming deliveries to fulfill |
-| `/florist/products` | ProductsPage | Product mapping (Shopify integration) |
-| `/florist/availability` | AvailabilityPage | Availability settings |
-| `/florist/settings` | SettingsPage | Florist settings and onboarding |
-
-### Admin Dashboard (`/admin/*`)
-
-| Route | Page | Description |
-|-------|------|-------------|
-| `/admin/properties` | PropertiesPage | Manage properties |
-| `/admin/florists` | FloristsPage | Manage florists |
-| `/admin/users` | UsersPage | Manage users |
-
-### Onboarding Flow (`/onboarding/*`)
-
-| Route | Page | Description |
-|-------|------|-------------|
-| `/onboarding/register` | RegisterPage | Customer registration |
-| `/onboarding/property` | PropertyPage | Property selection |
-| `/onboarding/subscription` | SubscriptionPage | Plan selection |
-
-### Other Pages
-
-| Route | Page | Description |
-|-------|------|-------------|
-| `/login` | LoginPage | User authentication |
-| `/unauthorized` | UnauthorizedPage | Access denied |
+Constraint: unique partial index on (property_id) WHERE active = true
+→ Only one active florist per property at a time
+```
 
 ---
 
-## Authentication & Authorization
+### Deliveries
 
-### JWT Token Structure
+```
+Delivery
+├── id                UUID (PK)
+├── user_id           UUID (in-memory ref, no FK)
+├── property_id       UUID → properties.id
+├── subscription_plan ESSENTIAL | SIGNATURE | STATEMENT
+├── status            SCHEDULED | DELIVERED | SKIPPED | MISSED
+├── scheduled_for     DateTime
+├── delivered_at      DateTime (nullable)
+├── created_at        DateTime
+├── updated_at        DateTime
+└── archived_at       DateTime (nullable)
+```
+
+**Status transitions:**
+```
+SCHEDULED → DELIVERED  (florist marks complete)
+SCHEDULED → MISSED     (florist marks failed)
+SCHEDULED → SKIPPED    (customer skips)
+```
+
+---
+
+### Payments
+
+```
+Payment
+├── id                          UUID (PK)
+├── user_id                     UUID (in-memory ref, no FK)
+├── property_id                 UUID → properties.id (nullable)
+├── stripe_payment_intent_id    String (unique, nullable)
+├── amount_cents                Integer
+├── currency                    String (default "usd")
+├── status                      PENDING | SUCCEEDED | FAILED | REFUNDED
+├── subscription_plan           String (nullable)
+└── created_at                  DateTime
+
+Invoice
+├── id                  UUID (PK)
+├── user_id             UUID (in-memory ref, no FK)
+├── stripe_invoice_id   String (unique, nullable)
+├── amount_cents        Integer
+├── currency            String
+├── status              String
+├── period_start        DateTime (nullable)
+├── period_end          DateTime (nullable)
+├── pdf_url             String (nullable)
+└── created_at          DateTime
+
+FloristPayout
+├── id                  UUID (PK)
+├── florist_id          UUID → florists.id
+├── stripe_transfer_id  String (unique, nullable)
+├── amount_cents        Integer
+├── status              PENDING | COMPLETED | FAILED
+├── period_start        DateTime (nullable)
+├── period_end          DateTime (nullable)
+└── created_at          DateTime
+```
+
+---
+
+### Florist Shopify Integration
+
+```
+FloristConnection
+├── id              UUID (PK)
+├── florist_id      UUID → florists.id (CASCADE)
+├── shop_domain     String (unique)
+├── api_key_hash    String (unique) — SHA-256 of API key
+├── connected_at    DateTime
+├── last_sync_at    DateTime (nullable)
+└── synced_count    Integer
+
+FloristProduct
+├── id                    UUID (PK)
+├── connection_id         UUID → florist_connections.id (CASCADE)
+├── shopify_product_id    String
+├── shopify_variant_id    String
+├── title                 String
+├── price                 String
+├── image_url             String (nullable)
+├── inventory_quantity    Integer
+├── status                String (default "active")
+└── synced_at             DateTime
+
+FloristTierMapping
+├── id                  UUID (PK)
+├── connection_id       UUID → florist_connections.id (CASCADE)
+├── tier                ESSENTIAL | SIGNATURE | STATEMENT
+├── shopify_product_id  String
+├── product_title       String
+├── product_price       String
+└── mapped_at           DateTime
+
+Constraint: unique (connection_id, tier) — one product per tier per florist
+```
+
+---
+
+### Florist Availability
+
+```
+FloristAvailability
+├── id                      UUID (PK)
+├── florist_id              UUID → florists.id
+├── day_of_week             Integer (0=Mon, 6=Sun)
+├── max_deliveries_per_day  Integer (default 10)
+├── is_available            Boolean (default true)
+├── created_at              DateTime
+└── updated_at              DateTime
+```
+
+---
+
+### PM Preferences
+
+```
+PMPreference
+├── id                      UUID (PK)
+├── user_id                 UUID (unique, in-memory ref)
+├── delivery_reminders      Boolean (default true)
+├── participation_updates   Boolean (default true)
+├── rewards_milestones      Boolean (default true)
+├── created_at              DateTime
+└── updated_at              DateTime
+```
+
+---
+
+### Property Rewards
+
+```
+PropertyReward
+├── id                  UUID (PK)
+├── property_id         UUID → properties.id (unique)
+├── tier                String (Bronze | Silver | Gold)
+├── participation_rate  Numeric(5,2)
+├── created_at          DateTime
+└── updated_at          DateTime
+```
+
+Reward tiers are computed from participation rate:
+- Bronze: < 30%
+- Silver: 30–60%
+- Gold: > 60%
+
+---
+
+### Webhook Events
+
+```
+WebhookEvent
+├── id              UUID (PK)
+├── source          String (stripe | shopify)
+├── event_type      String
+├── event_id        String (nullable, external dedup ID)
+├── payload_hash    String (nullable, SHA-256)
+├── status          String (received | processed | failed)
+├── error_message   Text (nullable)
+└── created_at      DateTime
+```
+
+---
+
+## Subscription Plans
+
+| Plan | Description |
+|------|-------------|
+| ESSENTIAL | Basic floral arrangement |
+| SIGNATURE | Premium floral arrangement |
+| STATEMENT | Luxury floral arrangement |
+
+Pricing is managed in Stripe, not hardcoded in the API.
+
+---
+
+## Authentication
+
+JWT-based auth with role claims:
 ```json
 {
   "sub": "user_id",
@@ -280,69 +356,90 @@ interface Delivery {
 }
 ```
 
-### Role-Based Access Control (RBAC)
-- All protected endpoints validate JWT token
-- Role is extracted from token and validated against endpoint requirements
-- Server-side role validation on all protected endpoints
+- Tokens signed with `JWT_SECRET` (HS256)
+- 7-day expiration
+- Stored in localStorage on frontend
+- `require_role()` FastAPI dependency enforces RBAC on all protected routes
 
-### Route Protection
-- Frontend routes are protected by role-based guards
-- Each role has a dedicated namespace (`/customer/*`, `/pm/*`, `/florist/*`, `/admin/*`)
-- Unauthorized access redirects to `/unauthorized`
+Optional AWS Cognito integration available via `USE_COGNITO=true` feature flag.
 
 ---
 
-## Subscription Plans
+## API Endpoints Summary
 
-| Plan | Description |
-|------|-------------|
-| **ESSENTIAL** | Basic floral arrangement |
-| **SIGNATURE** | Premium floral arrangement |
-| **STATEMENT** | Luxury floral arrangement |
+### Public
+- `GET /health` — Basic health check
+- `GET /health/db` — Database connectivity
+- `GET /health/full` — Full system health
+- `GET /properties` — List available properties
+- `GET /public/faq` — FAQ content
 
----
+### Auth
+- `POST /auth/register` — Customer registration
+- `POST /auth/login` — Login, returns JWT
+- `GET /auth/me` — Current user (enriched)
+- `POST /auth/dev/switch-role` — Dev only
 
-## Delivery Status Lifecycle
+### Customer (`/me/*`)
+- `PATCH /me/property` — Set property + unit
+- `PATCH /me/subscription` — Activate or pause
+- `PATCH /me/plan` — Select plan tier
+- `PATCH /me/skip-next-delivery` — Skip next cycle
+- `GET /me/deliveries` — Delivery history
+- `GET /me/notification-preferences`
+- `PATCH /me/notification-preferences`
 
-```
-SCHEDULED → DELIVERED (success)
-         → SKIPPED (customer choice)
-         → MISSED (delivery failed)
-```
+### Payments (`/payments/*`)
+- `POST /payments/setup-intent` — Stripe SetupIntent
+- `POST /payments/subscribe` — Create subscription
+- `POST /payments/cancel` — Cancel subscription
+- `GET /payments/payment-method`
+- `PATCH /payments/payment-method`
+- `GET /payments/invoices`
 
----
+### Florist (`/florist/*`)
+- `GET /florist/me` — Profile + assigned properties
+- `GET /florist/deliveries` — Upcoming deliveries
+- `PATCH /florist/deliveries/{id}` — Mark delivered/missed
+- `GET /florist/availability`
+- `PUT /florist/availability`
 
-## Key Business Rules
+### Florist API (`/api/florists/*`) — Shopify app integration
+- `POST /api/florists/validate-key`
+- `GET /api/florists/connection-status`
+- `POST /api/florists/disconnect`
+- `POST /api/florists/products/sync`
+- `GET /api/florists/products`
+- `POST/GET/DELETE /api/florists/tier-mappings`
+- `POST /api/florists/ready`
+- `GET /api/florists/dashboard`
+- `POST /api/florists/webhooks/products-update`
+- `POST /api/florists/webhooks/products-delete`
 
-1. **One florist per property** - Only one active assignment allowed
-2. **Property status is computed** - Based on florist and PM assignments
-3. **Customers cannot choose florists** - Bloom controls assignments
-4. **One delivery cadence per property** - No per-resident customization
-5. **Soft delete pattern** - Entities are archived, not deleted
-6. **Shopify is source of truth** - For products and pricing
+### Property Manager (`/pm/*`)
+- `GET /pm/stats` — Dashboard stats
+- `GET /pm/residents` — Resident list with plan distribution
+- `GET /pm/deliveries` — Paginated delivery history
+- `GET /pm/rewards` — Reward tier and progress
+- `GET /pm/settings`
+- `PATCH /pm/settings`
 
----
+### Admin (`/admin/*`)
+- `GET/POST/PATCH/DELETE /admin/properties`
+- `POST /admin/properties/{id}/assign-pm`
+- `GET/POST/DELETE /admin/florists`
+- `GET/POST/PATCH/DELETE /admin/users`
+- `GET/POST /admin/property-assignments`
+- `POST /admin/generate-deliveries`
+- `POST /admin/payouts/generate`
+- `GET /admin/payouts`
 
-## Technology Stack
+### Webhooks
+- `POST /webhooks/stripe` — Stripe event handler
 
-| Layer | Technology |
-|-------|------------|
-| Frontend | React + Vite + TypeScript |
-| Frontend Hosting | AWS Amplify |
-| Backend | FastAPI (Python) |
-| Backend Hosting | AWS App Runner |
-| Database | PostgreSQL (Amazon RDS) |
-| Authentication | JWT tokens |
-| Migrations | Alembic |
-
----
-
-## Environment Configuration
-
-| Environment | Purpose |
-|-------------|---------|
-| `development` | Local development with dev-only endpoints |
-| `production` | Live traffic |
+### Deliveries
+- `POST /deliveries/photo-upload-url` — S3 presigned upload URL
+- `GET /deliveries/photo-download-url` — S3 presigned download URL
 
 ---
 
@@ -358,11 +455,124 @@ SCHEDULED → DELIVERED (success)
 }
 ```
 
-Common error codes:
-- `INVALID_CREDENTIALS` - Authentication failed
-- `EMAIL_EXISTS` - Duplicate email on registration
-- `USER_NOT_FOUND` - User not found
-- `INVALID_PROPERTY` - Property validation failed
-- `FORBIDDEN` - Access denied
-- `NOT_FOUND` - Resource not found
-- `INVALID_STATE` - Invalid state transition
+Common codes: `INVALID_CREDENTIALS`, `EMAIL_EXISTS`, `USER_NOT_FOUND`, `INVALID_PROPERTY`, `FORBIDDEN`, `NOT_FOUND`, `INVALID_STATE`
+
+---
+
+## Database Migrations
+
+10 Alembic migrations (001–010):
+1. Core tables (properties, florists, property_assignments)
+2. Enhanced properties (status enum, property_manager_id)
+3. Archived status
+4. Deliveries table
+5. Shopify integration tables (florist_connections, products, tier_mappings)
+6. Delivery generation columns (next_delivery_date, delivery_lead_days)
+7. PM dashboard tables (pm_preferences, property_rewards)
+8. Payment tables (payments, invoices, florist_payouts)
+9. Florist availability
+10. Webhook events
+
+---
+
+## ⚠️ Migration Required: Users Table
+
+The `users` table does not exist in PostgreSQL. Users are stored in a Python dict that resets on every API restart. This is the most critical gap before production use.
+
+### What needs to be built
+
+**Migration 011** — Create users table:
+```sql
+CREATE TABLE users (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    email VARCHAR(255) NOT NULL UNIQUE,
+    hashed_password VARCHAR(255) NOT NULL,
+    role VARCHAR(30) NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
+    property_id UUID REFERENCES properties(id),
+    unit VARCHAR(50),
+    subscription_status VARCHAR(20) DEFAULT 'CREATED',
+    subscription_plan VARCHAR(20),
+    florist_id UUID REFERENCES florists(id),
+    stripe_customer_id VARCHAR(255),
+    stripe_subscription_id VARCHAR(255),
+    skip_next_delivery BOOLEAN NOT NULL DEFAULT FALSE,
+    email_notifications_enabled BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+```
+
+**What else changes:**
+- Replace `db/users.py` in-memory store with SQLAlchemy ORM model
+- Add FK constraints on `deliveries.user_id`, `payments.user_id`, `invoices.user_id`, `pm_preferences.user_id`
+- Update all routes that call `get_user_by_email`, `get_user_by_id`, `create_user`, `update_user` to use DB session
+- Migrate seed data to insert into the table
+
+### Impact on existing data
+- Any users created before this migration will be lost (expected — dev only)
+- Stripe customer/subscription IDs will persist correctly after migration
+
+---
+
+## Environment Variables
+
+### API (`apps/api/.env.local`)
+```
+JWT_SECRET=<openssl rand -hex 32>
+ENVIRONMENT=development
+DATABASE_URL=postgresql://user:password@host:5432/bloom
+AWS_REGION=us-east-1
+USE_COGNITO=false
+USE_AWS_SECRETS=false
+USE_CLOUDWATCH=false
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+SES_FROM_EMAIL=noreply@bloom.com
+S3_BUCKET_NAME=bloom-dev-delivery-photos
+CORS_ORIGINS=http://localhost:5173
+```
+
+### Web (`apps/web/.env.local`)
+```
+VITE_API_BASE_URL=http://localhost:8000
+```
+
+---
+
+## Local Development
+
+```bash
+# 1. Start Postgres
+docker compose up -d
+
+# 2. Install dependencies
+pnpm install
+cd apps/api && pip install -r requirements.txt
+
+# 3. Run migrations
+pnpm db:migrate
+
+# 4. Start everything
+pnpm dev
+```
+
+Dev users seeded automatically:
+- `admin@bloom.example.com` / `bloom123`
+- `florist@bloom.example.com` / `bloom123`
+- `pm1@bloom.example.com` / `bloom123`
+- `pm2@bloom.example.com` / `bloom123`
+- `customer1–30@bloom.example.com` / `bloom123`
+
+API docs: http://localhost:8000/docs
+
+---
+
+## Deployment
+
+| Layer | Service |
+|-------|---------|
+| Frontend | AWS Amplify (auto-deploy from `main`) |
+| Backend | AWS App Runner (ECR container) |
+| Database | Amazon RDS PostgreSQL 15 |
+| Scheduled jobs | AWS Lambda + EventBridge |

@@ -8,6 +8,7 @@ This file tracks all features, components, and infrastructure built for the Bloo
 
 | Date | What Was Built | What It Does |
 |------|----------------|--------------|
+| 2026-03-29 | System Design Doc Rewrite | Rewrote system-design.md to reflect actual PostgreSQL-only architecture; removed all Neo4j references; documented all 15 DB tables accurately; flagged users-in-memory as critical gap with migration plan |
 | 2026-03-03 | Billing Flow Fix: Stripe Elements + Subscription Creation | Fixed BillingPage to use proper Stripe Elements CardElement for card collection instead of broken confirmCardSetup without mounted element; SubscriptionPage now creates a Stripe Subscription via /payments/subscribe on activation; backend subscription creation charges default card immediately instead of requiring frontend payment confirmation |
 | 2026-03-02 | Phase 5 Remaining: Error Handling & Hardening | Prevent archiving properties with active subscriptions (409 error); florist disconnection now flags future SCHEDULED deliveries as MISSED; Idempotency-Key header support on payment mutation endpoints (setup-intent, subscribe, cancel); PM notification preference checks in email service (delivery_reminders, participation_updates, rewards_milestones) |
 | 2026-03-02 | SubscriptionPage Payment Method Check | Activate button now checks for payment method on file before activating; redirects to BillingPage with contextual banner if no card is set up |
