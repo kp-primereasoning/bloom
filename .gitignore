@@ -23,6 +23,7 @@ Thumbs.db
 
 # Build outputs
 dist
+out
 .next
 *.zip
 
