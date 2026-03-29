@@ -3,16 +3,16 @@ frontend:
   phases:
     preBuild:
       commands:
-        - npm install -g pnpm
-        - pnpm install
+        - npm install -g pnpm@9.0.0
+        - pnpm install --no-frozen-lockfile
     build:
       commands:
-        - cd apps/web && pnpm run build
+        - pnpm --filter @bloom/landing run build
   artifacts:
-    baseDirectory: apps/web/dist
+    baseDirectory: apps/landing/out
     files:
       - '**/*'
   cache:
     paths:
       - node_modules/**/*
-      - apps/web/node_modules/**/*
+      - apps/landing/node_modules/**/*
