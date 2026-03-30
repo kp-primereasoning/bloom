@@ -9,11 +9,6 @@ import { ScrollTrigger } from "gsap/ScrollTrigger"
 
 gsap.registerPlugin(ScrollTrigger)
 
-const MARQUEE_ITEMS = [
-  "Chicago", "·", "New York", "·", "Boston", "·",
-  "Petit", "·", "Grand", "·", "Luxe", "·",
-  "Local florists", "·", "Monthly delivery", "·",
-]
 
 const STEPS = [
   {
@@ -209,17 +204,6 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-
-      {/* ── MARQUEE ── */}
-      <div className="overflow-hidden border-y border-stone-200 py-3">
-        <div className="flex animate-marquee whitespace-nowrap">
-          {[...MARQUEE_ITEMS, ...MARQUEE_ITEMS].map((item, i) => (
-            <span key={i} className="mx-7 text-[0.6875rem] font-medium tracking-[0.25em] uppercase text-stone-400 shrink-0">
-              {item}
-            </span>
-          ))}
-        </div>
-      </div>
 
       {/* ── THE IDEA ── */}
       <section className="py-16 lg:py-32">
