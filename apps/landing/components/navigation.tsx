@@ -5,77 +5,77 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Menu, X, Leaf } from "lucide-react"
 
+const NAV_LINKS = [
+  { label: "Home",             href: "/" },
+  { label: "How it works",     href: "/#how-it-works" },
+  { label: "Florists",         href: "/florists" },
+  { label: "Buildings",        href: "/property-managers" },
+]
+
 export function Navigation() {
   const [isOpen, setIsOpen] = useState(false)
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-bloom-cream/80 backdrop-blur-md border-b border-stone-200/50">
-      <div className="container mx-auto px-6 lg:px-12">
-        <div className="flex justify-between h-20">
-          <div className="flex items-center">
-            <Link href="/" className="flex items-center space-x-2 group">
-              <Leaf className="h-7 w-7 text-bloom-sage transition-transform group-hover:rotate-12" />
-              <span className="text-2xl font-serif text-bloom-dark">Bloom</span>
-            </Link>
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-b border-stone-200/80">
+      <div className="max-w-[1400px] mx-auto px-8 lg:px-16">
+        <div className="flex justify-between items-center h-20">
+
+          {/* Logo */}
+          <Link href="/" className="flex items-center gap-2 group">
+            <Leaf className="h-5 w-5 text-bloom-sage transition-transform group-hover:rotate-12" />
+            <span className="font-serif text-xl text-bloom-dark tracking-tight">Bloom</span>
+          </Link>
+
+          {/* Desktop nav */}
+          <div className="hidden md:flex items-center gap-1 bg-stone-100 rounded-full px-2 py-1.5">
+            {NAV_LINKS.map((link, i) => (
+              <Link
+                key={i}
+                href={link.href}
+                className="flex items-center gap-1.5 px-4 py-1.5 text-sm text-stone-500 hover:text-bloom-dark transition-colors rounded-full hover:bg-white"
+              >
+                <span className="w-1.5 h-1.5 rounded-full border border-stone-400/60 inline-block" />
+                {link.label}
+              </Link>
+            ))}
           </div>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-10">
-            <Link
-              href="/florists"
-              className="text-stone-600 hover:text-bloom-dark transition-colors text-sm font-medium tracking-wide uppercase"
-            >
-              Florists
-            </Link>
-            <Link
-              href="/property-managers"
-              className="text-stone-600 hover:text-bloom-dark transition-colors text-sm font-medium tracking-wide uppercase"
-            >
-              Buildings
-            </Link>
-            <Button asChild className="rounded-full px-6 bg-bloom-dark text-bloom-cream hover:bg-stone-800 transition-transform hover:scale-105">
+          {/* CTA */}
+          <div className="hidden md:block">
+            <Button asChild
+              className="bg-bloom-dark hover:bg-stone-800 text-white rounded-full px-6 py-2.5 text-sm font-medium tracking-wide transition-transform hover:scale-[1.02]">
               <a href="/#sign-up">Get Started</a>
             </Button>
           </div>
 
-          {/* Mobile menu button */}
-          <div className="md:hidden flex items-center">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setIsOpen(!isOpen)}
-              className="text-stone-600"
-            >
-              {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </Button>
-          </div>
+          {/* Mobile toggle */}
+          <button
+            onClick={() => setIsOpen(!isOpen)}
+            className="md:hidden p-2 text-stone-600 hover:text-bloom-dark transition-colors"
+            aria-label="Toggle menu"
+          >
+            {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
         </div>
 
-        {/* Mobile Navigation */}
+        {/* Mobile menu */}
         {isOpen && (
-          <div className="md:hidden border-t border-stone-100 bg-white/95 backdrop-blur-md rounded-b-2xl">
-            <div className="py-4 space-y-1">
+          <div className="md:hidden border-t border-stone-100 py-4 space-y-1">
+            {NAV_LINKS.map((link, i) => (
               <Link
-                href="/florists"
-                className="block px-3 py-2.5 text-stone-600 hover:text-stone-900 hover:bg-stone-50 rounded-lg transition-colors text-sm font-medium"
+                key={i}
+                href={link.href}
                 onClick={() => setIsOpen(false)}
+                className="flex items-center gap-2.5 px-3 py-2.5 text-sm text-stone-600 hover:text-bloom-dark hover:bg-stone-50 rounded-lg transition-colors"
               >
-                Florists
+                <span className="w-1.5 h-1.5 rounded-full border border-stone-400/60 inline-block" />
+                {link.label}
               </Link>
-              <Link
-                href="/property-managers"
-                className="block px-3 py-2.5 text-stone-600 hover:text-stone-900 hover:bg-stone-50 rounded-lg transition-colors text-sm font-medium"
-                onClick={() => setIsOpen(false)}
-              >
-                Buildings
-              </Link>
-              <div className="pt-2 px-3">
-                <Button asChild className="w-full rounded-full">
-                  <a href="/#sign-up" onClick={() => setIsOpen(false)}>
-                    Get Started
-                  </a>
-                </Button>
-              </div>
+            ))}
+            <div className="pt-3 px-3">
+              <Button asChild className="w-full bg-bloom-dark text-white rounded-full text-sm font-medium">
+                <a href="/#sign-up" onClick={() => setIsOpen(false)}>Get Started</a>
+              </Button>
             </div>
           </div>
         )}
