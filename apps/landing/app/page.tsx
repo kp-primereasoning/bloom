@@ -42,13 +42,13 @@ const PLANS = [
   {
     name: "Grand",
     price: "$75",
-    desc: "Our signature size. Full stems, mixed varieties, real presence in a room. Personalization options available.",
+    desc: "Our most popular size. A large arrangement that actually fills a room, with personalization options.",
     tag: "Most chosen",
   },
   {
     name: "Luxe",
     price: "$120",
-    desc: "Designer-curated arrangements. Exotic and rare stems. Multiple placements. White-glove delivery.",
+    desc: "The works — designer-curated, rare stems, delivered with care. For people who want the full experience.",
     tag: null,
   },
 ]
@@ -92,8 +92,7 @@ export default function HomePage() {
             </h1>
 
             <p className="text-[1.0625rem] text-stone-500 leading-relaxed mb-10 max-w-sm font-light">
-              A local florist. Your building. Every month.
-              Create an account and we'll notify you the moment your building goes live.
+              We work with local florists to bring fresh flowers to your apartment every month. Create an account and we'll notify you when your building goes live.
             </p>
 
             <div className="flex flex-wrap gap-3">
@@ -105,20 +104,6 @@ export default function HomePage() {
                 className="border-stone-300 text-stone-600 hover:bg-stone-100 rounded-lg px-8 py-5 text-sm font-medium">
                 <a href="#how-it-works">How it works</a>
               </Button>
-            </div>
-
-            {/* Stats row — mobile only */}
-            <div className="flex gap-8 mt-12 lg:hidden">
-              {[
-                { num: "$45",     label: "from" },
-                { num: "3",       label: "cities" },
-                { num: "Monthly", label: "delivery" },
-              ].map((s, i) => (
-                <div key={i}>
-                  <div className="font-serif text-2xl text-[#2C1810] leading-none">{s.num}</div>
-                  <div className="text-[0.65rem] tracking-[0.18em] text-stone-400 uppercase mt-0.5">{s.label}</div>
-                </div>
-              ))}
             </div>
           </div>
         </div>
@@ -134,20 +119,6 @@ export default function HomePage() {
           />
           {/* Blend edge into cream on desktop */}
           <div className="hidden lg:block absolute inset-y-0 left-0 w-20 bg-gradient-to-r from-[#FFFBF7] to-transparent" />
-
-          {/* Stats — desktop, overlaid bottom-right */}
-          <div className="hidden lg:flex absolute bottom-10 right-10 gap-8 bg-white/70 backdrop-blur-sm rounded-2xl px-8 py-5">
-            {[
-              { num: "$45",     label: "Starting price" },
-              { num: "3",       label: "Cities" },
-              { num: "Monthly", label: "Delivery" },
-            ].map((s, i) => (
-              <div key={i} className="text-center">
-                <div className="font-serif text-3xl text-[#2C1810] leading-none mb-1">{s.num}</div>
-                <div className="text-[0.65rem] tracking-[0.18em] text-stone-500 uppercase">{s.label}</div>
-              </div>
-            ))}
-          </div>
         </div>
       </section>
 
@@ -214,10 +185,10 @@ export default function HomePage() {
       <section className="py-20 lg:py-28 bg-[#2C1810] text-white text-center">
         <div className="max-w-xl mx-auto px-6">
           <p className="reveal font-serif text-3xl md:text-4xl lg:text-5xl leading-tight mb-4 font-light">
-            Your building.<br />Your flowers.
+            Ready when your building is.
           </p>
           <p className="reveal text-stone-400 text-[1.0625rem] mb-10 font-light">
-            Create an account and we'll let you know when you're good to go.
+            Create an account and we'll reach out as soon as you're set up.
           </p>
           <Button asChild
             className="reveal bg-white text-[#2C1810] hover:bg-stone-100 rounded-lg px-10 py-5 text-sm font-medium tracking-wide transition-transform hover:scale-[1.02]">
