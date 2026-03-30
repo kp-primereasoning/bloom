@@ -1,30 +1,13 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
+import Image from "next/image"
 import { ArrowRight, Leaf } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import gsap from "gsap"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
 
 gsap.registerPlugin(ScrollTrigger)
-
-// Abstract apartment grid — colored cells = units with Bloom
-const GRID: Array<"sage" | "rose" | "sage-dim" | "rose-dim" | "empty"> = [
-  "empty",    "sage",     "sage",     "empty",    "empty",
-  "rose-dim", "sage",     "empty",    "rose",     "rose",
-  "empty",    "empty",    "sage-dim", "rose",     "empty",
-  "sage",     "empty",    "sage-dim", "empty",    "rose-dim",
-  "sage",     "sage",     "empty",    "empty",    "empty",
-  "empty",    "empty",    "rose",     "rose-dim", "empty",
-]
-
-const CELL_BG: Record<string, string> = {
-  "sage":     "bg-[#8FA698]",
-  "rose":     "bg-[#E8A0A0]",
-  "sage-dim": "bg-[#8FA698]/30",
-  "rose-dim": "bg-[#E8A0A0]/30",
-  "empty":    "bg-stone-200/60",
-}
 
 const MARQUEE_ITEMS = [
   "Chicago", "·", "New York", "·", "Boston", "·",
@@ -82,8 +65,9 @@ const fieldClass = (err: boolean) =>
   }`
 
 export default function HomePage() {
-  const gridRef    = useRef<HTMLDivElement>(null)
-  const heroRef    = useRef<HTMLDivElement>(null)
+  const heroRef  = useRef<HTMLDivElement>(null)
+  const photoRef = useRef<HTMLDivElement>(null)
+  const statsRef = useRef<HTMLDivElement>(null)
 
   const [form, setForm] = useState({
     firstName: "", lastName: "", email: "",
@@ -95,22 +79,18 @@ export default function HomePage() {
 
   useEffect(() => {
     const ctx = gsap.context(() => {
-      // Hero text entrance
       gsap.fromTo(heroRef.current,
         { opacity: 0, y: 36 },
         { opacity: 1, y: 0, duration: 1, ease: "power3.out", delay: 0.15 }
       )
-
-      // Grid cells stagger in from center
-      if (gridRef.current) {
-        gsap.fromTo(gridRef.current.querySelectorAll(".cell"),
-          { opacity: 0, scale: 0.7 },
-          { opacity: 1, scale: 1, duration: 0.45, ease: "back.out(1.2)",
-            stagger: { amount: 0.9, from: "center" }, delay: 0.3 }
-        )
-      }
-
-      // Scroll reveals
+      gsap.fromTo(photoRef.current,
+        { opacity: 0, scale: 0.96 },
+        { opacity: 1, scale: 1, duration: 1.1, ease: "power3.out", delay: 0.3 }
+      )
+      gsap.fromTo(statsRef.current,
+        { opacity: 0, x: 20 },
+        { opacity: 1, x: 0, duration: 0.9, ease: "power3.out", delay: 0.6 }
+      )
       gsap.utils.toArray<HTMLElement>(".reveal").forEach(el => {
         gsap.fromTo(el,
           { opacity: 0, y: 22 },
@@ -152,94 +132,78 @@ export default function HomePage() {
     <div className="min-h-screen bg-white text-bloom-dark">
 
       {/* ── HERO ── */}
-      <section className="min-h-screen flex flex-col pt-20">
+      <section className="min-h-screen bg-[#FFFBF7] flex flex-col justify-center pt-20 pb-12 overflow-hidden">
+        <div className="max-w-[1300px] mx-auto px-8 lg:px-16 w-full">
+          <div className="grid lg:grid-cols-[5fr_4fr_2fr] gap-8 lg:gap-12 items-center">
 
-        {/* Split */}
-        <div className="flex-1 grid lg:grid-cols-2">
-
-          {/* Left — text */}
-          <div className="flex items-center px-8 lg:px-16 py-16 lg:py-0">
+            {/* Left — text */}
             <div ref={heroRef}>
-              <div className="flex items-center gap-2.5 mb-8">
-                <span className="w-1.5 h-1.5 rounded-full bg-bloom-sage inline-block" />
-                <span className="text-[0.6875rem] tracking-[0.25em] uppercase text-stone-400 font-medium">
-                  Floral subscription
-                </span>
-              </div>
-
-              <h1 className="font-serif text-[clamp(2.75rem,5vw,4.5rem)] leading-[1.08] tracking-tight mb-6">
-                Fresh flowers
-                <br />
-                for your{" "}
-                <span className="bg-bloom-sage/15 px-2.5 py-0.5 rounded-lg">apartment,</span>
-                <br />
-                every month.
+              <h1 className="font-serif text-[clamp(2.75rem,4.5vw,5rem)] leading-[1.05] text-[#2C1810] tracking-tight mb-6">
+                We bring fresh<br />
+                flowers to your<br />
+                <em className="not-italic text-bloom-sage">apartment.</em>
               </h1>
 
               <p className="text-[1.0625rem] text-stone-500 leading-relaxed mb-10 max-w-sm font-light">
-                A local florist. Your building. No errands.
+                A local florist. Your building. Every month.
+                No errands, no subscriptions to manage.
                 Starting at $45/mo.
               </p>
 
-              <div className="flex flex-wrap gap-3">
+              <div className="flex flex-wrap gap-3 mb-16">
                 <Button asChild
-                  className="bg-bloom-dark hover:bg-stone-800 text-white rounded-full px-8 py-5 text-sm font-medium tracking-wide transition-transform hover:scale-[1.02]">
-                  <a href="#sign-up">Get started</a>
+                  className="bg-[#2C1810] hover:bg-stone-900 text-white rounded-lg px-8 py-5 text-sm font-medium tracking-wide transition-transform hover:scale-[1.02]">
+                  <a href="#sign-up">Explore</a>
                 </Button>
                 <Button asChild variant="outline"
-                  className="border-stone-200 text-stone-600 hover:bg-stone-50 rounded-full px-8 py-5 text-sm font-medium">
+                  className="border-stone-300 text-stone-600 hover:bg-stone-50 rounded-lg px-8 py-5 text-sm font-medium">
                   <a href="#how-it-works">How it works</a>
                 </Button>
               </div>
-            </div>
-          </div>
 
-          {/* Right — apartment grid visual */}
-          <div className="relative flex items-center justify-center bg-stone-50 overflow-hidden min-h-[380px] lg:min-h-0">
-            {/* Dot grid */}
-            <div className="absolute inset-0 opacity-50" style={{
-              backgroundImage: "radial-gradient(circle, #d1d5db 1px, transparent 1px)",
-              backgroundSize: "28px 28px",
-            }} />
-            {/* Cells */}
-            <div
-              ref={gridRef}
-              className="relative grid gap-2"
-              style={{ gridTemplateColumns: "repeat(5, 68px)" }}
-            >
-              {GRID.map((type, i) => (
-                <div key={i} className={`cell h-[68px] rounded-xl ${CELL_BG[type]}`} />
+              {/* Wavy line decoration */}
+              <svg width="220" height="40" viewBox="0 0 220 40" fill="none" className="opacity-60">
+                <path d="M0 20 C18 4, 36 36, 54 20 C72 4, 90 36, 108 20 C126 4, 144 36, 162 20 C180 4, 198 36, 216 20"
+                  stroke="#D4AF37" strokeWidth="2" strokeLinecap="round" fill="none"/>
+              </svg>
+            </div>
+
+            {/* Center — arch photo */}
+            <div ref={photoRef} className="relative flex justify-center">
+              {/* Orange blob — top right */}
+              <div className="absolute -top-6 -right-8 w-28 h-24 z-10 opacity-90"
+                style={{ background: "#F4A940", borderRadius: "40% 60% 55% 45% / 45% 40% 60% 55%" }} />
+              {/* Rose circle — bottom left */}
+              <div className="absolute -bottom-4 -left-6 w-20 h-20 z-10 opacity-80"
+                style={{ background: "#E8A0A0", borderRadius: "50%" }} />
+
+              {/* Arch photo frame */}
+              <div className="relative w-[280px] h-[380px] overflow-hidden z-20"
+                style={{ borderRadius: "140px 140px 0 0" }}>
+                <Image
+                  src="/hero.png"
+                  alt="Fresh flowers in a city apartment"
+                  fill
+                  className="object-cover object-center"
+                  priority
+                />
+              </div>
+            </div>
+
+            {/* Right — stats column */}
+            <div ref={statsRef} className="hidden lg:flex flex-col gap-10 pl-4 border-l border-stone-200">
+              {[
+                { num: "$45",     label: "STARTING\nPRICE" },
+                { num: "3",       label: "CITIES" },
+                { num: "Monthly", label: "DELIVERY" },
+              ].map((s, i) => (
+                <div key={i}>
+                  <div className="font-serif text-4xl text-[#2C1810] leading-none mb-1">{s.num}</div>
+                  <div className="text-[0.65rem] tracking-[0.2em] text-stone-400 uppercase whitespace-pre-line leading-relaxed">{s.label}</div>
+                </div>
               ))}
             </div>
-          </div>
-        </div>
 
-        {/* Bottom bar */}
-        <div className="border-t border-stone-200">
-          <div className="grid grid-cols-1 sm:grid-cols-[auto_1fr_1fr_1fr] sm:divide-x divide-stone-200 divide-y sm:divide-y-0">
-            <div className="px-8 py-5 flex items-center">
-              <Button asChild
-                className="bg-bloom-dark hover:bg-stone-800 text-white rounded-full px-7 py-2.5 text-sm font-medium whitespace-nowrap uppercase tracking-widest">
-                <a href="#sign-up">Get Started</a>
-              </Button>
-            </div>
-            {[
-              { title: "Local florists",   desc: "Sourced from your neighborhood" },
-              { title: "Monthly delivery", desc: "To your door, every month"       },
-              { title: "Cancel anytime",   desc: "No long-term commitment"         },
-            ].map((item, i) => (
-              <div key={i} className="px-8 py-5 flex items-start gap-3">
-                <div className="flex-1">
-                  <div className="flex items-center gap-1.5 mb-1">
-                    <span className="text-[0.7rem] font-bold tracking-[0.15em] uppercase text-bloom-dark">
-                      {item.title}
-                    </span>
-                    <ArrowRight className="h-3 w-3 text-stone-400 shrink-0" />
-                  </div>
-                  <p className="text-sm text-stone-500">{item.desc}</p>
-                </div>
-              </div>
-            ))}
           </div>
         </div>
       </section>
