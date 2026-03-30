@@ -11,6 +11,22 @@ function Petal({ className, style }: { className?: string; style?: React.CSSProp
   )
 }
 
+function RoundPetal({ className, style }: { className?: string; style?: React.CSSProperties }) {
+  return (
+    <svg viewBox="0 0 70 70" className={className} style={style} fill="currentColor">
+      <path d="M35 4 C55 4, 66 20, 66 35 C66 50, 55 66, 35 66 C15 66, 4 50, 4 35 C4 20, 15 4, 35 4Z" />
+    </svg>
+  )
+}
+
+function LongPetal({ className, style }: { className?: string; style?: React.CSSProperties }) {
+  return (
+    <svg viewBox="0 0 40 100" className={className} style={style} fill="currentColor">
+      <path d="M20 0 C38 20, 40 50, 20 100 C0 50, 2 20, 20 0Z" />
+    </svg>
+  )
+}
+
 export default function HeroScene() {
   const containerRef = useRef<HTMLDivElement>(null)
 
@@ -22,14 +38,14 @@ export default function HeroScene() {
     const ctx = gsap.context(() => {
       petals.forEach((petal, i) => {
         gsap.to(petal, {
-          y: `random(-30, 30)`,
-          x: `random(-20, 20)`,
-          rotation: `random(-25, 25)`,
-          duration: `random(3, 6)`,
+          y: `random(-25, 25)`,
+          x: `random(-15, 15)`,
+          rotation: `random(-20, 20)`,
+          duration: `random(4, 7)`,
           repeat: -1,
           yoyo: true,
           ease: "sine.inOut",
-          delay: i * 0.3,
+          delay: i * 0.25,
         })
       })
     }, containerRef)
@@ -37,42 +53,37 @@ export default function HeroScene() {
     return () => ctx.revert()
   }, [])
 
-  const petals = [
-    { top: "8%", left: "20%", size: "60px", color: "text-rose-300/60", rotate: -15 },
-    { top: "15%", left: "65%", size: "45px", color: "text-rose-200/50", rotate: 30 },
-    { top: "35%", left: "10%", size: "35px", color: "text-rose-300/40", rotate: -45 },
-    { top: "25%", left: "80%", size: "55px", color: "text-rose-200/60", rotate: 15 },
-    { top: "55%", left: "30%", size: "50px", color: "text-rose-300/50", rotate: -30 },
-    { top: "50%", left: "75%", size: "40px", color: "text-rose-200/40", rotate: 60 },
-    { top: "70%", left: "15%", size: "45px", color: "text-rose-200/50", rotate: 20 },
-    { top: "65%", left: "55%", size: "55px", color: "text-rose-300/60", rotate: -20 },
-    { top: "80%", left: "40%", size: "35px", color: "text-rose-200/40", rotate: 45 },
-    { top: "85%", left: "85%", size: "50px", color: "text-rose-300/50", rotate: -10 },
-    { top: "40%", left: "45%", size: "65px", color: "text-rose-200/30", rotate: 35 },
-    { top: "12%", left: "42%", size: "30px", color: "text-rose-300/40", rotate: -55 },
-  ]
-
   return (
     <div ref={containerRef} className="absolute inset-0 overflow-hidden">
-      {/* Soft radial gradients */}
-      <div className="absolute inset-0 bg-gradient-to-br from-rose-50 via-[#FFF5EE] to-rose-100" />
-      <div className="absolute top-1/4 left-1/4 w-[60%] h-[60%] bg-rose-200/30 rounded-full blur-3xl" />
-      <div className="absolute bottom-1/4 right-1/4 w-[40%] h-[40%] bg-amber-100/20 rounded-full blur-3xl" />
+      {/* Background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[#FFF8F5] via-[#FFF5EE] to-rose-50" />
+      {/* Warm glow — biased right */}
+      <div className="absolute top-0 right-0 w-[65%] h-[70%] bg-rose-200/25 rounded-full blur-[80px]" />
+      <div className="absolute bottom-0 right-[10%] w-[40%] h-[50%] bg-amber-100/20 rounded-full blur-[60px]" />
+      <div className="absolute top-[30%] right-[20%] w-[30%] h-[30%] bg-bloom-rose/15 rounded-full blur-[50px]" />
 
-      {/* Floating petals */}
-      {petals.map((p, i) => (
-        <Petal
-          key={i}
-          className={`petal absolute ${p.color}`}
-          style={{
-            top: p.top,
-            left: p.left,
-            width: p.size,
-            height: p.size,
-            transform: `rotate(${p.rotate}deg)`,
-          }}
-        />
-      ))}
+      {/* Large cluster — top right, bleeds off screen */}
+      <LongPetal className="petal absolute text-rose-300/50" style={{ top: "-5%", right: "8%",  width: "110px", height: "110px", transform: "rotate(35deg)" }} />
+      <Petal     className="petal absolute text-rose-200/60" style={{ top: "2%",  right: "18%", width: "90px",  height: "90px",  transform: "rotate(-15deg)" }} />
+      <RoundPetal className="petal absolute text-rose-300/40" style={{ top: "8%", right: "5%",  width: "75px",  height: "75px",  transform: "rotate(60deg)" }} />
+      <LongPetal className="petal absolute text-rose-200/45" style={{ top: "12%", right: "28%", width: "65px",  height: "65px",  transform: "rotate(-40deg)" }} />
+      <Petal     className="petal absolute text-rose-300/55" style={{ top: "18%", right: "12%", width: "80px",  height: "80px",  transform: "rotate(20deg)" }} />
+
+      {/* Mid-right scatter */}
+      <RoundPetal className="petal absolute text-rose-200/35" style={{ top: "30%", right: "6%",  width: "55px", height: "55px", transform: "rotate(-25deg)" }} />
+      <Petal      className="petal absolute text-rose-300/45" style={{ top: "35%", right: "22%", width: "70px", height: "70px", transform: "rotate(50deg)" }} />
+      <LongPetal  className="petal absolute text-rose-200/40" style={{ top: "45%", right: "10%", width: "50px", height: "50px", transform: "rotate(-60deg)" }} />
+      <Petal      className="petal absolute text-rose-300/30" style={{ top: "55%", right: "30%", width: "60px", height: "60px", transform: "rotate(15deg)" }} />
+
+      {/* Lower right */}
+      <RoundPetal className="petal absolute text-rose-200/45" style={{ top: "65%", right: "8%",  width: "65px", height: "65px", transform: "rotate(40deg)" }} />
+      <Petal      className="petal absolute text-rose-300/35" style={{ top: "72%", right: "20%", width: "50px", height: "50px", transform: "rotate(-30deg)" }} />
+      <LongPetal  className="petal absolute text-rose-200/30" style={{ top: "80%", right: "5%",  width: "80px", height: "80px", transform: "rotate(70deg)" }} />
+
+      {/* A few on the left — subtle, don't compete with text */}
+      <Petal     className="petal absolute text-rose-200/25" style={{ top: "15%", left: "5%",  width: "35px", height: "35px", transform: "rotate(-20deg)" }} />
+      <RoundPetal className="petal absolute text-rose-200/20" style={{ top: "70%", left: "8%", width: "30px", height: "30px", transform: "rotate(45deg)" }} />
+      <Petal     className="petal absolute text-rose-200/20" style={{ top: "85%", left: "35%", width: "40px", height: "40px", transform: "rotate(-50deg)" }} />
     </div>
   )
 }

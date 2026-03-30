@@ -58,6 +58,12 @@
   }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee {
+    animation: none;
+  }
+}
+
 @layer components {
   /* Premium Clean Design System - Inspired by Visage/Prestige */
 
