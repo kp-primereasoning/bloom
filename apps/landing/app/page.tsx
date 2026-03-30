@@ -1,14 +1,13 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef } from "react"
 import Image from "next/image"
-import { ArrowRight, Leaf } from "lucide-react"
+import { Leaf } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import gsap from "gsap"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
 
 gsap.registerPlugin(ScrollTrigger)
-
 
 const STEPS = [
   {
@@ -54,38 +53,18 @@ const PLANS = [
   },
 ]
 
-const fieldClass = (err: boolean) =>
-  `w-full bg-transparent border-0 border-b pb-2 text-[0.9375rem] text-bloom-dark placeholder:text-stone-300 focus:outline-none transition-colors ${
-    err ? "border-red-400" : "border-stone-300 focus:border-bloom-dark"
-  }`
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "/register"
 
 export default function HomePage() {
-  const heroRef  = useRef<HTMLDivElement>(null)
-  const photoRef = useRef<HTMLDivElement>(null)
-  const statsRef = useRef<HTMLDivElement>(null)
-
-  const [form, setForm] = useState({
-    firstName: "", lastName: "", email: "",
-    buildingAddress: "", apartmentNumber: "", plan: "",
-  })
-  const [errors, setErrors]         = useState<Record<string, string>>({})
-  const [submitting, setSubmitting] = useState(false)
-  const [submitted, setSubmitted]   = useState(false)
+  const heroTextRef = useRef<HTMLDivElement>(null)
+  const heroPhotoRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const ctx = gsap.context(() => {
-      gsap.fromTo(heroRef.current,
-        { opacity: 0, y: 36 },
-        { opacity: 1, y: 0, duration: 1, ease: "power3.out", delay: 0.15 }
-      )
-      gsap.fromTo(photoRef.current,
-        { opacity: 0, scale: 0.96 },
-        { opacity: 1, scale: 1, duration: 1.1, ease: "power3.out", delay: 0.3 }
-      )
-      gsap.fromTo(statsRef.current,
-        { opacity: 0, x: 20 },
-        { opacity: 1, x: 0, duration: 0.9, ease: "power3.out", delay: 0.6 }
-      )
+      gsap.timeline({ defaults: { ease: "power3.out" } })
+        .fromTo(heroTextRef.current,  { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 1, delay: 0.1 })
+        .fromTo(heroPhotoRef.current, { opacity: 0, scale: 1.04 }, { opacity: 1, scale: 1, duration: 1.2 }, "-=0.8")
+
       gsap.utils.toArray<HTMLElement>(".reveal").forEach(el => {
         gsap.fromTo(el,
           { opacity: 0, y: 22 },
@@ -97,138 +76,83 @@ export default function HomePage() {
     return () => ctx.revert()
   }, [])
 
-  const validate = () => {
-    const e: Record<string, string> = {}
-    if (!form.firstName.trim())       e.firstName       = "Required"
-    if (!form.lastName.trim())        e.lastName        = "Required"
-    if (!form.email.trim())           e.email           = "Required"
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = "Enter a valid email"
-    if (!form.buildingAddress.trim()) e.buildingAddress = "Required"
-    if (!form.apartmentNumber.trim()) e.apartmentNumber = "Required"
-    if (!form.plan)                   e.plan            = "Pick a size"
-    return e
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    const errs = validate()
-    if (Object.keys(errs).length > 0) { setErrors(errs); return }
-    setSubmitting(true); setErrors({})
-    await new Promise(r => setTimeout(r, 900))
-    setSubmitting(false); setSubmitted(true)
-  }
-
-  const update = (field: string, value: string) => {
-    setForm(prev => ({ ...prev, [field]: value }))
-    if (errors[field]) setErrors(prev => { const n = { ...prev }; delete n[field]; return n })
-  }
-
   return (
-    <div className="min-h-screen bg-white text-bloom-dark">
+    <div className="min-h-screen bg-[#FFFBF7] text-bloom-dark">
 
       {/* ── HERO ── */}
-      <section className="min-h-[100svh] bg-[#FFFBF7] flex flex-col justify-center pt-20 pb-12 overflow-hidden">
-        <div className="max-w-[1300px] mx-auto px-6 lg:px-16 w-full">
-          <div className="grid lg:grid-cols-[5fr_4fr_2fr] gap-10 lg:gap-12 items-center">
+      <section className="min-h-[100svh] grid lg:grid-cols-2">
 
-            {/* Left — text */}
-            <div ref={heroRef}>
-              <h1 className="font-serif text-[clamp(2.5rem,6vw,5rem)] leading-[1.05] text-[#2C1810] tracking-tight mb-5">
-                We bring fresh<br />
-                flowers to your<br />
-                <em className="not-italic text-bloom-sage">apartment.</em>
-              </h1>
+        {/* Left — text */}
+        <div className="flex flex-col justify-center px-8 lg:px-16 pt-32 pb-16 lg:py-0">
+          <div ref={heroTextRef}>
+            <h1 className="font-serif text-[clamp(3rem,5.5vw,5.5rem)] leading-[1.0] text-[#2C1810] tracking-tight mb-6">
+              Fresh flowers<br />
+              for your<br />
+              <em className="not-italic text-bloom-sage">apartment.</em>
+            </h1>
 
-              <p className="text-[1.0625rem] text-stone-500 leading-relaxed mb-8 max-w-sm font-light">
-                A local florist. Your building. Every month.
-                No errands, no subscriptions to manage.
-                Starting at $45/mo.
-              </p>
+            <p className="text-[1.0625rem] text-stone-500 leading-relaxed mb-10 max-w-sm font-light">
+              A local florist. Your building. Every month.
+              Create an account and we'll notify you the moment your building goes live.
+            </p>
 
-              <div className="flex flex-wrap gap-3 mb-10 lg:mb-16">
-                <Button asChild
-                  className="bg-[#2C1810] hover:bg-stone-900 text-white rounded-lg px-7 py-4 text-sm font-medium tracking-wide transition-transform hover:scale-[1.02]">
-                  <a href="#sign-up">Explore</a>
-                </Button>
-                <Button asChild variant="outline"
-                  className="border-stone-300 text-stone-600 hover:bg-stone-50 rounded-lg px-7 py-4 text-sm font-medium">
-                  <a href="#how-it-works">How it works</a>
-                </Button>
-              </div>
-
-              {/* Wavy line decoration — hidden on small screens */}
-              <svg width="220" height="40" viewBox="0 0 220 40" fill="none" className="opacity-60 hidden sm:block">
-                <path d="M0 20 C18 4, 36 36, 54 20 C72 4, 90 36, 108 20 C126 4, 144 36, 162 20 C180 4, 198 36, 216 20"
-                  stroke="#D4AF37" strokeWidth="2" strokeLinecap="round" fill="none"/>
-              </svg>
+            <div className="flex flex-wrap gap-3">
+              <Button asChild
+                className="bg-[#2C1810] hover:bg-stone-900 text-white rounded-lg px-8 py-5 text-sm font-medium tracking-wide transition-transform hover:scale-[1.02]">
+                <a href={`${APP_URL}/onboarding/register`}>Create account</a>
+              </Button>
+              <Button asChild variant="outline"
+                className="border-stone-300 text-stone-600 hover:bg-stone-100 rounded-lg px-8 py-5 text-sm font-medium">
+                <a href="#how-it-works">How it works</a>
+              </Button>
             </div>
 
-            {/* Center — arch photo */}
-            <div ref={photoRef} className="relative flex justify-center py-8 lg:py-0">
-              {/* Orange blob — top right */}
-              <div className="absolute top-2 right-4 lg:-top-6 lg:-right-8 w-20 h-16 lg:w-28 lg:h-24 z-10 opacity-90"
-                style={{ background: "#F4A940", borderRadius: "40% 60% 55% 45% / 45% 40% 60% 55%" }} />
-              {/* Rose circle — bottom left */}
-              <div className="absolute bottom-2 left-4 lg:-bottom-4 lg:-left-6 w-14 h-14 lg:w-20 lg:h-20 z-10 opacity-80"
-                style={{ background: "#E8A0A0", borderRadius: "50%" }} />
-
-              {/* Arch photo frame */}
-              <div
-                className="relative w-[220px] h-[300px] sm:w-[260px] sm:h-[350px] lg:w-[280px] lg:h-[380px] overflow-hidden z-20"
-                style={{ borderRadius: "9999px 9999px 0 0" }}
-              >
-                <Image
-                  src="/hero.png"
-                  alt="Fresh flowers in a city apartment"
-                  fill
-                  className="object-cover object-center"
-                  priority
-                />
-              </div>
-            </div>
-
-            {/* Right — stats column (desktop only) */}
-            <div ref={statsRef} className="hidden lg:flex flex-col gap-10 pl-4 border-l border-stone-200">
+            {/* Stats row — mobile only */}
+            <div className="flex gap-8 mt-12 lg:hidden">
               {[
-                { num: "$45",     label: "STARTING\nPRICE" },
-                { num: "3",       label: "CITIES" },
-                { num: "Monthly", label: "DELIVERY" },
+                { num: "$45",     label: "from" },
+                { num: "3",       label: "cities" },
+                { num: "Monthly", label: "delivery" },
               ].map((s, i) => (
                 <div key={i}>
-                  <div className="font-serif text-4xl text-[#2C1810] leading-none mb-1">{s.num}</div>
-                  <div className="text-[0.65rem] tracking-[0.2em] text-stone-400 uppercase whitespace-pre-line leading-relaxed">{s.label}</div>
+                  <div className="font-serif text-2xl text-[#2C1810] leading-none">{s.num}</div>
+                  <div className="text-[0.65rem] tracking-[0.18em] text-stone-400 uppercase mt-0.5">{s.label}</div>
                 </div>
               ))}
             </div>
-
           </div>
         </div>
-      </section>
 
-      {/* ── THE IDEA ── */}
-      <section className="py-16 lg:py-32">
-        <div className="max-w-6xl mx-auto px-6 lg:px-16">
-          <div className="grid lg:grid-cols-[1fr_2fr] gap-12 lg:gap-24 items-start">
-            <div className="reveal">
-              <span className="text-[0.6875rem] tracking-[0.28em] uppercase text-stone-400 font-medium">The idea</span>
-            </div>
-            <div>
-              <p className="reveal font-serif text-2xl md:text-3xl lg:text-[2.25rem] text-stone-900 leading-[1.2] mb-10 font-light">
-                A local florist. Your building. Monthly.
-              </p>
-              <p className="reveal text-[1.0625rem] text-stone-500 leading-relaxed mb-5 max-w-xl">
-                We connect florists who already deliver in your neighborhood with the buildings they pass every day. No warehouse. No markups. The arrangement that shows up at your door came from a shop a few miles away.
-              </p>
-              <p className="reveal text-[1.0625rem] text-stone-500 leading-relaxed max-w-xl">
-                Your property manager sets it up once. You pick a size. It shows up at your door every month. That's the whole thing.
-              </p>
-            </div>
+        {/* Right — full-bleed photo */}
+        <div ref={heroPhotoRef} className="relative min-h-[50vw] lg:min-h-0">
+          <Image
+            src="/hero.png"
+            alt="Fresh flowers in a city apartment"
+            fill
+            className="object-cover object-center"
+            priority
+          />
+          {/* Blend edge into cream on desktop */}
+          <div className="hidden lg:block absolute inset-y-0 left-0 w-20 bg-gradient-to-r from-[#FFFBF7] to-transparent" />
+
+          {/* Stats — desktop, overlaid bottom-right */}
+          <div className="hidden lg:flex absolute bottom-10 right-10 gap-8 bg-white/70 backdrop-blur-sm rounded-2xl px-8 py-5">
+            {[
+              { num: "$45",     label: "Starting price" },
+              { num: "3",       label: "Cities" },
+              { num: "Monthly", label: "Delivery" },
+            ].map((s, i) => (
+              <div key={i} className="text-center">
+                <div className="font-serif text-3xl text-[#2C1810] leading-none mb-1">{s.num}</div>
+                <div className="text-[0.65rem] tracking-[0.18em] text-stone-500 uppercase">{s.label}</div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
       {/* ── HOW IT WORKS ── */}
-      <section id="how-it-works" className="border-t border-stone-200 py-14 lg:py-24 bg-stone-50">
+      <section id="how-it-works" className="border-t border-stone-200 py-14 lg:py-24 bg-white">
         <div className="max-w-6xl mx-auto px-6 lg:px-16">
           <div className="grid lg:grid-cols-[1fr_2fr] gap-6 lg:gap-24 mb-10 lg:mb-16">
             <div className="reveal">
@@ -239,9 +163,9 @@ export default function HomePage() {
             </p>
           </div>
           {STEPS.map((step, i) => (
-            <div key={i} className="reveal grid lg:grid-cols-[1fr_2fr] gap-3 lg:gap-24 py-6 lg:py-8 border-t border-stone-200">
+            <div key={i} className="reveal grid lg:grid-cols-[1fr_2fr] gap-3 lg:gap-24 py-6 lg:py-8 border-t border-stone-100">
               <div className="flex items-baseline gap-4">
-                <span className="font-serif text-2xl text-stone-300 select-none leading-none shrink-0">{step.num}</span>
+                <span className="font-serif text-2xl text-stone-200 select-none leading-none shrink-0">{step.num}</span>
                 <h3 className="font-serif text-lg text-stone-900 leading-snug">{step.title}</h3>
               </div>
               <p className="text-[0.9375rem] text-stone-500 leading-relaxed max-w-lg pl-10 lg:pl-0">{step.desc}</p>
@@ -251,7 +175,7 @@ export default function HomePage() {
       </section>
 
       {/* ── PRICING ── */}
-      <section className="border-t border-stone-200 py-14 lg:py-24">
+      <section className="border-t border-stone-200 py-14 lg:py-24 bg-[#FFFBF7]">
         <div className="max-w-6xl mx-auto px-6 lg:px-16">
           <div className="grid lg:grid-cols-[1fr_2fr] gap-6 lg:gap-24 mb-10 lg:mb-16">
             <div className="reveal">
@@ -273,105 +197,48 @@ export default function HomePage() {
                   )}
                 </div>
                 <div className="font-serif text-4xl text-stone-900 leading-none">
-                  {plan.price}
-                  <span className="text-sm font-sans text-stone-400 font-normal ml-0.5">/mo</span>
+                  {plan.price}<span className="text-sm font-sans text-stone-400 font-normal ml-0.5">/mo</span>
                 </div>
               </div>
               <p className="text-[0.9375rem] text-stone-500 leading-relaxed max-w-md">{plan.desc}</p>
-              <Button asChild variant="outline"
-                className="w-full lg:w-auto rounded-full border-stone-300 text-stone-600 hover:bg-bloom-dark hover:text-white hover:border-bloom-dark transition-all text-sm">
-                <a href="#sign-up">Choose {plan.name}</a>
+              <Button asChild
+                className="w-full lg:w-auto bg-[#2C1810] hover:bg-stone-900 text-white rounded-lg text-sm transition-transform hover:scale-[1.02]">
+                <a href={`${APP_URL}/onboarding/register`}>Get started</a>
               </Button>
             </div>
           ))}
         </div>
       </section>
 
-      {/* ── SIGN UP ── */}
-      <section id="sign-up" className="border-t border-stone-200 py-16 lg:py-28 bg-stone-50">
-        <div className="max-w-6xl mx-auto px-6 lg:px-16">
-          <div className="grid lg:grid-cols-[1fr_2fr] gap-12 lg:gap-24">
-            <div className="reveal">
-              <span className="text-[0.6875rem] tracking-[0.28em] uppercase text-stone-400 font-medium">Get started</span>
-              <p className="mt-6 text-[0.9375rem] text-stone-500 leading-relaxed max-w-[220px]">
-                Tell us where you live. We'll check if your building is set up—or add you to the list if not.
-              </p>
-            </div>
-            <div className="reveal">
-              {submitted ? (
-                <div className="py-8">
-                  <p className="font-serif text-3xl text-bloom-sage mb-4">You're on the list.</p>
-                  <p className="text-stone-500 text-[1.0625rem] max-w-md">
-                    We'll be in touch in a couple of days. Check your inbox—spam folder too, just in case.
-                  </p>
-                </div>
-              ) : (
-                <form className="space-y-8" onSubmit={handleSubmit} noValidate>
-                  <div className="grid sm:grid-cols-2 gap-x-8 gap-y-8">
-                    <div>
-                      <label htmlFor="firstName" className="block text-[0.6875rem] tracking-[0.2em] uppercase text-stone-400 mb-3">First name</label>
-                      <input id="firstName" placeholder="Jane" value={form.firstName} onChange={e => update("firstName", e.target.value)} className={fieldClass(!!errors.firstName)} />
-                      {errors.firstName && <p className="text-xs text-red-500 mt-1.5">{errors.firstName}</p>}
-                    </div>
-                    <div>
-                      <label htmlFor="lastName" className="block text-[0.6875rem] tracking-[0.2em] uppercase text-stone-400 mb-3">Last name</label>
-                      <input id="lastName" placeholder="Smith" value={form.lastName} onChange={e => update("lastName", e.target.value)} className={fieldClass(!!errors.lastName)} />
-                      {errors.lastName && <p className="text-xs text-red-500 mt-1.5">{errors.lastName}</p>}
-                    </div>
-                  </div>
-                  <div>
-                    <label htmlFor="email" className="block text-[0.6875rem] tracking-[0.2em] uppercase text-stone-400 mb-3">Email</label>
-                    <input id="email" type="email" placeholder="jane@example.com" value={form.email} onChange={e => update("email", e.target.value)} className={fieldClass(!!errors.email)} />
-                    {errors.email && <p className="text-xs text-red-500 mt-1.5">{errors.email}</p>}
-                  </div>
-                  <div>
-                    <label htmlFor="buildingAddress" className="block text-[0.6875rem] tracking-[0.2em] uppercase text-stone-400 mb-3">Building address</label>
-                    <input id="buildingAddress" placeholder="123 Main St" value={form.buildingAddress} onChange={e => update("buildingAddress", e.target.value)} className={fieldClass(!!errors.buildingAddress)} />
-                    {errors.buildingAddress && <p className="text-xs text-red-500 mt-1.5">{errors.buildingAddress}</p>}
-                  </div>
-                  <div className="grid sm:grid-cols-2 gap-x-8 gap-y-8">
-                    <div>
-                      <label htmlFor="apartmentNumber" className="block text-[0.6875rem] tracking-[0.2em] uppercase text-stone-400 mb-3">Unit number</label>
-                      <input id="apartmentNumber" placeholder="4B" value={form.apartmentNumber} onChange={e => update("apartmentNumber", e.target.value)} className={fieldClass(!!errors.apartmentNumber)} />
-                      {errors.apartmentNumber && <p className="text-xs text-red-500 mt-1.5">{errors.apartmentNumber}</p>}
-                    </div>
-                    <div>
-                      <label htmlFor="plan" className="block text-[0.6875rem] tracking-[0.2em] uppercase text-stone-400 mb-3">Preferred size</label>
-                      <select id="plan" value={form.plan} onChange={e => update("plan", e.target.value)} className={fieldClass(!!errors.plan)}>
-                        <option value="">Pick one</option>
-                        <option value="petit">Petit — $45/mo</option>
-                        <option value="grand">Grand — $75/mo</option>
-                        <option value="luxe">Luxe — $120/mo</option>
-                      </select>
-                      {errors.plan && <p className="text-xs text-red-500 mt-1.5">{errors.plan}</p>}
-                    </div>
-                  </div>
-                  <div className="pt-2">
-                    <Button type="submit" disabled={submitting}
-                      className="bg-bloom-dark hover:bg-stone-800 text-white rounded-full px-10 py-5 text-sm tracking-wide disabled:opacity-60 transition-transform hover:scale-[1.02]">
-                      {submitting ? "Sending…" : "Sign up →"}
-                    </Button>
-                  </div>
-                </form>
-              )}
-            </div>
-          </div>
+      {/* ── CTA ── */}
+      <section className="py-20 lg:py-28 bg-[#2C1810] text-white text-center">
+        <div className="max-w-xl mx-auto px-6">
+          <p className="reveal font-serif text-3xl md:text-4xl lg:text-5xl leading-tight mb-4 font-light">
+            Your building.<br />Your flowers.
+          </p>
+          <p className="reveal text-stone-400 text-[1.0625rem] mb-10 font-light">
+            Create an account and we'll let you know when you're good to go.
+          </p>
+          <Button asChild
+            className="reveal bg-white text-[#2C1810] hover:bg-stone-100 rounded-lg px-10 py-5 text-sm font-medium tracking-wide transition-transform hover:scale-[1.02]">
+            <a href={`${APP_URL}/onboarding/register`}>Create your account →</a>
+          </Button>
         </div>
       </section>
 
       {/* ── FOOTER ── */}
-      <footer className="border-t border-stone-200 py-10">
+      <footer className="border-t border-stone-800 bg-[#2C1810] py-10">
         <div className="max-w-6xl mx-auto px-6 lg:px-16 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div className="flex items-center gap-2">
             <Leaf className="h-4 w-4 text-bloom-sage" />
-            <span className="font-serif text-lg text-bloom-dark">Bloom</span>
+            <span className="font-serif text-lg text-white">Bloom</span>
           </div>
-          <div className="flex gap-10 text-sm text-stone-400">
-            <a href="/florists"          className="hover:text-bloom-dark transition-colors">Florists</a>
-            <a href="/property-managers" className="hover:text-bloom-dark transition-colors">Buildings</a>
-            <a href="#"                  className="hover:text-bloom-dark transition-colors">Contact</a>
+          <div className="flex gap-10 text-sm text-stone-500">
+            <a href="/florists"          className="hover:text-white transition-colors">Florists</a>
+            <a href="/property-managers" className="hover:text-white transition-colors">Buildings</a>
+            <a href="#"                  className="hover:text-white transition-colors">Contact</a>
           </div>
-          <span className="text-xs text-stone-400">© 2026 Bloom</span>
+          <span className="text-xs text-stone-600">© 2026 Bloom</span>
         </div>
       </footer>
 
