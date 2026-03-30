@@ -132,54 +132,56 @@ export default function HomePage() {
     <div className="min-h-screen bg-white text-bloom-dark">
 
       {/* ── HERO ── */}
-      <section className="min-h-screen bg-[#FFFBF7] flex flex-col justify-center pt-20 pb-12 overflow-hidden">
-        <div className="max-w-[1300px] mx-auto px-8 lg:px-16 w-full">
-          <div className="grid lg:grid-cols-[5fr_4fr_2fr] gap-8 lg:gap-12 items-center">
+      <section className="min-h-[100svh] bg-[#FFFBF7] flex flex-col justify-center pt-20 pb-12 overflow-hidden">
+        <div className="max-w-[1300px] mx-auto px-6 lg:px-16 w-full">
+          <div className="grid lg:grid-cols-[5fr_4fr_2fr] gap-10 lg:gap-12 items-center">
 
             {/* Left — text */}
             <div ref={heroRef}>
-              <h1 className="font-serif text-[clamp(2.75rem,4.5vw,5rem)] leading-[1.05] text-[#2C1810] tracking-tight mb-6">
+              <h1 className="font-serif text-[clamp(2.5rem,6vw,5rem)] leading-[1.05] text-[#2C1810] tracking-tight mb-5">
                 We bring fresh<br />
                 flowers to your<br />
                 <em className="not-italic text-bloom-sage">apartment.</em>
               </h1>
 
-              <p className="text-[1.0625rem] text-stone-500 leading-relaxed mb-10 max-w-sm font-light">
+              <p className="text-[1.0625rem] text-stone-500 leading-relaxed mb-8 max-w-sm font-light">
                 A local florist. Your building. Every month.
                 No errands, no subscriptions to manage.
                 Starting at $45/mo.
               </p>
 
-              <div className="flex flex-wrap gap-3 mb-16">
+              <div className="flex flex-wrap gap-3 mb-10 lg:mb-16">
                 <Button asChild
-                  className="bg-[#2C1810] hover:bg-stone-900 text-white rounded-lg px-8 py-5 text-sm font-medium tracking-wide transition-transform hover:scale-[1.02]">
+                  className="bg-[#2C1810] hover:bg-stone-900 text-white rounded-lg px-7 py-4 text-sm font-medium tracking-wide transition-transform hover:scale-[1.02]">
                   <a href="#sign-up">Explore</a>
                 </Button>
                 <Button asChild variant="outline"
-                  className="border-stone-300 text-stone-600 hover:bg-stone-50 rounded-lg px-8 py-5 text-sm font-medium">
+                  className="border-stone-300 text-stone-600 hover:bg-stone-50 rounded-lg px-7 py-4 text-sm font-medium">
                   <a href="#how-it-works">How it works</a>
                 </Button>
               </div>
 
-              {/* Wavy line decoration */}
-              <svg width="220" height="40" viewBox="0 0 220 40" fill="none" className="opacity-60">
+              {/* Wavy line decoration — hidden on small screens */}
+              <svg width="220" height="40" viewBox="0 0 220 40" fill="none" className="opacity-60 hidden sm:block">
                 <path d="M0 20 C18 4, 36 36, 54 20 C72 4, 90 36, 108 20 C126 4, 144 36, 162 20 C180 4, 198 36, 216 20"
                   stroke="#D4AF37" strokeWidth="2" strokeLinecap="round" fill="none"/>
               </svg>
             </div>
 
             {/* Center — arch photo */}
-            <div ref={photoRef} className="relative flex justify-center">
+            <div ref={photoRef} className="relative flex justify-center py-8 lg:py-0">
               {/* Orange blob — top right */}
-              <div className="absolute -top-6 -right-8 w-28 h-24 z-10 opacity-90"
+              <div className="absolute top-2 right-4 lg:-top-6 lg:-right-8 w-20 h-16 lg:w-28 lg:h-24 z-10 opacity-90"
                 style={{ background: "#F4A940", borderRadius: "40% 60% 55% 45% / 45% 40% 60% 55%" }} />
               {/* Rose circle — bottom left */}
-              <div className="absolute -bottom-4 -left-6 w-20 h-20 z-10 opacity-80"
+              <div className="absolute bottom-2 left-4 lg:-bottom-4 lg:-left-6 w-14 h-14 lg:w-20 lg:h-20 z-10 opacity-80"
                 style={{ background: "#E8A0A0", borderRadius: "50%" }} />
 
               {/* Arch photo frame */}
-              <div className="relative w-[280px] h-[380px] overflow-hidden z-20"
-                style={{ borderRadius: "140px 140px 0 0" }}>
+              <div
+                className="relative w-[220px] h-[300px] sm:w-[260px] sm:h-[350px] lg:w-[280px] lg:h-[380px] overflow-hidden z-20"
+                style={{ borderRadius: "9999px 9999px 0 0" }}
+              >
                 <Image
                   src="/hero.png"
                   alt="Fresh flowers in a city apartment"
@@ -190,7 +192,7 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* Right — stats column */}
+            {/* Right — stats column (desktop only) */}
             <div ref={statsRef} className="hidden lg:flex flex-col gap-10 pl-4 border-l border-stone-200">
               {[
                 { num: "$45",     label: "STARTING\nPRICE" },
@@ -220,8 +222,8 @@ export default function HomePage() {
       </div>
 
       {/* ── THE IDEA ── */}
-      <section className="py-32">
-        <div className="max-w-6xl mx-auto px-8 lg:px-16">
+      <section className="py-16 lg:py-32">
+        <div className="max-w-6xl mx-auto px-6 lg:px-16">
           <div className="grid lg:grid-cols-[1fr_2fr] gap-12 lg:gap-24 items-start">
             <div className="reveal">
               <span className="text-[0.6875rem] tracking-[0.28em] uppercase text-stone-400 font-medium">The idea</span>
@@ -242,9 +244,9 @@ export default function HomePage() {
       </section>
 
       {/* ── HOW IT WORKS ── */}
-      <section id="how-it-works" className="border-t border-stone-200 py-24 bg-stone-50">
-        <div className="max-w-6xl mx-auto px-8 lg:px-16">
-          <div className="grid lg:grid-cols-[1fr_2fr] gap-12 lg:gap-24 mb-16">
+      <section id="how-it-works" className="border-t border-stone-200 py-14 lg:py-24 bg-stone-50">
+        <div className="max-w-6xl mx-auto px-6 lg:px-16">
+          <div className="grid lg:grid-cols-[1fr_2fr] gap-6 lg:gap-24 mb-10 lg:mb-16">
             <div className="reveal">
               <span className="text-[0.6875rem] tracking-[0.28em] uppercase text-stone-400 font-medium">How it works</span>
             </div>
@@ -253,21 +255,21 @@ export default function HomePage() {
             </p>
           </div>
           {STEPS.map((step, i) => (
-            <div key={i} className="reveal grid lg:grid-cols-[1fr_2fr] gap-6 lg:gap-24 py-8 border-t border-stone-200 items-baseline">
-              <div className="flex items-baseline gap-5">
+            <div key={i} className="reveal grid lg:grid-cols-[1fr_2fr] gap-3 lg:gap-24 py-6 lg:py-8 border-t border-stone-200">
+              <div className="flex items-baseline gap-4">
                 <span className="font-serif text-2xl text-stone-300 select-none leading-none shrink-0">{step.num}</span>
                 <h3 className="font-serif text-lg text-stone-900 leading-snug">{step.title}</h3>
               </div>
-              <p className="text-[0.9375rem] text-stone-500 leading-relaxed max-w-lg">{step.desc}</p>
+              <p className="text-[0.9375rem] text-stone-500 leading-relaxed max-w-lg pl-10 lg:pl-0">{step.desc}</p>
             </div>
           ))}
         </div>
       </section>
 
       {/* ── PRICING ── */}
-      <section className="border-t border-stone-200 py-24">
-        <div className="max-w-6xl mx-auto px-8 lg:px-16">
-          <div className="grid lg:grid-cols-[1fr_2fr] gap-12 lg:gap-24 mb-16">
+      <section className="border-t border-stone-200 py-14 lg:py-24">
+        <div className="max-w-6xl mx-auto px-6 lg:px-16">
+          <div className="grid lg:grid-cols-[1fr_2fr] gap-6 lg:gap-24 mb-10 lg:mb-16">
             <div className="reveal">
               <span className="text-[0.6875rem] tracking-[0.28em] uppercase text-stone-400 font-medium">Sizes & pricing</span>
             </div>
@@ -276,8 +278,7 @@ export default function HomePage() {
             </p>
           </div>
           {PLANS.map((plan, i) => (
-            <div key={i}
-              className="reveal grid lg:grid-cols-[200px_1fr_auto] gap-6 lg:gap-16 py-10 border-t border-stone-200 items-center">
+            <div key={i} className="reveal grid lg:grid-cols-[200px_1fr_auto] gap-4 lg:gap-16 py-8 lg:py-10 border-t border-stone-200 lg:items-center">
               <div>
                 <div className="flex items-center gap-2.5 mb-1">
                   <h3 className="font-serif text-2xl text-stone-900">{plan.name}</h3>
@@ -294,7 +295,7 @@ export default function HomePage() {
               </div>
               <p className="text-[0.9375rem] text-stone-500 leading-relaxed max-w-md">{plan.desc}</p>
               <Button asChild variant="outline"
-                className="rounded-full border-stone-300 text-stone-600 hover:bg-bloom-dark hover:text-white hover:border-bloom-dark transition-all whitespace-nowrap text-sm">
+                className="w-full lg:w-auto rounded-full border-stone-300 text-stone-600 hover:bg-bloom-dark hover:text-white hover:border-bloom-dark transition-all text-sm">
                 <a href="#sign-up">Choose {plan.name}</a>
               </Button>
             </div>
@@ -303,8 +304,8 @@ export default function HomePage() {
       </section>
 
       {/* ── SIGN UP ── */}
-      <section id="sign-up" className="border-t border-stone-200 py-28 bg-stone-50">
-        <div className="max-w-6xl mx-auto px-8 lg:px-16">
+      <section id="sign-up" className="border-t border-stone-200 py-16 lg:py-28 bg-stone-50">
+        <div className="max-w-6xl mx-auto px-6 lg:px-16">
           <div className="grid lg:grid-cols-[1fr_2fr] gap-12 lg:gap-24">
             <div className="reveal">
               <span className="text-[0.6875rem] tracking-[0.28em] uppercase text-stone-400 font-medium">Get started</span>
@@ -376,7 +377,7 @@ export default function HomePage() {
 
       {/* ── FOOTER ── */}
       <footer className="border-t border-stone-200 py-10">
-        <div className="max-w-6xl mx-auto px-8 lg:px-16 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+        <div className="max-w-6xl mx-auto px-6 lg:px-16 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div className="flex items-center gap-2">
             <Leaf className="h-4 w-4 text-bloom-sage" />
             <span className="font-serif text-lg text-bloom-dark">Bloom</span>
