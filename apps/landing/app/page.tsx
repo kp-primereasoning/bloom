@@ -5,14 +5,6 @@ import { ArrowDown, Leaf } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import gsap from "gsap"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
-import dynamic from "next/dynamic"
-
-const HeroScene = dynamic(() => import("@/components/HeroScene"), {
-  ssr: false,
-  loading: () => (
-    <div className="absolute inset-0" style={{ background: "linear-gradient(135deg, #FFF8F5 0%, #FFF5EE 60%, #FCE8E0 100%)" }} />
-  ),
-})
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -154,7 +146,6 @@ export default function HomePage() {
 
       {/* ── HERO ── */}
       <section className="relative min-h-screen flex flex-col justify-end pb-16 lg:pb-24 overflow-hidden pt-20">
-        <HeroScene />
         <div className="container relative z-10 mx-auto px-6 lg:px-12">
           <div ref={headlineRef}>
             <div className="flex items-center gap-3 mb-10">
