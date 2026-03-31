@@ -167,6 +167,28 @@ class BloomStack(Stack):
             id_token_validity=Duration.hours(8),
             access_token_validity=Duration.hours(8),
             refresh_token_validity=Duration.days(30),
+            o_auth=cognito.OAuthSettings(
+                flows=cognito.OAuthFlows(authorization_code_grant=True, implicit_code_grant=True),
+                scopes=[
+                    cognito.OAuthScope.OPENID,
+                    cognito.OAuthScope.EMAIL,
+                    cognito.OAuthScope.PROFILE,
+                    cognito.OAuthScope.PHONE,
+                    cognito.OAuthScope.COGNITO_ADMIN,
+                ],
+                callback_urls=[
+                    "https://app.blooms.now/auth/callback",
+                    "http://localhost:5173/auth/callback",
+                ],
+                logout_urls=[
+                    "https://app.blooms.now",
+                    "http://localhost:5173",
+                ],
+            ),
+            supported_identity_providers=[
+                cognito.UserPoolClientIdentityProvider.COGNITO,
+                cognito.UserPoolClientIdentityProvider.GOOGLE,
+            ],
         )
 
         # =====================================================================
@@ -182,7 +204,8 @@ class BloomStack(Stack):
                 s3.CorsRule(
                     allowed_methods=[s3.HttpMethods.GET, s3.HttpMethods.PUT],
                     allowed_origins=[
-                        "https://main.d16hr5zrev5jhh.amplifyapp.com",
+                        "https://app.blooms.now",
+                        "https://blooms.now",
                         "http://localhost:5173",
                     ],
                     allowed_headers=["*"],

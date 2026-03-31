@@ -385,8 +385,8 @@ Lifecycle Policy:
   {
     "AllowedOrigins": [
       "http://localhost:5173",
-      "https://dev.bloom.com",
-      "https://*.amplifyapp.com"
+      "https://app.blooms.now",
+      "https://blooms.now"
     ],
     "AllowedMethods": ["GET", "PUT", "POST"],
     "AllowedHeaders": ["*"],

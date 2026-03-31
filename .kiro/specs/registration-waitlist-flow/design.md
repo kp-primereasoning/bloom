@@ -68,7 +68,7 @@ sequenceDiagram
 **Environment variables** (new):
 - `NEXT_PUBLIC_COGNITO_DOMAIN` — e.g. `bloom-dev.auth.us-east-1.amazoncognito.com`
 - `NEXT_PUBLIC_COGNITO_CLIENT_ID` — e.g. `5j7l03d6avbg43fh0hvvslom2f`
-- `NEXT_PUBLIC_COGNITO_REDIRECT_URI` — e.g. `https://main.d16hr5zrev5jhh.amplifyapp.com/auth/callback`
+- `NEXT_PUBLIC_COGNITO_REDIRECT_URI` — e.g. `https://app.blooms.now/auth/callback`
 
 **URL construction helper** (`lib/cognito.ts`):
 ```typescript

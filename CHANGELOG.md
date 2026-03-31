@@ -8,6 +8,9 @@ This file tracks all features, components, and infrastructure built for the Bloo
 
 | Date | What Was Built | What It Does |
 |------|----------------|--------------|
+| 2026-03-31 | Comprehensive README | Rewrote README.md with full AWS infrastructure inventory (confirmed via CLI), all 17 database tables with column definitions, complete API endpoint reference (70+ endpoints), live URLs, DNS records, and environment variable docs |
+| 2026-03-31 | Custom Domain Configuration (blooms.now) | Updated all env files, CDK stack, CORS config, and Cognito callback URLs to use blooms.now (landing), app.blooms.now (web app), and api.blooms.now (API) instead of Amplify default URLs; created .env.production for web app |
+| 2026-03-31 | Cognito OAuth Callback URL Fix | Updated CDK user pool client with proper OAuth settings, callback URLs (Amplify + localhost), logout URLs, and Google identity provider; fixes redirect to non-existent app.blooms.now domain after Google sign-in |
 | 2026-03-30 | Web App Cognito Auth Flow & Waitlist UI | CallbackPage exchanges Cognito auth codes and routes users by account state; RegisterPage now redirects to Cognito Hosted UI; /auth/callback route added to router; exchangeAuthCode and submitWaitlistEntry API client functions; PropertyPage waitlist form with "My building isn't listed" link, inline form, and confirmation screen |
 | 2026-03-30 | Registration & Waitlist API | Cognito callback endpoint (POST /auth/cognito/callback) exchanges auth codes for tokens and provisions local users; waitlist endpoints (POST /auth/waitlist, GET /admin/waitlist) let users request unlisted buildings and admins view demand; WaitlistEntry model + migration 013; Pydantic schemas for all new request/response types |
 | 2026-03-30 | Landing Page Cognito Redirect | Created getCognitoSignupUrl() helper in lib/cognito.ts; updated all CTA buttons across home, florists, property-managers pages and navigation to redirect to Cognito Hosted UI signup URL |
