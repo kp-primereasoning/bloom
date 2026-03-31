@@ -73,7 +73,7 @@ async def get_current_user_cognito(
     return {
         "id": claims.get("sub"),
         "email": claims.get("email"),
-        "role": claims.get("custom:role", "RESIDENT"),
+        "role": claims.get("custom:role", "CUSTOMER"),
     }
 
 
@@ -103,5 +103,5 @@ async def get_optional_user_cognito(
     return {
         "id": claims.get("sub"),
         "email": claims.get("email"),
-        "role": claims.get("custom:role", "RESIDENT"),
+        "role": claims.get("custom:role", "CUSTOMER"),
     }

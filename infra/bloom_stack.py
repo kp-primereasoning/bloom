@@ -298,6 +298,7 @@ class BloomStack(Stack):
                             apprunner.CfnService.KeyValuePairProperty(name="DB_PORT", value=db_instance.db_instance_endpoint_port),
                             apprunner.CfnService.KeyValuePairProperty(name="DB_NAME", value="bloom"),
                             apprunner.CfnService.KeyValuePairProperty(name="DB_USER", value="bloom_admin"),
+                            apprunner.CfnService.KeyValuePairProperty(name="WEB_DOMAIN", value="https://app.blooms.now"),
                             apprunner.CfnService.KeyValuePairProperty(name="SENTRY_DSN", value=""),  # Set via console or Secrets Manager
                         ],
                     ),
