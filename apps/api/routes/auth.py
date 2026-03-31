@@ -246,18 +246,14 @@ async def register(request: RegisterRequest):
             )
         
         try:
-            # Register in Cognito
+            # Register in Cognito (identity provider only)
             cognito_result = cognito.register(
                 email=request.email,
                 password=request.password,
                 role="CUSTOMER",
             )
             user_id = UUID(cognito_result["user_sub"])
-            
-            # Login to get tokens
-            tokens = cognito.login(request.email, request.password)
-            access_token = tokens["access_token"]
-            
+
         except ClientError as e:
             error_code = e.response.get("Error", {}).get("Code", "Unknown")
             if error_code == "UsernameExistsException":
@@ -331,9 +327,6 @@ async def login(request: LoginRequest):
     
     Returns 401 if credentials are invalid.
     """
-    access_token = None
-    refresh_token = None
-    
     if _use_cognito():
         # Authenticate with Cognito
         from services.aws.cognito import get_cognito_client
@@ -353,9 +346,8 @@ async def login(request: LoginRequest):
             )
         
         try:
-            tokens = cognito.login(request.email, request.password)
-            access_token = tokens["access_token"]
-            refresh_token = tokens.get("refresh_token")
+            # Verify credentials with Cognito (identity check only)
+            cognito.login(request.email, request.password)
         except ClientError as e:
             error_code = e.response.get("Error", {}).get("Code", "Unknown")
             if error_code in ["NotAuthorizedException", "UserNotFoundException"]:
@@ -395,10 +387,8 @@ async def login(request: LoginRequest):
                     }
                 }
             )
-        
-        access_token = auth_service.create_access_token(user)
-    
-    # Get user from local DB for response
+
+    # Get user from local DB and issue custom JWT
     user = await get_user_by_email(request.email)
     if not user:
         raise HTTPException(
@@ -411,10 +401,12 @@ async def login(request: LoginRequest):
                 }
             }
         )
-    
+
+    access_token = auth_service.create_access_token(user)
+
     return LoginResponse(
         access_token=access_token,
-        refresh_token=refresh_token,
+        refresh_token=None,
         user=UserResponseWithOnboarding(
             id=user.id,
             email=user.email,

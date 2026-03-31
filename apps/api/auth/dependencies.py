@@ -64,19 +64,15 @@ async def get_current_user(
 ) -> dict:
     """
     FastAPI dependency to extract and validate current user from JWT.
-    
-    Automatically switches between custom JWT and Cognito based on
-    the USE_COGNITO feature flag.
-    
+
+    Always validates custom JWTs issued by this API. Cognito is used only
+    for identity verification at login/register time, not as a token issuer
+    for API calls.
+
     Returns user dict with id, email, and role.
     Raises 401 if token is invalid or expired.
     """
-    if _use_cognito():
-        logger.debug("Using Cognito authentication")
-        return await _get_current_user_cognito(credentials)
-    else:
-        logger.debug("Using custom JWT authentication")
-        return await _get_current_user_jwt(credentials)
+    return await _get_current_user_jwt(credentials)
 
 
 def require_role(allowed_roles: list[str]) -> Callable:
