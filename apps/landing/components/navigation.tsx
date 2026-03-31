@@ -6,10 +6,10 @@ import { Button } from "@/components/ui/button"
 import { Menu, X, Leaf } from "lucide-react"
 
 const NAV_LINKS = [
-  { label: "Home",             href: "/" },
-  { label: "How it works",     href: "/#how-it-works" },
-  { label: "Florists",         href: "/florists" },
-  { label: "Buildings",        href: "/property-managers" },
+  { label: "HOME",       href: "/" },
+  { label: "FLORISTS",   href: "/florists" },
+  { label: "PROPERTIES", href: "/property-managers" },
+  { label: "CONTACT",    href: "/contact" },
 ]
 
 export function Navigation() {
@@ -26,25 +26,24 @@ export function Navigation() {
             <span className="font-serif text-xl text-bloom-dark tracking-tight">Bloom</span>
           </Link>
 
-          {/* Desktop nav */}
-          <div className="hidden md:flex items-center gap-1 bg-stone-100 rounded-full px-2 py-1.5">
+          {/* Desktop nav - centered */}
+          <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 items-center gap-20">
             {NAV_LINKS.map((link, i) => (
               <Link
                 key={i}
                 href={link.href}
-                className="flex items-center gap-1.5 px-4 py-1.5 text-sm text-stone-500 hover:text-bloom-dark transition-colors rounded-full hover:bg-white"
+                className="text-sm text-stone-500 hover:text-bloom-dark transition-colors"
               >
-                <span className="w-1.5 h-1.5 rounded-full border border-stone-400/60 inline-block" />
                 {link.label}
               </Link>
             ))}
           </div>
 
-          {/* CTA */}
-          <div className="hidden md:block">
+          {/* Register CTA */}
+          <div className="hidden md:block ml-auto">
             <Button asChild
-              className="bg-bloom-dark hover:bg-stone-800 text-white rounded-full px-6 py-2.5 text-sm font-medium tracking-wide transition-transform hover:scale-[1.02]">
-              <a href="/#sign-up">Get Started</a>
+              className="bg-bloom-dark hover:bg-stone-800 text-white rounded-full px-6 py-2.5 text-sm font-medium uppercase tracking-wide transition-transform hover:scale-[1.02]">
+              <a href="/register">Register</a>
             </Button>
           </div>
 
@@ -73,8 +72,8 @@ export function Navigation() {
               </Link>
             ))}
             <div className="pt-3 px-3">
-              <Button asChild className="w-full bg-bloom-dark text-white rounded-full text-sm font-medium">
-                <a href="/#sign-up" onClick={() => setIsOpen(false)}>Get Started</a>
+              <Button asChild className="w-full bg-bloom-sage text-white rounded-full text-sm font-medium">
+                <a href="/register" onClick={() => setIsOpen(false)}>Register</a>
               </Button>
             </div>
           </div>

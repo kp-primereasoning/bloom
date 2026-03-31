@@ -12,43 +12,38 @@ gsap.registerPlugin(ScrollTrigger)
 const STEPS = [
   {
     num: "01",
-    title: "Your building signs up",
-    desc: "The property manager brings us on as an amenity. They handle the florist access and scheduling. You don't have to make this happen.",
+    title: "Pick your size",
+    desc: "Petit, Grand, or Luxe. Takes two minutes.",
   },
   {
     num: "02",
-    title: "You pick a size",
-    desc: "Petit for the nightstand. Grand for a proper centerpiece. Luxe for the one people ask about. One decision, then you're done.",
+    title: "We coordinate with your building",
+    desc: "Your florist is already assigned. Delivery is already scheduled.",
   },
   {
     num: "03",
-    title: "A florist delivers to your door",
-    desc: "Not left in the lobby. Your building gives us access. We coordinate with a local florist. You find it waiting—or get a knock.",
-  },
-  {
-    num: "04",
-    title: "It happens again next month",
-    desc: "No reordering. No remembering. Your apartment just consistently looks better. That's the whole thing.",
+    title: "Fresh flowers, every month",
+    desc: "Local, seasonal, at your door. No reordering, no reminders.",
   },
 ]
 
 const PLANS = [
   {
     name: "Petit",
-    price: "$45",
-    desc: "Compact seasonal bouquet. For a nightstand, a shelf, anywhere you want a bit of color.",
+    price: "$35",
+    desc: "A fresh seasonal arrangement, no vase. Great for a nightstand or shelf.",
     tag: null,
   },
   {
     name: "Grand",
-    price: "$75",
-    desc: "Our most popular size. A large arrangement that actually fills a room, with personalization options.",
+    price: "$55",
+    desc: "A larger arrangement, no vase. More presence, same simplicity.",
     tag: "Most chosen",
   },
   {
     name: "Luxe",
-    price: "$120",
-    desc: "The works — designer-curated, rare stems, delivered with care. For people who want the full experience.",
+    price: "$75",
+    desc: "A full arrangement with a vase included. Ready to display, nothing else needed.",
     tag: null,
   },
 ]
@@ -83,7 +78,7 @@ export default function HomePage() {
       <section className="min-h-[100svh] grid lg:grid-cols-2">
 
         {/* Left — text */}
-        <div className="flex flex-col justify-center px-8 lg:px-16 pt-32 pb-16 lg:py-0">
+        <div className="flex flex-col justify-center px-8 lg:px-16 pt-32 pb-16 lg:pt-32 lg:pb-0">
           <div ref={heroTextRef}>
             <h1 className="font-serif text-[clamp(3rem,5.5vw,5.5rem)] leading-[1.0] text-[#2C1810] tracking-tight mb-6">
               Fresh flowers<br />
@@ -130,7 +125,7 @@ export default function HomePage() {
               <span className="text-[0.6875rem] tracking-[0.28em] uppercase text-stone-400 font-medium">How it works</span>
             </div>
             <p className="reveal font-serif text-2xl md:text-3xl text-stone-800 font-light leading-snug">
-              Four steps. None of them require you to do much.
+              You pick flowers and we handle the rest.
             </p>
           </div>
           {STEPS.map((step, i) => (
