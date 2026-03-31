@@ -84,6 +84,7 @@ export { API_BASE_URL };
 import type {
   RegisterRequest,
   RegisterResponse,
+  LoginResponse,
   PropertyListItem,
   MePropertyUpdateRequest,
   MeSubscriptionUpdateRequest,
@@ -109,6 +110,31 @@ export async function getMe(): Promise<MeResponse> {
  */
 export async function register(data: RegisterRequest): Promise<RegisterResponse> {
   return apiRequest<RegisterResponse>('/auth/register', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+/**
+ * Exchange a Cognito authorization code for tokens and user info.
+ * Public endpoint - no authentication required.
+ */
+export async function exchangeAuthCode(code: string): Promise<LoginResponse> {
+  return apiRequest<LoginResponse>('/auth/cognito/callback', {
+    method: 'POST',
+    body: JSON.stringify({ code }),
+  });
+}
+
+/**
+ * Submit a waitlist entry for a building not yet on Bloom.
+ * Requires authentication.
+ */
+export async function submitWaitlistEntry(data: {
+  building_name: string;
+  building_address: string;
+}): Promise<{ id: string; message: string }> {
+  return apiRequest<{ id: string; message: string }>('/auth/waitlist', {
     method: 'POST',
     body: JSON.stringify(data),
   });

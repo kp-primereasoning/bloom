@@ -6,6 +6,7 @@ import { Leaf } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import gsap from "gsap"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
+import { getCognitoSignupUrl } from "@/lib/cognito"
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -47,8 +48,6 @@ const BENEFITS = [
   },
 ]
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "/register"
-
 export default function PropertyManagersPage() {
   const heroTextRef = useRef<HTMLDivElement>(null)
 
@@ -86,7 +85,7 @@ export default function PropertyManagersPage() {
             </p>
             <Button asChild
               className="bg-[#2C1810] hover:bg-stone-900 text-white rounded-lg px-8 py-5 text-sm font-medium tracking-wide transition-transform hover:scale-[1.02]">
-              <a href={`${APP_URL}/onboarding/property`}>Bring Bloom to your building</a>
+              <a href={getCognitoSignupUrl()}>Bring Bloom to your building</a>
             </Button>
           </div>
         </div>
@@ -156,7 +155,7 @@ export default function PropertyManagersPage() {
           </p>
           <Button asChild
             className="reveal bg-white text-[#2C1810] hover:bg-stone-100 rounded-lg px-10 py-5 text-sm font-medium tracking-wide transition-transform hover:scale-[1.02]">
-            <a href={`${APP_URL}/onboarding/property`}>Get started</a>
+            <a href={getCognitoSignupUrl()}>Get started</a>
           </Button>
         </div>
       </section>

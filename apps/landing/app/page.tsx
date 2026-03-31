@@ -6,6 +6,7 @@ import { Leaf } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import gsap from "gsap"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
+import { getCognitoSignupUrl } from "@/lib/cognito"
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -47,8 +48,6 @@ const PLANS = [
     tag: null,
   },
 ]
-
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "/register"
 
 export default function HomePage() {
   const heroTextRef = useRef<HTMLDivElement>(null)
@@ -93,7 +92,7 @@ export default function HomePage() {
             <div className="flex flex-wrap gap-3">
               <Button asChild
                 className="bg-[#2C1810] hover:bg-stone-900 text-white rounded-lg px-8 py-5 text-sm font-medium tracking-wide transition-transform hover:scale-[1.02]">
-                <a href={`${APP_URL}/onboarding/register`}>Create account</a>
+                <a href={getCognitoSignupUrl()}>Create account</a>
               </Button>
               <Button asChild variant="outline"
                 className="border-stone-300 text-stone-600 hover:bg-stone-100 rounded-lg px-8 py-5 text-sm font-medium">
@@ -169,7 +168,7 @@ export default function HomePage() {
               <p className="text-[0.9375rem] text-stone-500 leading-relaxed max-w-md">{plan.desc}</p>
               <Button asChild
                 className="w-full lg:w-auto bg-[#2C1810] hover:bg-stone-900 text-white rounded-lg text-sm transition-transform hover:scale-[1.02]">
-                <a href={`${APP_URL}/onboarding/register`}>Get started</a>
+                <a href={getCognitoSignupUrl()}>Get started</a>
               </Button>
             </div>
           ))}
@@ -187,7 +186,7 @@ export default function HomePage() {
           </p>
           <Button asChild
             className="reveal bg-white text-[#2C1810] hover:bg-stone-100 rounded-lg px-10 py-5 text-sm font-medium tracking-wide transition-transform hover:scale-[1.02]">
-            <a href={`${APP_URL}/onboarding/register`}>Create your account →</a>
+            <a href={getCognitoSignupUrl()}>Create your account →</a>
           </Button>
         </div>
       </section>

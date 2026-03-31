@@ -8,7 +8,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { OnboardingLayout } from '@/components/OnboardingLayout';
-import { listProperties, updateMyProperty } from '@/lib/api';
+import { listProperties, updateMyProperty, submitWaitlistEntry } from '@/lib/api';
 import { useAuth } from '@/providers/AuthProvider';
 import type { PropertyListItem } from '@bloom/shared';
 
@@ -36,6 +36,12 @@ export function PropertyPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
+
+  // Waitlist state
+  const [showWaitlistForm, setShowWaitlistForm] = useState(false);
+  const [waitlistSuccess, setWaitlistSuccess] = useState(false);
+  const [buildingName, setBuildingName] = useState('');
+  const [buildingAddress, setBuildingAddress] = useState('');
 
   // Get selected property details
   const selectedProperty = useMemo(() => {
@@ -127,6 +133,34 @@ export function PropertyPage() {
       setIsSubmitting(false);
     }
   };
+
+  const handleWaitlistSubmit = async () => {
+    if (!buildingName.trim() || !buildingAddress.trim()) {
+      setError('Please fill in both building name and address');
+      return;
+    }
+    setIsSubmitting(true);
+    setError('');
+    try {
+      await submitWaitlistEntry({
+        building_name: buildingName.trim(),
+        building_address: buildingAddress.trim(),
+      });
+      setWaitlistSuccess(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to submit waitlist entry');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleBackToList = () => {
+    setShowWaitlistForm(false);
+    setWaitlistSuccess(false);
+    setBuildingName('');
+    setBuildingAddress('');
+    setError('');
+  };
   
   if (authLoading || isLoading) {
     return (
@@ -138,6 +172,126 @@ export function PropertyPage() {
             transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
           />
         </div>
+      </OnboardingLayout>
+    );
+  }
+
+  // Waitlist confirmation screen
+  if (waitlistSuccess) {
+    return (
+      <OnboardingLayout
+        currentStep={2}
+        title="You're on the list!"
+        subtitle="We'll notify you when your building goes live"
+      >
+        <motion.div
+          className="space-y-6 text-center"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+        >
+          <div className="text-green-500 text-4xl">🌸</div>
+          <p className="text-gray-600">
+            We'll notify you when your building goes live
+          </p>
+          <motion.button
+            onClick={handleBackToList}
+            className="w-full py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            Back to property list
+          </motion.button>
+        </motion.div>
+      </OnboardingLayout>
+    );
+  }
+
+  // Waitlist form
+  if (showWaitlistForm) {
+    return (
+      <OnboardingLayout
+        currentStep={2}
+        title="Tell us about your building"
+        subtitle="We'll work on getting your building on Bloom"
+      >
+        <motion.div
+          className="space-y-6"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
+        >
+          <AnimatePresence mode="wait">
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded overflow-hidden"
+              >
+                {error}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <div>
+            <label htmlFor="buildingName" className="block text-sm font-medium text-gray-700 mb-1">
+              Building name <span className="text-red-500">*</span>
+            </label>
+            <motion.input
+              id="buildingName"
+              type="text"
+              required
+              maxLength={255}
+              value={buildingName}
+              onChange={(e) => setBuildingName(e.target.value)}
+              placeholder="e.g., The Meridian"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
+              whileFocus={{ boxShadow: '0 0 0 3px rgba(34, 197, 94, 0.2)' }}
+            />
+          </div>
+
+          <div>
+            <label htmlFor="buildingAddress" className="block text-sm font-medium text-gray-700 mb-1">
+              Building address <span className="text-red-500">*</span>
+            </label>
+            <motion.input
+              id="buildingAddress"
+              type="text"
+              required
+              maxLength={500}
+              value={buildingAddress}
+              onChange={(e) => setBuildingAddress(e.target.value)}
+              placeholder="e.g., 123 Main St, New York, NY 10001"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
+              whileFocus={{ boxShadow: '0 0 0 3px rgba(34, 197, 94, 0.2)' }}
+            />
+          </div>
+
+          <motion.button
+            onClick={handleWaitlistSubmit}
+            disabled={!buildingName.trim() || !buildingAddress.trim() || isSubmitting}
+            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            whileHover={!isSubmitting && buildingName.trim() && buildingAddress.trim() ? { scale: 1.02 } : {}}
+            whileTap={!isSubmitting && buildingName.trim() && buildingAddress.trim() ? { scale: 0.98 } : {}}
+          >
+            {isSubmitting ? (
+              <motion.span animate={{ opacity: [1, 0.5, 1] }} transition={{ duration: 1.5, repeat: Infinity }}>
+                Submitting...
+              </motion.span>
+            ) : (
+              'Submit'
+            )}
+          </motion.button>
+
+          <motion.button
+            onClick={handleBackToList}
+            className="w-full py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            Back to property list
+          </motion.button>
+        </motion.div>
       </OnboardingLayout>
     );
   }
@@ -230,6 +384,22 @@ export function PropertyPage() {
               ))}
             </motion.ul>
           )}
+        </motion.div>
+
+        {/* My building isn't listed link */}
+        <motion.div
+          className="text-center"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.25 }}
+        >
+          <button
+            type="button"
+            onClick={() => { setShowWaitlistForm(true); setError(''); }}
+            className="text-sm text-green-600 hover:text-green-500 underline"
+          >
+            My building isn't listed
+          </button>
         </motion.div>
 
         {/* Address and Unit fields - shown when property is selected */}

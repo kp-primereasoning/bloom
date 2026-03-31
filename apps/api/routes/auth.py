@@ -19,7 +19,10 @@ from auth.dependencies import get_current_user
 from db.database import get_db
 from db.users import get_user_by_email, get_user_by_role, create_user, get_user_by_id
 from models.user import User, UserRole, UserResponse, SubscriptionStatus
-from schemas.domain import RegisterRequest, RegisterResponse, UserResponseWithOnboarding, MeResponseWithPropertyName
+from schemas.domain import (
+    RegisterRequest, RegisterResponse, UserResponseWithOnboarding, MeResponseWithPropertyName,
+    CognitoCallbackRequest, WaitlistCreateRequest, WaitlistCreateResponse,
+)
 from services import property_service
 
 logger = logging.getLogger(__name__)
@@ -57,6 +60,143 @@ class RefreshResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
     expires_in: int = 3600
+
+
+@router.post("/cognito/callback", response_model=LoginResponse)
+async def cognito_callback(request: CognitoCallbackRequest):
+    """
+    Exchange Cognito authorization code for tokens and provision local user.
+
+    1. Exchanges auth code with Cognito /oauth2/token endpoint
+    2. Decodes ID token to extract email and sub
+    3. Finds or creates local user by email
+    4. Returns access_token + user object
+    """
+    import httpx
+    from jose import jwt as jose_jwt
+
+    if not request.code or not request.code.strip():
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error": {
+                    "code": "MISSING_AUTH_CODE",
+                    "message": "Authorization code is required",
+                    "request_id": str(uuid4()),
+                }
+            },
+        )
+
+    cognito_domain = os.environ.get(
+        "COGNITO_DOMAIN", "bloom-dev.auth.us-east-1.amazoncognito.com"
+    )
+    client_id = os.environ.get("COGNITO_CLIENT_ID", "5j7l03d6avbg43fh0hvvslom2f")
+    redirect_uri = os.environ.get(
+        "COGNITO_REDIRECT_URI", "http://localhost:5173/auth/callback"
+    )
+
+    token_url = f"https://{cognito_domain}/oauth2/token"
+    payload = {
+        "grant_type": "authorization_code",
+        "code": request.code,
+        "client_id": client_id,
+        "redirect_uri": redirect_uri,
+    }
+
+    # Exchange code with Cognito
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            resp = await client.post(
+                token_url,
+                data=payload,
+                headers={"Content-Type": "application/x-www-form-urlencoded"},
+            )
+    except httpx.RequestError:
+        raise HTTPException(
+            status_code=502,
+            detail={
+                "error": {
+                    "code": "COGNITO_UNAVAILABLE",
+                    "message": "Authentication service temporarily unavailable",
+                    "request_id": str(uuid4()),
+                }
+            },
+        )
+
+    if resp.status_code != 200:
+        logger.warning(f"Cognito token exchange failed: {resp.status_code} {resp.text}")
+        raise HTTPException(
+            status_code=401,
+            detail={
+                "error": {
+                    "code": "INVALID_AUTH_CODE",
+                    "message": "Authorization code is invalid or expired",
+                    "request_id": str(uuid4()),
+                }
+            },
+        )
+
+    tokens = resp.json()
+    id_token = tokens.get("id_token")
+    if not id_token:
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error": {
+                    "code": "INVALID_ID_TOKEN",
+                    "message": "Failed to extract user information from token",
+                    "request_id": str(uuid4()),
+                }
+            },
+        )
+
+    # Decode ID token (unverified — Cognito already validated it)
+    try:
+        claims = jose_jwt.get_unverified_claims(id_token)
+        email = claims.get("email")
+        sub = claims.get("sub")
+        if not email or not sub:
+            raise ValueError("Missing email or sub claim")
+    except Exception:
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error": {
+                    "code": "INVALID_ID_TOKEN",
+                    "message": "Failed to extract user information from token",
+                    "request_id": str(uuid4()),
+                }
+            },
+        )
+
+    # Find or create local user
+    email = email.lower()
+    user = await get_user_by_email(email)
+    if not user:
+        hashed_password = auth_service.hash_password(str(uuid4()))
+        user = User(
+            id=UUID(sub),
+            email=email,
+            hashed_password=hashed_password,
+            role=UserRole.CUSTOMER,
+            subscription_status=SubscriptionStatus.CREATED,
+            created_at=datetime.now(timezone.utc),
+        )
+        await create_user(user)
+
+    access_token = auth_service.create_access_token(user)
+
+    return LoginResponse(
+        access_token=access_token,
+        user=UserResponseWithOnboarding(
+            id=user.id,
+            email=user.email,
+            role=user.role,
+            property_id=user.property_id,
+            subscription_status=user.subscription_status if user.role == UserRole.CUSTOMER else None,
+            created_at=user.created_at,
+        ),
+    )
 
 
 @router.post("/register", response_model=RegisterResponse, status_code=201)
@@ -396,6 +536,32 @@ async def get_me(
         subscription_status=user.subscription_status if user.role == UserRole.CUSTOMER else None,
         created_at=user.created_at
     )
+
+
+@router.post("/waitlist", response_model=WaitlistCreateResponse, status_code=201)
+async def create_waitlist_entry(
+    request: WaitlistCreateRequest,
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Submit a waitlist entry for an unlisted building.
+
+    Requires authentication. Users may submit multiple entries.
+    """
+    from models.waitlist import WaitlistEntry, WaitlistStatus
+
+    entry = WaitlistEntry(
+        user_id=UUID(current_user["id"]),
+        building_name=request.building_name,
+        building_address=request.building_address,
+        status=WaitlistStatus.PENDING.value,
+    )
+    db.add(entry)
+    db.commit()
+    db.refresh(entry)
+
+    return WaitlistCreateResponse(id=entry.id)
 
 
 # Dev-only endpoint for role switching

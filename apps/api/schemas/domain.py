@@ -346,3 +346,48 @@ class UpdateDeliveryStatusRequest(BaseModel):
         ...,
         description="New delivery status (DELIVERED or MISSED only)"
     )
+
+
+# =============================================================================
+# Cognito Callback Schemas
+# =============================================================================
+
+class CognitoCallbackRequest(BaseModel):
+    """Request body for POST /auth/cognito/callback."""
+    code: str = Field(..., description="Authorization code from Cognito redirect")
+
+
+# =============================================================================
+# Waitlist Schemas
+# =============================================================================
+
+class WaitlistCreateRequest(BaseModel):
+    """Request body for POST /auth/waitlist."""
+    building_name: str = Field(..., min_length=1, max_length=255, description="Building name")
+    building_address: str = Field(..., min_length=1, max_length=500, description="Building address")
+
+
+class WaitlistCreateResponse(BaseModel):
+    """Response for POST /auth/waitlist."""
+    id: UUID
+    message: str = "We'll notify you when your building goes live"
+
+
+class WaitlistEntryResponse(BaseModel):
+    """Single waitlist entry in admin list."""
+    id: UUID
+    user_email: str
+    building_name: str
+    building_address: str
+    status: str
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class WaitlistListResponse(BaseModel):
+    """Paginated response for GET /admin/waitlist."""
+    entries: list[WaitlistEntryResponse]
+    total: int
+    page: int
+    per_page: int

@@ -4,6 +4,7 @@ import Link from "next/link"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Menu, X, Leaf } from "lucide-react"
+import { getCognitoSignupUrl } from "@/lib/cognito"
 
 const NAV_LINKS = [
   { label: "HOME",       href: "/" },
@@ -43,7 +44,7 @@ export function Navigation() {
           <div className="hidden md:block ml-auto">
             <Button asChild
               className="bg-bloom-dark hover:bg-stone-800 text-white rounded-full px-6 py-2.5 text-sm font-medium uppercase tracking-wide transition-transform hover:scale-[1.02]">
-              <a href="/register">Register</a>
+              <a href={getCognitoSignupUrl()}>Register</a>
             </Button>
           </div>
 
@@ -73,7 +74,7 @@ export function Navigation() {
             ))}
             <div className="pt-3 px-3">
               <Button asChild className="w-full bg-bloom-sage text-white rounded-full text-sm font-medium">
-                <a href="/register" onClick={() => setIsOpen(false)}>Register</a>
+                <a href={getCognitoSignupUrl()} onClick={() => setIsOpen(false)}>Register</a>
               </Button>
             </div>
           </div>

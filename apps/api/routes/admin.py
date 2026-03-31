@@ -25,6 +25,8 @@ from schemas.domain import (
     UserCreate,
     UserUpdate,
     EnrichedUserResponse,
+    WaitlistEntryResponse,
+    WaitlistListResponse,
 )
 from models.user import UserResponse, UserRole, SubscriptionStatus
 from services import property_service, florist_service, assignment_service
@@ -584,4 +586,56 @@ async def delete_user_endpoint(
         property_name=property_name,
         subscription_status=sub_status,
         created_at=archived_user.created_at
+    )
+
+
+# =============================================================================
+# Waitlist Endpoints
+# =============================================================================
+
+@router.get("/waitlist", response_model=WaitlistListResponse)
+async def list_waitlist(
+    page: int = 1,
+    per_page: int = 20,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(require_role(["ADMIN"])),
+):
+    """
+    List waitlist entries with pagination (ADMIN only).
+
+    Returns entries ordered by created_at DESC with user email included.
+    """
+    from sqlalchemy import func
+    from models.waitlist import WaitlistEntry
+    from models.user import User
+
+    total = db.query(func.count(WaitlistEntry.id)).scalar()
+
+    offset = (page - 1) * per_page
+    rows = (
+        db.query(WaitlistEntry, User.email)
+        .join(User, WaitlistEntry.user_id == User.id)
+        .order_by(WaitlistEntry.created_at.desc())
+        .offset(offset)
+        .limit(per_page)
+        .all()
+    )
+
+    entries = [
+        WaitlistEntryResponse(
+            id=entry.id,
+            user_email=email,
+            building_name=entry.building_name,
+            building_address=entry.building_address,
+            status=entry.status,
+            created_at=entry.created_at,
+        )
+        for entry, email in rows
+    ]
+
+    return WaitlistListResponse(
+        entries=entries,
+        total=total,
+        page=page,
+        per_page=per_page,
     )

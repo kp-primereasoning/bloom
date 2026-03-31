@@ -6,6 +6,7 @@ import { UserRole } from '@bloom/shared';
 
 // Auth pages
 import { LoginPage } from '@/pages/LoginPage';
+import { CallbackPage } from '@/pages/CallbackPage';
 import { UnauthorizedPage } from '@/pages/UnauthorizedPage';
 
 // Onboarding pages
@@ -54,6 +55,11 @@ export const router = createBrowserRouter([
   {
     path: '/unauthorized',
     element: <UnauthorizedPage />,
+  },
+  // Cognito OAuth callback
+  {
+    path: '/auth/callback',
+    element: <CallbackPage />,
   },
   // Onboarding routes (with smart guard)
   {
