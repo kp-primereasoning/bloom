@@ -25,7 +25,9 @@ async def get_current_user_cognito(
     """
     FastAPI dependency to extract and validate current user from Cognito JWT.
     
-    Validates the token against Cognito JWKS and extracts user claims.
+    Validates the token against Cognito JWKS first. If that fails, falls back
+    to local JWT validation (needed because the Cognito OAuth callback returns
+    a locally-signed JWT with user claims from the database).
     
     Returns:
         User dict with id (sub), email, and role
@@ -36,45 +38,42 @@ async def get_current_user_cognito(
     """
     request_id = str(uuid4())
     
-    cognito_client = get_cognito_client()
-    if cognito_client is None:
-        logger.error("Cognito client not available")
-        raise HTTPException(
-            status_code=503,
-            detail={
-                "error": {
-                    "code": "SERVICE_UNAVAILABLE",
-                    "message": "Authentication service not available",
-                    "request_id": request_id
-                }
-            }
-        )
-    
     token = credentials.credentials
     
-    # Validate token against Cognito JWKS
-    claims = cognito_client.validate_token(token)
-    
-    if claims is None:
-        raise HTTPException(
-            status_code=401,
-            detail={
-                "error": {
-                    "code": "INVALID_TOKEN",
-                    "message": "Invalid or expired token",
-                    "request_id": request_id
-                }
+    # Try Cognito JWKS validation first
+    cognito_client = get_cognito_client()
+    if cognito_client is not None:
+        claims = cognito_client.validate_token(token)
+        if claims is not None:
+            return {
+                "id": claims.get("sub"),
+                "email": claims.get("email"),
+                "role": claims.get("custom:role", "CUSTOMER"),
             }
-        )
     
-    # Extract user info from claims
-    # Cognito tokens have 'sub' as the user ID
-    # Custom attributes are prefixed with 'custom:'
-    return {
-        "id": claims.get("sub"),
-        "email": claims.get("email"),
-        "role": claims.get("custom:role", "RESIDENT"),
-    }
+    # Fall back to local JWT validation (for tokens issued by /auth/cognito/callback)
+    try:
+        from auth.service import auth_service
+        from jose import JWTError
+        payload = auth_service.verify_token(token)
+        return {
+            "id": payload["sub"],
+            "email": payload["email"],
+            "role": payload["role"],
+        }
+    except Exception:
+        pass
+    
+    raise HTTPException(
+        status_code=401,
+        detail={
+            "error": {
+                "code": "INVALID_TOKEN",
+                "message": "Invalid or expired token",
+                "request_id": request_id
+            }
+        }
+    )
 
 
 async def get_optional_user_cognito(
