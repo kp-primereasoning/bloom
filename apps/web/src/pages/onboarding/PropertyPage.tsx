@@ -47,7 +47,8 @@ export function PropertyPage() {
     if (authLoading) return;
     if (!isAuthenticated) { navigate('/onboarding/register'); return; }
     if (user?.role !== 'CUSTOMER') {
-      navigate({ ADMIN: '/admin', PROPERTY_MANAGER: '/pm', FLORIST: '/florist' }[user?.role || ''] || '/');
+      const landingPages: Record<string, string> = { ADMIN: '/admin', PROPERTY_MANAGER: '/pm', FLORIST: '/florist' };
+      navigate(landingPages[user?.role || ''] || '/');
       return;
     }
     if (user?.property_id && user?.subscription_status !== 'CREATED') navigate('/customer');
