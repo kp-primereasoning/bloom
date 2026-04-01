@@ -1,14 +1,12 @@
-import { useNavigate } from 'react-router-dom';
 import { RoleSwitcher } from './RoleSwitcher';
 import { useAuth } from '@/providers/AuthProvider';
 
 export function TopBar() {
   const { user, logout } = useAuth();
-  const navigate = useNavigate();
 
   const handleLogout = () => {
     logout();
-    navigate('/login', { replace: true });
+    window.location.href = 'https://blooms.now';
   };
 
   return (
