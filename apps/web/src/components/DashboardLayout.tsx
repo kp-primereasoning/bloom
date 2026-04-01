@@ -18,9 +18,9 @@ export function DashboardLayout() {
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
-      navigate('/login', { replace: true });
+      window.location.href = 'https://blooms.now';
     }
-  }, [isLoading, isAuthenticated, navigate]);
+  }, [isLoading, isAuthenticated]);
 
   if (isLoading) return <LoadingSpinner />;
   if (!isAuthenticated || !user) return null;
