@@ -1,6 +1,22 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&display=swap');
 
-/* Base styles */
+@theme {
+  --color-bloom-cream: #FFFBF7;
+  --color-bloom-dark: #2C1810;
+  --color-bloom-sage: #8FA698;
+  --color-bloom-sage-light: #8FA69820;
+  --color-bloom-rose: #E8A0A0;
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-serif: 'Playfair Display', Georgia, serif;
+}
+
 body {
-  @apply bg-gray-50 text-gray-900 antialiased;
+  @apply bg-bloom-cream text-bloom-dark antialiased font-sans;
+  font-weight: 300;
+}
+
+.input-field {
+  @apply w-full px-4 py-3 border border-stone-200 rounded-lg text-sm text-bloom-dark placeholder-stone-400 transition-all;
+  @apply focus:outline-none focus:border-bloom-sage focus:ring-1 focus:ring-bloom-sage/30;
 }

@@ -1,6 +1,5 @@
 /**
  * Registration page — redirects to Cognito Hosted UI.
- * The custom email/password form has been replaced with a Cognito redirect.
  */
 
 import { useEffect } from 'react';
@@ -27,16 +26,9 @@ export function RegisterPage() {
 
   useEffect(() => {
     if (isLoading) return;
-
-    // If already authenticated, route based on state
     if (isAuthenticated && user) {
       if (user.role !== 'CUSTOMER') {
-        const landingPages: Record<string, string> = {
-          ADMIN: '/admin',
-          PROPERTY_MANAGER: '/pm',
-          FLORIST: '/florist',
-        };
-        navigate(landingPages[user.role] || '/');
+        navigate({ ADMIN: '/admin', PROPERTY_MANAGER: '/pm', FLORIST: '/florist' }[user.role] || '/');
       } else if (!user.property_id) {
         navigate('/onboarding/property');
       } else if (user.subscription_status === 'CREATED') {
@@ -46,24 +38,15 @@ export function RegisterPage() {
       }
       return;
     }
-
-    // Not authenticated — redirect to Cognito signup
     window.location.href = getCognitoSignupUrl();
   }, [isAuthenticated, user, isLoading, navigate]);
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center">
-      <motion.div
-        className="text-center space-y-4"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-      >
-        <motion.div
-          className="mx-auto rounded-full h-10 w-10 border-b-2 border-green-600"
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-        />
-        <p className="text-gray-600">Redirecting to sign up...</p>
+    <div className="min-h-screen bg-bloom-cream flex flex-col items-center justify-center">
+      <motion.div className="text-center space-y-4" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+        <motion.div className="mx-auto rounded-full h-8 w-8 border-b-2 border-bloom-sage"
+          animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }} />
+        <p className="text-stone-500 text-[0.9375rem] font-light">Redirecting to sign up...</p>
       </motion.div>
     </div>
   );

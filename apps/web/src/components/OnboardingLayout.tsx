@@ -1,6 +1,6 @@
 /**
- * Animated layout wrapper for onboarding pages.
- * Provides consistent styling, progress header, and page transitions.
+ * Layout wrapper for onboarding pages.
+ * Matches the landing page's warm, premium aesthetic.
  */
 
 import type { ReactNode } from 'react';
@@ -14,50 +14,6 @@ interface OnboardingLayoutProps {
   subtitle?: string;
 }
 
-// Animation variants for page transitions
-const pageVariants = {
-  initial: { 
-    opacity: 0, 
-    y: 20,
-    scale: 0.98
-  },
-  animate: { 
-    opacity: 1, 
-    y: 0,
-    scale: 1,
-    transition: {
-      duration: 0.4,
-      ease: [0.25, 0.46, 0.45, 0.94] as const
-    }
-  },
-  exit: { 
-    opacity: 0, 
-    y: -20,
-    scale: 0.98,
-    transition: {
-      duration: 0.3
-    }
-  }
-};
-
-const cardVariants = {
-  initial: { 
-    opacity: 0, 
-    y: 30,
-    boxShadow: '0 0 0 rgba(0, 0, 0, 0)'
-  },
-  animate: { 
-    opacity: 1, 
-    y: 0,
-    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-    transition: {
-      duration: 0.5,
-      delay: 0.2,
-      ease: [0.25, 0.46, 0.45, 0.94] as const
-    }
-  }
-};
-
 export function OnboardingLayout({
   children,
   currentStep,
@@ -65,49 +21,46 @@ export function OnboardingLayout({
   subtitle,
 }: OnboardingLayoutProps) {
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        {/* Animated Logo */}
-        <motion.div 
-          className="text-center mb-6"
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ 
-            type: 'spring', 
-            stiffness: 200, 
-            damping: 15 
-          }}
+    <div className="min-h-screen bg-bloom-cream flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <div className="sm:mx-auto sm:w-full sm:max-w-lg">
+        {/* Logo */}
+        <motion.div
+          className="text-center mb-8"
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
         >
-          <motion.h1 
-            className="text-3xl font-bold text-green-600"
-            whileHover={{ scale: 1.05 }}
-            transition={{ type: 'spring', stiffness: 400 }}
-          >
-            🌸 Bloom
-          </motion.h1>
+          <a href="https://blooms.now" className="inline-flex items-center gap-2 group">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-bloom-sage transition-transform group-hover:rotate-12" aria-hidden="true">
+              <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z" />
+              <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12" />
+            </svg>
+            <span className="font-serif text-xl text-bloom-dark tracking-tight">Bloom</span>
+          </a>
         </motion.div>
-        
-        {/* Progress indicator */}
+
+        {/* Progress */}
         <OnboardingProgress currentStep={currentStep} />
-        
-        {/* Animated Title */}
+
+        {/* Title */}
         <AnimatePresence mode="wait">
           <motion.div
             key={title}
-            variants={pageVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.3 }}
+            className="mt-6"
           >
-            <h2 className="text-center text-2xl font-bold text-gray-900">
+            <h2 className="text-center font-serif text-2xl md:text-3xl text-bloom-dark font-light tracking-tight">
               {title}
             </h2>
             {subtitle && (
-              <motion.p 
-                className="mt-2 text-center text-sm text-gray-600"
+              <motion.p
+                className="mt-2 text-center text-[0.9375rem] text-stone-500 font-light"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ delay: 0.2 }}
+                transition={{ delay: 0.15 }}
               >
                 {subtitle}
               </motion.p>
@@ -116,20 +69,20 @@ export function OnboardingLayout({
         </AnimatePresence>
       </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <motion.div 
-          className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10"
-          variants={cardVariants}
-          initial="initial"
-          animate="animate"
+      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-lg">
+        <motion.div
+          className="bg-white py-8 px-6 sm:px-10 rounded-xl border border-stone-200/60"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.15 }}
         >
           <AnimatePresence mode="wait">
             <motion.div
               key={currentStep}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.3 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
             >
               {children}
             </motion.div>

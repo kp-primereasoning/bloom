@@ -1,7 +1,6 @@
 /**
  * Cognito OAuth callback page.
- * Extracts the authorization code from the URL, exchanges it for tokens,
- * and routes the user based on their account state.
+ * Exchanges the authorization code for tokens and routes the user.
  */
 
 import { useEffect, useState } from 'react';
@@ -31,10 +30,7 @@ export function CallbackPage() {
 
   useEffect(() => {
     const code = searchParams.get('code');
-    if (!code) {
-      setError('Missing authorization code');
-      return;
-    }
+    if (!code) { setError('Missing authorization code'); return; }
 
     let cancelled = false;
 
@@ -42,18 +38,12 @@ export function CallbackPage() {
       try {
         const response = await exchangeAuthCode(authCode);
         if (cancelled) return;
-
         setAuthToken(response.access_token);
         setUser(response.user);
-
         const user = response.user;
-        if (!user.property_id) {
-          navigate('/onboarding/property', { replace: true });
-        } else if (user.subscription_status === 'CREATED') {
-          navigate('/onboarding/subscription', { replace: true });
-        } else {
-          navigate('/customer', { replace: true });
-        }
+        if (!user.property_id) navigate('/onboarding/property', { replace: true });
+        else if (user.subscription_status === 'CREATED') navigate('/onboarding/subscription', { replace: true });
+        else navigate('/customer', { replace: true });
       } catch (err) {
         if (cancelled) return;
         setError(err instanceof Error ? err.message : 'Authentication failed');
@@ -66,35 +56,27 @@ export function CallbackPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4">
-        <div className="bg-white p-8 rounded-lg shadow-md max-w-md w-full text-center space-y-4">
-          <div className="text-red-500 text-4xl">⚠️</div>
-          <h2 className="text-xl font-bold text-gray-900">Authentication failed</h2>
-          <p className="text-gray-600">{error}</p>
-          <a
-            href={getCognitoSignupUrl()}
-            className="inline-block w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-          >
+      <div className="min-h-screen bg-bloom-cream flex flex-col items-center justify-center px-4">
+        <motion.div className="bg-white p-10 rounded-xl border border-stone-200/60 max-w-md w-full text-center space-y-5"
+          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+          <p className="font-serif text-3xl">⚠️</p>
+          <h2 className="font-serif text-xl text-bloom-dark">Authentication failed</h2>
+          <p className="text-stone-500 text-[0.9375rem] font-light">{error}</p>
+          <a href={getCognitoSignupUrl()}
+            className="inline-block w-full py-3 bg-bloom-dark hover:bg-stone-900 text-white rounded-lg text-sm font-medium tracking-wide transition-colors">
             Try again
           </a>
-        </div>
+        </motion.div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center">
-      <motion.div
-        className="text-center space-y-4"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-      >
-        <motion.div
-          className="mx-auto rounded-full h-10 w-10 border-b-2 border-green-600"
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-        />
-        <p className="text-gray-600">Signing you in...</p>
+    <div className="min-h-screen bg-bloom-cream flex flex-col items-center justify-center">
+      <motion.div className="text-center space-y-4" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+        <motion.div className="mx-auto rounded-full h-8 w-8 border-b-2 border-bloom-sage"
+          animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }} />
+        <p className="text-stone-500 text-[0.9375rem] font-light">Signing you in...</p>
       </motion.div>
     </div>
   );
