@@ -10,35 +10,25 @@ export function DashboardLayout() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
 
-  // Redirect to default path on initial load if at root
-  // Must be before any early returns to satisfy React hooks rules
   useEffect(() => {
     if (isAuthenticated && user && window.location.pathname === '/') {
       navigate(getDefaultPath(user.role));
     }
   }, [isAuthenticated, user, navigate]);
 
-  // Redirect to login if not authenticated (after hooks)
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       navigate('/login', { replace: true });
     }
   }, [isLoading, isAuthenticated, navigate]);
 
-  // Show loading while checking auth
-  if (isLoading) {
-    return <LoadingSpinner />;
-  }
-
-  // Show nothing while redirecting to login
-  if (!isAuthenticated || !user) {
-    return null;
-  }
+  if (isLoading) return <LoadingSpinner />;
+  if (!isAuthenticated || !user) return null;
 
   const config = getRoleConfig(user.role);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-bloom-cream">
       <TopBar />
       <div className="flex">
         <Sidebar navItems={config.navItems} />

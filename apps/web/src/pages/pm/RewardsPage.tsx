@@ -37,7 +37,7 @@ export function RewardsPage() {
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
           <div className="flex justify-center py-12">
             <div className="flex flex-col items-center gap-4">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600" />
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-bloom-sage" />
               <p className="text-gray-500 text-sm">Loading rewards...</p>
             </div>
           </div>
@@ -150,7 +150,7 @@ export function RewardsPage() {
                 <ul className="space-y-2 text-sm text-gray-600">
                   {tierDef.benefits.map((benefit) => (
                     <li key={benefit} className="flex items-center gap-2">
-                      <svg className="h-4 w-4 text-green-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg className="h-4 w-4 text-bloom-sage flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                       </svg>
                       {benefit}

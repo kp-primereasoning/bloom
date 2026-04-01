@@ -61,7 +61,7 @@ export function AvailabilityPage() {
     return (
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
         <div className="flex justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600" />
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-bloom-sage" />
         </div>
       </div>
     );
@@ -100,8 +100,8 @@ export function AvailabilityPage() {
                   role="switch"
                   aria-checked={day.is_available}
                   aria-label={`Toggle ${DAY_NAMES[day.day_of_week]}`}
-                  className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
-                    day.is_available ? 'bg-indigo-600' : 'bg-gray-200'
+                  className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus:outline-none focus:ring-2 focus:ring-bloom-sage focus:ring-offset-2 ${
+                    day.is_available ? 'bg-bloom-dark' : 'bg-gray-200'
                   }`}
                 >
                   <span
@@ -127,7 +127,7 @@ export function AvailabilityPage() {
                     max="500"
                     value={day.max_deliveries_per_day}
                     onChange={(e) => handleCapChange(index, parseInt(e.target.value, 10) || 0)}
-                    className="w-20 rounded-md border border-gray-300 px-2 py-1 text-sm text-center focus:border-indigo-500 focus:ring-indigo-500"
+                    className="w-20 rounded-md border border-gray-300 px-2 py-1 text-sm text-center focus:border-bloom-sage focus:ring-bloom-sage"
                   />
                 </div>
               ) : (
@@ -160,7 +160,7 @@ export function AvailabilityPage() {
       {/* Actions */}
       <div className="flex items-center justify-end gap-4">
         {saved && (
-          <span className="text-green-600 text-sm font-medium flex items-center gap-1">
+          <span className="text-bloom-sage text-sm font-medium flex items-center gap-1">
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
@@ -170,7 +170,7 @@ export function AvailabilityPage() {
         <button
           onClick={handleSave}
           disabled={saving}
-          className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white font-medium rounded-lg transition-colors"
+          className="px-6 py-2 bg-bloom-dark hover:bg-stone-900 disabled:bg-indigo-400 text-white font-medium rounded-lg transition-colors"
         >
           {saving ? 'Saving...' : 'Save Changes'}
         </button>

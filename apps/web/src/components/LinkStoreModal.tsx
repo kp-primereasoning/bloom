@@ -74,19 +74,19 @@ export function LinkStoreModal({ isOpen, onClose, onComplete }: LinkStoreModalPr
               will be automatically imported and kept in sync.
             </p>
 
-            <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
+            <div className="bg-bloom-sage/10 border border-bloom-sage/30 rounded-lg p-4">
               <h3 className="text-sm font-medium text-indigo-900 mb-2">What happens next:</h3>
-              <ul className="text-sm text-indigo-700 space-y-1">
+              <ul className="text-sm text-bloom-dark space-y-1">
                 <li className="flex items-start gap-2">
-                  <span className="text-indigo-500">•</span>
+                  <span className="text-bloom-sage">•</span>
                   You'll be redirected to Shopify to authorize Bloom
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-indigo-500">•</span>
+                  <span className="text-bloom-sage">•</span>
                   Your products will be imported automatically
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-indigo-500">•</span>
+                  <span className="text-bloom-sage">•</span>
                   Changes in Shopify will sync to Bloom
                 </li>
               </ul>
@@ -111,7 +111,7 @@ export function LinkStoreModal({ isOpen, onClose, onComplete }: LinkStoreModalPr
             <button
               type="button"
               onClick={handleConnect}
-              className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md hover:bg-indigo-700"
+              className="px-4 py-2 text-sm font-medium text-white bg-bloom-dark border border-transparent rounded-md hover:bg-stone-900"
               data-testid="connect-shopify-button"
             >
               Connect Shopify Store

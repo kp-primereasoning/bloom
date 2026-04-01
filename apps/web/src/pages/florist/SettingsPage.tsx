@@ -16,7 +16,7 @@ import type { FloristMeResponse, AssignedProperty } from '@bloom/shared';
 function getStatusBadgeColor(status: string): string {
   switch (status) {
     case 'READY':
-      return 'bg-green-100 text-green-800';
+      return 'bg-bloom-sage/15 text-green-800';
     case 'ONBOARDING':
       return 'bg-yellow-100 text-yellow-800';
     case 'ARCHIVED':
@@ -74,7 +74,7 @@ export function SettingsPage() {
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
           <div className="flex justify-center py-12">
             <div className="flex flex-col items-center gap-4">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600" />
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-bloom-sage" />
               <p className="text-gray-500 text-sm">Loading settings...</p>
             </div>
           </div>
@@ -178,8 +178,8 @@ export function SettingsPage() {
             aria-label="Toggle email notifications"
             disabled={notifLoading}
             onClick={handleNotificationToggle}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
-              emailNotificationsEnabled ? 'bg-indigo-600' : 'bg-gray-200'
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-bloom-sage focus:ring-offset-2 ${
+              emailNotificationsEnabled ? 'bg-bloom-dark' : 'bg-gray-200'
             } ${notifLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
           >
             <span

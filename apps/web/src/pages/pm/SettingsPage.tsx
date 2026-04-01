@@ -44,8 +44,8 @@ function ToggleSwitch({ id, checked, onChange, label, description, disabled }: T
         aria-label={`${label}: ${checked ? 'enabled' : 'disabled'}`}
         disabled={disabled}
         onClick={() => onChange(!checked)}
-        className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2 ${
-          checked ? 'bg-indigo-600' : 'bg-gray-200'
+        className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-bloom-sage focus:ring-offset-2 ${
+          checked ? 'bg-bloom-dark' : 'bg-gray-200'
         } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
       >
         <span
@@ -120,7 +120,7 @@ export function SettingsPage() {
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
           <div className="flex justify-center py-12">
             <div className="flex flex-col items-center gap-4">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600" />
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-bloom-sage" />
               <p className="text-gray-500 text-sm">Loading settings...</p>
             </div>
           </div>

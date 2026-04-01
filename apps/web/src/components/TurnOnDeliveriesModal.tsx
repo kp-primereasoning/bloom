@@ -136,7 +136,7 @@ export function TurnOnDeliveriesModal({ isOpen, onClose, onComplete, productsLin
                   type="checkbox"
                   checked={confirmed}
                   onChange={(e) => setConfirmed(e.target.checked)}
-                  className="mt-1 h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                  className="mt-1 h-4 w-4 text-bloom-sage border-gray-300 rounded focus:ring-bloom-sage"
                   data-testid="confirm-checkbox"
                 />
                 <span className="text-sm text-gray-700">

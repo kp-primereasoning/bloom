@@ -110,7 +110,7 @@ export function LinkProductsModal({ isOpen, onClose, onComplete, storeLinked }: 
                 </p>
               </div>
 
-              <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-3">
+              <div className="bg-bloom-sage/10 border border-bloom-sage/30 rounded-lg p-3">
                 <p className="text-sm text-indigo-800">
                   <strong>Note:</strong> Click below to simulate product linking for demo purposes.
                 </p>
@@ -127,7 +127,7 @@ export function LinkProductsModal({ isOpen, onClose, onComplete, storeLinked }: 
                 <button
                   type="button"
                   onClick={handleLinkProducts}
-                  className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md hover:bg-indigo-700"
+                  className="px-4 py-2 text-sm font-medium text-white bg-bloom-dark border border-transparent rounded-md hover:bg-stone-900"
                   data-testid="link-products-button"
                 >
                   Link Products

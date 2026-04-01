@@ -30,7 +30,7 @@ const STATUS_COLORS: Record<string, string> = {
   [PropertyStatus.CREATED]: 'bg-gray-100 text-gray-800',
   [PropertyStatus.PENDING_FLORIST]: 'bg-yellow-100 text-yellow-800',
   [PropertyStatus.PENDING_PM]: 'bg-orange-100 text-orange-800',
-  [PropertyStatus.ACTIVE]: 'bg-green-100 text-green-800',
+  [PropertyStatus.ACTIVE]: 'bg-bloom-sage/15 text-green-800',
 };
 
 const PROPERTY_FIELDS: FieldConfig[] = [
@@ -155,19 +155,19 @@ export function PropertiesPage() {
             <>
               <button
                 onClick={() => setEditModalOpen(true)}
-                className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-bloom-sage"
               >
                 ✏️ Edit Property
               </button>
               <button
                 onClick={() => setAssignFloristModalOpen(true)}
-                className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-bloom-sage"
               >
                 🌸 Assign Florist
               </button>
               <button
                 onClick={() => setAssignPMModalOpen(true)}
-                className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-bloom-sage"
               >
                 👤 Assign PM
               </button>
@@ -175,7 +175,7 @@ export function PropertiesPage() {
           ) : (
             <button
               onClick={() => setAddModalOpen(true)}
-              className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-bloom-dark border border-transparent rounded-md hover:bg-stone-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-bloom-sage"
             >
               ➕ Add Property
             </button>

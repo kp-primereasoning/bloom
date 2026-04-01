@@ -45,7 +45,7 @@ export function sortResidents(
 function getStatusBadge(status: string): { color: string; label: string } {
   switch (status) {
     case 'ACTIVE':
-      return { color: 'bg-green-100 text-green-800', label: 'Active' };
+      return { color: 'bg-bloom-sage/15 text-green-800', label: 'Active' };
     case 'PAUSED':
       return { color: 'bg-yellow-100 text-yellow-800', label: 'Paused' };
     case 'CREATED':
@@ -173,7 +173,7 @@ export function ParticipationPage() {
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
           <div className="flex justify-center py-12">
             <div className="flex flex-col items-center gap-4">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600" />
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-bloom-sage" />
               <p className="text-gray-500 text-sm">Loading residents...</p>
             </div>
           </div>
@@ -252,7 +252,7 @@ export function ParticipationPage() {
         </div>
         <div className="w-full bg-gray-200 rounded-full h-2.5">
           <div
-            className="bg-indigo-600 h-2.5 rounded-full transition-all"
+            className="bg-bloom-dark h-2.5 rounded-full transition-all"
             style={{ width: `${participationRate}%` }}
           />
         </div>
@@ -265,7 +265,7 @@ export function ParticipationPage() {
             onClick={() => setFilter('all')}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
               filter === 'all'
-                ? 'bg-indigo-600 text-white'
+                ? 'bg-bloom-dark text-white'
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
           >
@@ -275,7 +275,7 @@ export function ParticipationPage() {
             onClick={() => setFilter('ACTIVE')}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
               filter === 'ACTIVE'
-                ? 'bg-green-600 text-white'
+                ? 'bg-bloom-dark text-white'
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
           >

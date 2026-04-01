@@ -230,7 +230,7 @@ describe('AdminTable Selection', () => {
     
     const rows = screen.getAllByRole('row');
     // First row is header, second is selected item
-    expect(rows[1]).toHaveClass('bg-indigo-50');
-    expect(rows[2]).not.toHaveClass('bg-indigo-50');
+    expect(rows[1]).toHaveClass('bg-bloom-sage/10');
+    expect(rows[2]).not.toHaveClass('bg-bloom-sage/10');
   });
 });

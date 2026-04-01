@@ -65,7 +65,7 @@ export function HomePage() {
 
   // Status badge colors
   const statusColors: Record<string, string> = {
-    ACTIVE: 'bg-green-100 text-green-800',
+    ACTIVE: 'bg-bloom-sage/15 text-green-800',
     PAUSED: 'bg-yellow-100 text-yellow-800',
     CREATED: 'bg-gray-100 text-gray-800',
   };
@@ -155,7 +155,7 @@ export function HomePage() {
           {!needsProperty && needsActivation && (
             <Link
               to="/onboarding/subscription"
-              className="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700"
+              className="inline-flex items-center px-4 py-2 bg-bloom-dark text-white text-sm font-medium rounded-md hover:bg-stone-900"
             >
               Activate subscription
             </Link>
@@ -175,7 +175,7 @@ export function HomePage() {
             <button
               onClick={handleResumeSubscription}
               disabled={isActionLoading}
-              className="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex items-center px-4 py-2 bg-bloom-dark text-white text-sm font-medium rounded-md hover:bg-stone-900 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isActionLoading ? 'Resuming...' : 'Resume subscription'}
             </button>

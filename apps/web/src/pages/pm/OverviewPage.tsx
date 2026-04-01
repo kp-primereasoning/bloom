@@ -41,7 +41,7 @@ export function OverviewPage() {
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
           <div className="flex justify-center py-12">
             <div className="flex flex-col items-center gap-4">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600" />
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-bloom-sage" />
               <p className="text-gray-500 text-sm">Loading dashboard...</p>
             </div>
           </div>
@@ -110,12 +110,12 @@ export function OverviewPage() {
       </div>
 
       {/* Property Info Card */}
-      <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-lg shadow-sm p-6 text-white">
+      <div className="bg-gradient-to-r from-bloom-dark to-bloom-dark rounded-lg shadow-sm p-6 text-white">
         <div className="flex items-start justify-between">
           <div>
-            <p className="text-indigo-100 text-sm font-medium">Your Property</p>
+            <p className="text-stone-300 text-sm font-medium">Your Property</p>
             <h2 className="text-2xl font-bold mt-1">{stats.property.name}</h2>
-            <p className="text-indigo-100 mt-2">{stats.property.address}</p>
+            <p className="text-stone-300 mt-2">{stats.property.address}</p>
           </div>
           {stats.property.delivery_cadence && (
             <div className="bg-white/20 rounded-lg px-3 py-1">
@@ -147,10 +147,10 @@ export function OverviewPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-500">Active Subscriptions</p>
-              <p className="text-3xl font-bold text-green-600 mt-1">{stats.active_subscriptions}</p>
+              <p className="text-3xl font-bold text-bloom-sage mt-1">{stats.active_subscriptions}</p>
             </div>
-            <div className="p-3 bg-green-100 rounded-full">
-              <svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="p-3 bg-bloom-sage/15 rounded-full">
+              <svg className="h-6 w-6 text-bloom-sage" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
@@ -193,8 +193,8 @@ export function OverviewPage() {
         <h3 className="text-lg font-medium text-gray-900 mb-4">Next Delivery</h3>
         {hasUpcomingDeliveries ? (
           <div className="flex items-center gap-6">
-            <div className="p-4 bg-indigo-50 rounded-lg">
-              <svg className="h-8 w-8 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="p-4 bg-bloom-sage/10 rounded-lg">
+              <svg className="h-8 w-8 text-bloom-sage" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
             </div>
@@ -224,9 +224,9 @@ export function OverviewPage() {
           <h3 className="text-lg font-medium text-gray-900 mb-4">Delivery Summary</h3>
           <p className="text-sm text-gray-500 mb-4">Last 90 days</p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="bg-green-50 rounded-lg p-4 text-center">
-              <p className="text-3xl font-bold text-green-700">{deliverySummary.delivered}</p>
-              <p className="text-sm font-medium text-green-600 mt-1">Delivered</p>
+            <div className="bg-bloom-sage/10 rounded-lg p-4 text-center">
+              <p className="text-3xl font-bold text-bloom-dark">{deliverySummary.delivered}</p>
+              <p className="text-sm font-medium text-bloom-sage mt-1">Delivered</p>
             </div>
             <div className="bg-yellow-50 rounded-lg p-4 text-center">
               <p className="text-3xl font-bold text-yellow-700">{deliverySummary.skipped}</p>
@@ -247,7 +247,7 @@ export function OverviewPage() {
           <div className="flex-1">
             <div className="h-4 bg-gray-200 rounded-full overflow-hidden">
               <div
-                className="h-full bg-green-500 transition-all duration-500"
+                className="h-full bg-bloom-sage transition-all duration-500"
                 style={{ width: `${participationRate}%` }}
               />
             </div>

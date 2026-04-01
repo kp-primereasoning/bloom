@@ -59,7 +59,7 @@ function getStatusDisplayText(status: SubscriptionStatus | null): string {
  * Get status chip color classes
  */
 function getStatusChipColor(status: SubscriptionStatus | null): string {
-  if (status === 'ACTIVE') return 'bg-green-100 text-green-800';
+  if (status === 'ACTIVE') return 'bg-bloom-sage/15 text-green-800';
   if (status === 'PAUSED') return 'bg-yellow-100 text-yellow-800';
   return 'bg-gray-100 text-gray-600';
 }
@@ -70,7 +70,7 @@ function getStatusChipColor(status: SubscriptionStatus | null): string {
 function getDeliveryStatusDisplay(status: string): { text: string; color: string } {
   switch (status) {
     case 'DELIVERED':
-      return { text: 'Delivered', color: 'text-green-600' };
+      return { text: 'Delivered', color: 'text-bloom-sage' };
     case 'SCHEDULED':
       return { text: 'Scheduled', color: 'text-blue-600' };
     case 'SKIPPED':

@@ -166,7 +166,7 @@ export function ProductsPage() {
           </div>
           <button
             onClick={handleAdd}
-            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors flex items-center gap-2"
+            className="px-4 py-2 bg-bloom-dark hover:bg-stone-900 text-white font-medium rounded-lg transition-colors flex items-center gap-2"
           >
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -178,7 +178,7 @@ export function ProductsPage() {
 
       {/* Add/Edit Form */}
       {(isAdding || editingId) && (
-        <div className="bg-white rounded-lg shadow-sm border border-indigo-200 p-6">
+        <div className="bg-white rounded-lg shadow-sm border border-bloom-sage/30 p-6">
           <h3 className="font-medium text-gray-900 mb-4">
             {editingId ? 'Edit Product' : 'Add New Product'}
           </h3>
@@ -193,7 +193,7 @@ export function ProductsPage() {
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder="e.g., Spring Garden Mix"
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:ring-indigo-500"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-bloom-sage focus:ring-bloom-sage"
               />
             </div>
             <div>
@@ -206,7 +206,7 @@ export function ProductsPage() {
                 min="0"
                 value={formData.price}
                 onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:ring-indigo-500"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-bloom-sage focus:ring-bloom-sage"
               />
             </div>
             <div className="md:col-span-2">
@@ -219,7 +219,7 @@ export function ProductsPage() {
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 placeholder="Brief description of the arrangement"
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:ring-indigo-500"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-bloom-sage focus:ring-bloom-sage"
               />
             </div>
             <div>
@@ -235,7 +235,7 @@ export function ProductsPage() {
                     tier: e.target.value as 'ESSENTIAL' | 'SIGNATURE' | 'STATEMENT',
                   })
                 }
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:ring-indigo-500"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-bloom-sage focus:ring-bloom-sage"
               >
                 <option value="ESSENTIAL">Essential</option>
                 <option value="SIGNATURE">Signature</option>
@@ -253,7 +253,7 @@ export function ProductsPage() {
             <button
               onClick={handleSave}
               disabled={!formData.name.trim()}
-              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-300 text-white font-medium rounded-lg transition-colors"
+              className="px-4 py-2 bg-bloom-dark hover:bg-stone-900 disabled:bg-gray-300 text-white font-medium rounded-lg transition-colors"
             >
               {editingId ? 'Save Changes' : 'Add Product'}
             </button>
@@ -321,7 +321,7 @@ export function ProductsPage() {
                     setFormData({ name: '', description: '', tier, price: 0 });
                     setIsAdding(true);
                   }}
-                  className="mt-2 text-indigo-600 hover:text-indigo-700 text-sm font-medium"
+                  className="mt-2 text-bloom-sage hover:text-bloom-dark text-sm font-medium"
                 >
                   Add your first {config.label} product
                 </button>

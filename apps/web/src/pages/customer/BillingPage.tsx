@@ -43,7 +43,7 @@ function formatTimestamp(ts: number | null): string {
 
 function statusBadge(status: string) {
   const colors: Record<string, string> = {
-    paid: 'bg-green-100 text-green-800',
+    paid: 'bg-bloom-sage/15 text-green-800',
     open: 'bg-yellow-100 text-yellow-800',
     draft: 'bg-gray-100 text-gray-600',
     void: 'bg-red-100 text-red-700',

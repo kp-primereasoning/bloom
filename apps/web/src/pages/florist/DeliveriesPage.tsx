@@ -99,7 +99,7 @@ export function DeliveriesPage() {
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
         <div className="flex justify-center py-12">
           <div className="flex flex-col items-center gap-4">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600" />
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-bloom-sage" />
             <p className="text-gray-500 text-sm">Loading deliveries...</p>
           </div>
         </div>
@@ -191,7 +191,7 @@ export function DeliveriesPage() {
                       <button
                         onClick={() => handleMarkDelivered(delivery.id)}
                         disabled={actionLoading === delivery.id}
-                        className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-white bg-bloom-dark hover:bg-stone-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-bloom-sage disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {actionLoading === delivery.id ? (
                           <span className="flex items-center gap-1">
@@ -220,7 +220,7 @@ export function DeliveriesPage() {
                       <button
                         onClick={() => handleMarkMissed(delivery.id)}
                         disabled={actionLoading === delivery.id}
-                        className="inline-flex items-center px-3 py-1.5 border border-gray-300 text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="inline-flex items-center px-3 py-1.5 border border-gray-300 text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-bloom-sage disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         Mark Missed
                       </button>

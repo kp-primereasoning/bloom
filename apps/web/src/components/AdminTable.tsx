@@ -92,7 +92,7 @@ export function AdminTable<T>({
             return (
               <tr 
                 key={rowId} 
-                className={`${isSelected ? 'bg-indigo-50' : 'hover:bg-gray-50'}`}
+                className={`${isSelected ? 'bg-bloom-sage/10' : 'hover:bg-gray-50'}`}
               >
                 {selectable && (
                   <td className="px-2 py-4 whitespace-nowrap w-8">
@@ -100,7 +100,7 @@ export function AdminTable<T>({
                       type="checkbox"
                       checked={isSelected}
                       onChange={() => handleRowSelect(rowId)}
-                      className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded cursor-pointer"
+                      className="h-4 w-4 text-bloom-sage focus:ring-bloom-sage border-gray-300 rounded cursor-pointer"
                       aria-label={`Select row ${rowId}`}
                     />
                   </td>

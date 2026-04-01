@@ -62,7 +62,7 @@ export function FloristsPage() {
       render: (value) => (
         <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
           value === 'READY' 
-            ? 'bg-green-100 text-green-800' 
+            ? 'bg-bloom-sage/15 text-green-800' 
             : 'bg-yellow-100 text-yellow-800'
         }`}>
           {value as string}
@@ -82,7 +82,7 @@ export function FloristsPage() {
         <h1 className="text-2xl font-semibold text-gray-900">Florists</h1>
         <button
           onClick={() => setModalOpen(true)}
-          className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+          className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-bloom-dark border border-transparent rounded-md hover:bg-stone-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-bloom-sage"
         >
           ➕ Add Florist
         </button>

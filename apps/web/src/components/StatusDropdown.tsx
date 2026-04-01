@@ -43,7 +43,7 @@ export function StatusDropdown({
         disabled={disabled || updating}
         className={`
           px-2 py-1 text-sm border rounded-md
-          focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500
+          focus:outline-none focus:ring-1 focus:ring-bloom-sage focus:border-bloom-sage
           ${updating ? 'opacity-50 cursor-wait' : ''}
           ${disabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-white cursor-pointer'}
         `}

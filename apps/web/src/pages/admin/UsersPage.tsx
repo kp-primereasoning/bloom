@@ -153,7 +153,7 @@ export function UsersPage() {
       case 'PROPERTY_MANAGER':
         return 'bg-blue-100 text-blue-800';
       case 'FLORIST':
-        return 'bg-green-100 text-green-800';
+        return 'bg-bloom-sage/15 text-green-800';
       case 'CUSTOMER':
       default:
         return 'bg-gray-100 text-gray-800';
@@ -163,7 +163,7 @@ export function UsersPage() {
   const getSubscriptionBadgeColor = (status: string | null) => {
     switch (status) {
       case 'ACTIVE':
-        return 'bg-green-100 text-green-800';
+        return 'bg-bloom-sage/15 text-green-800';
       case 'PAUSED':
         return 'bg-yellow-100 text-yellow-800';
       case 'CREATED':
@@ -236,7 +236,7 @@ export function UsersPage() {
         <h1 className="text-2xl font-semibold text-gray-900">Users</h1>
         <button
           onClick={() => setModalOpen(true)}
-          className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+          className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-bloom-dark border border-transparent rounded-md hover:bg-stone-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-bloom-sage"
         >
           ➕ Add User
         </button>

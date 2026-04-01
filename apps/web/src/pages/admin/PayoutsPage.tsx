@@ -90,8 +90,8 @@ export function PayoutsPage() {
         </div>
       )}
       {success && (
-        <div className="bg-green-50 border border-green-200 rounded-md p-4">
-          <p className="text-sm text-green-700">{success}</p>
+        <div className="bg-bloom-sage/10 border border-bloom-sage/30 rounded-md p-4">
+          <p className="text-sm text-bloom-dark">{success}</p>
         </div>
       )}
 
@@ -158,7 +158,7 @@ export function PayoutsPage() {
                     <td className="py-3 text-gray-600">{formatDate(p.period_start)} – {formatDate(p.period_end)}</td>
                     <td className="py-3">
                       <span className={`inline-flex px-2 py-0.5 text-xs font-medium rounded-full ${
-                        p.status === 'COMPLETED' ? 'bg-green-100 text-green-800' :
+                        p.status === 'COMPLETED' ? 'bg-bloom-sage/15 text-green-800' :
                         p.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
                         'bg-red-100 text-red-700'
                       }`}>
