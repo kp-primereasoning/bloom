@@ -1,14 +1,19 @@
 """
 Admin payout routes — florist payout management.
 
+Payouts are calculated from actual delivered orders. For each delivery,
+the payout amount is the florist's mapped product price for that tier
+(from their Shopify tier mappings). If no mapping exists, a default
+rate is used.
+
 Endpoints:
 - POST /admin/payouts/generate — calculate and record payouts for a date range
-- GET  /admin/payouts — list payout history
+- GET  /admin/payouts — list payout history with florist names
 """
 
 import logging
-from datetime import datetime, timezone
-from uuid import uuid4
+from datetime import datetime
+from decimal import Decimal
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -18,18 +23,53 @@ from sqlalchemy.orm import Session
 from auth.dependencies import require_role
 from db.database import get_db
 from models.delivery import Delivery, DeliveryStatus, SubscriptionPlan
+from models.florist import Florist
+from models.florist_tier_mapping import FloristTierMapping
+from models.florist_connection import FloristConnection
 from models.payment import FloristPayout, PayoutStatus
 from models.property_assignment import PropertyAssignment
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/admin/payouts", tags=["admin-payouts"])
 
-# Payout rates per plan tier (cents) — configurable
-PAYOUT_RATES = {
-    SubscriptionPlan.ESSENTIAL: 2500,   # $25
-    SubscriptionPlan.SIGNATURE: 4500,   # $45
-    SubscriptionPlan.STATEMENT: 7500,   # $75
+# Fallback rates (cents) when a florist has no tier mapping for a plan.
+# These should only apply to florists who haven't connected Shopify yet.
+DEFAULT_RATES = {
+    SubscriptionPlan.ESSENTIAL: 2000,  # $20
+    SubscriptionPlan.SIGNATURE: 3500,  # $35
+    SubscriptionPlan.STATEMENT: 5500,  # $55
 }
+
+
+def _get_florist_rates(db: Session, florist_id) -> dict[SubscriptionPlan, int]:
+    """
+    Build a tier → payout-cents map for a florist from their Shopify
+    tier mappings. Falls back to DEFAULT_RATES for unmapped tiers.
+    """
+    rates = dict(DEFAULT_RATES)
+
+    connection = (
+        db.query(FloristConnection)
+        .filter(FloristConnection.florist_id == florist_id)
+        .first()
+    )
+    if not connection:
+        return rates
+
+    mappings = (
+        db.query(FloristTierMapping)
+        .filter(FloristTierMapping.connection_id == connection.id)
+        .all()
+    )
+    for m in mappings:
+        try:
+            tier = SubscriptionPlan(m.tier)
+            price_cents = int(Decimal(m.product_price) * 100)
+            rates[tier] = price_cents
+        except (ValueError, KeyError):
+            continue
+
+    return rates
 
 
 class GeneratePayoutsRequest(BaseModel):
@@ -40,7 +80,9 @@ class GeneratePayoutsRequest(BaseModel):
 class PayoutResponse(BaseModel):
     id: str
     florist_id: str
+    florist_name: Optional[str] = None
     amount_cents: int
+    delivery_count: int = 0
     status: str
     period_start: Optional[datetime] = None
     period_end: Optional[datetime] = None
@@ -52,6 +94,7 @@ class PayoutResponse(BaseModel):
 class GeneratePayoutsResponse(BaseModel):
     payouts_created: int
     total_amount_cents: int
+    total_deliveries: int
     details: list[PayoutResponse]
 
 
@@ -64,11 +107,11 @@ async def generate_payouts(
     """
     Calculate florist payouts for delivered orders in a date range.
 
-    Groups delivered orders by the florist assigned to each property,
-    sums up payout amounts based on plan tier rates, and creates
-    FloristPayout records.
+    For each delivery:
+    1. Find the florist assigned to the delivery's property
+    2. Look up the florist's Shopify tier mapping price for that plan
+    3. Sum amounts per florist and create payout records
     """
-    # Get all DELIVERED deliveries in the period
     deliveries = (
         db.query(Delivery)
         .filter(
@@ -81,9 +124,11 @@ async def generate_payouts(
     )
 
     if not deliveries:
-        return GeneratePayoutsResponse(payouts_created=0, total_amount_cents=0, details=[])
+        return GeneratePayoutsResponse(
+            payouts_created=0, total_amount_cents=0, total_deliveries=0, details=[]
+        )
 
-    # Get active property-florist assignments
+    # Map property → florist
     assignments = (
         db.query(PropertyAssignment)
         .filter(PropertyAssignment.active.is_(True))
@@ -91,48 +136,69 @@ async def generate_payouts(
     )
     property_to_florist = {a.property_id: a.florist_id for a in assignments}
 
-    # Aggregate amounts per florist
-    florist_totals: dict = {}
+    # Cache florist rates
+    florist_rates_cache: dict = {}
+    florist_totals: dict = {}  # florist_id → {amount, count}
+
     for d in deliveries:
         florist_id = property_to_florist.get(d.property_id)
         if not florist_id:
             continue
-        rate = PAYOUT_RATES.get(d.subscription_plan, 2500)
-        florist_totals.setdefault(florist_id, 0)
-        florist_totals[florist_id] += rate
+
+        if florist_id not in florist_rates_cache:
+            florist_rates_cache[florist_id] = _get_florist_rates(db, florist_id)
+
+        rates = florist_rates_cache[florist_id]
+        rate = rates.get(d.subscription_plan, DEFAULT_RATES.get(d.subscription_plan, 2000))
+
+        entry = florist_totals.setdefault(florist_id, {"amount": 0, "count": 0})
+        entry["amount"] += rate
+        entry["count"] += 1
 
     # Create payout records
     payouts = []
-    for florist_id, amount in florist_totals.items():
+    for florist_id, totals in florist_totals.items():
         payout = FloristPayout(
             florist_id=florist_id,
-            amount_cents=amount,
+            amount_cents=totals["amount"],
             status=PayoutStatus.PENDING,
             period_start=data.period_start,
             period_end=data.period_end,
         )
         db.add(payout)
-        payouts.append(payout)
+        payouts.append((payout, totals["count"]))
 
     db.commit()
-    for p in payouts:
+    for p, _ in payouts:
         db.refresh(p)
+
+    # Resolve florist names
+    florist_names = {}
+    if payouts:
+        florist_ids = [p.florist_id for p, _ in payouts]
+        florists = db.query(Florist).filter(Florist.id.in_(florist_ids)).all()
+        florist_names = {f.id: f.name for f in florists}
+
+    details = [
+        PayoutResponse(
+            id=str(p.id),
+            florist_id=str(p.florist_id),
+            florist_name=florist_names.get(p.florist_id),
+            amount_cents=p.amount_cents,
+            delivery_count=count,
+            status=p.status.value if hasattr(p.status, "value") else p.status,
+            period_start=p.period_start,
+            period_end=p.period_end,
+            created_at=p.created_at,
+        )
+        for p, count in payouts
+    ]
 
     return GeneratePayoutsResponse(
         payouts_created=len(payouts),
-        total_amount_cents=sum(p.amount_cents for p in payouts),
-        details=[
-            PayoutResponse(
-                id=str(p.id),
-                florist_id=str(p.florist_id),
-                amount_cents=p.amount_cents,
-                status=p.status.value if hasattr(p.status, "value") else p.status,
-                period_start=p.period_start,
-                period_end=p.period_end,
-                created_at=p.created_at,
-            )
-            for p in payouts
-        ],
+        total_amount_cents=sum(p.amount_cents for p, _ in payouts),
+        total_deliveries=sum(c for _, c in payouts),
+        details=details,
     )
 
 
@@ -142,18 +208,26 @@ async def list_payouts(
     db: Session = Depends(get_db),
     current_user: dict = Depends(require_role(["ADMIN"])),
 ):
-    """List florist payout history, most recent first."""
+    """List florist payout history with florist names, most recent first."""
     payouts = (
         db.query(FloristPayout)
         .order_by(FloristPayout.created_at.desc())
         .limit(limit)
         .all()
     )
+
+    # Resolve florist names
+    florist_ids = list({p.florist_id for p in payouts})
+    florists = db.query(Florist).filter(Florist.id.in_(florist_ids)).all() if florist_ids else []
+    florist_names = {f.id: f.name for f in florists}
+
     return [
         PayoutResponse(
             id=str(p.id),
             florist_id=str(p.florist_id),
+            florist_name=florist_names.get(p.florist_id),
             amount_cents=p.amount_cents,
+            delivery_count=0,
             status=p.status.value if hasattr(p.status, "value") else p.status,
             period_start=p.period_start,
             period_end=p.period_end,
